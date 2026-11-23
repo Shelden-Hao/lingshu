@@ -1,5 +1,5 @@
-import { AgentDoc, type ConversationId, ROOT_CONVERSATION_ID } from "@earendil-works/pi-durable";
-import type { ExecutionEnv } from "@earendil-works/pi-durable/env";
+import { AgentDoc, type ConversationId, ROOT_CONVERSATION_ID } from "@lingshu/durable";
+import type { ExecutionEnv } from "@lingshu/durable/env";
 import {
 	canSend,
 	defineFacet,

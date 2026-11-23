@@ -1,7 +1,7 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
 import { afterEach, describe, expect, it } from "vitest";
-import { type PiMessagesOptions, stream, streamSimple } from "../src/api/pi-messages.ts";
+import { type PiMessagesOptions, stream, streamSimple } from "../src/api/lingshu-messages.ts";
 import type { Api, AssistantMessageEvent, Context, Model, StopReason } from "../src/types.ts";
 import { normalizeContext } from "../src/utils/transcript.ts";
 
@@ -66,11 +66,11 @@ async function startServer(options: ResponderOptions): Promise<{ baseUrl: string
 	return { baseUrl: `http://127.0.0.1:${address.port}/v1`, requests };
 }
 
-function createModel(baseUrl: string): Model<"pi-messages"> {
+function createModel(baseUrl: string): Model<"lingshu-messages"> {
 	return {
 		id: "auto",
 		name: "Radius Auto",
-		api: "pi-messages",
+		api: "lingshu-messages",
 		provider: "radius",
 		baseUrl,
 		reasoning: false,
@@ -94,7 +94,7 @@ const usage = {
 	cost: { input: 0.1, output: 0.2, cacheRead: 0, cacheWrite: 0, total: 0.3 },
 };
 
-describe("pi-messages", () => {
+describe("lingshu-messages", () => {
 	it("streams text and tool calls and resolves the terminal message", async () => {
 		const { baseUrl, requests } = await startServer({
 			events: [
@@ -198,7 +198,7 @@ describe("pi-messages", () => {
 
 	it("appends debug=1 and reports response headers via onResponse", async () => {
 		const { baseUrl, requests } = await startServer({
-			headers: { "x-pi-gateway-upstream-provider": "anthropic" },
+			headers: { "x-lingshu-gateway-upstream-provider": "anthropic" },
 			events: [{ type: "done", reason: "stop", usage }],
 		});
 		const model = createModel(baseUrl);
@@ -215,7 +215,7 @@ describe("pi-messages", () => {
 
 		expect(message.stopReason).toBe("stop");
 		expect(requests[0].url).toBe("/v1/messages?debug=1");
-		expect(observedHeaders?.["x-pi-gateway-upstream-provider"]).toBe("anthropic");
+		expect(observedHeaders?.["x-lingshu-gateway-upstream-provider"]).toBe("anthropic");
 	});
 
 	it("surfaces backend error responses with diagnostics", async () => {
@@ -312,14 +312,14 @@ describe("pi-messages", () => {
 	});
 });
 
-describe("pi-messages api registration", () => {
+describe("lingshu-messages api registration", () => {
 	it("is registered as a builtin api provider", async () => {
 		const { getApiProvider } = await import("../src/compat.ts");
-		expect(getApiProvider("pi-messages")).toBeDefined();
+		expect(getApiProvider("lingshu-messages")).toBeDefined();
 	});
 
 	it("is a known api usable on models", () => {
-		const api: Api = "pi-messages";
-		expect(api).toBe("pi-messages");
+		const api: Api = "lingshu-messages";
+		expect(api).toBe("lingshu-messages");
 	});
 });

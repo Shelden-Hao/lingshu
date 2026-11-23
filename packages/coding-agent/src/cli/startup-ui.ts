@@ -1,10 +1,4 @@
-import {
-	ProcessTerminal,
-	setCapabilityOverrides,
-	setKeybindings,
-	type TUI,
-	TuiMainScreen,
-} from "@earendil-works/pi-tui";
+import { ProcessTerminal, setCapabilityOverrides, setKeybindings, type TUI, TuiMainScreen } from "@lingshu/tui";
 import { existsSync } from "fs";
 import { APP_NAME, CONFIG_DIR_NAME, ENV_AGENT_DIR, getAgentDir, getSettingsPath, PACKAGE_NAME } from "../config.ts";
 import { areExperimentalFeaturesEnabled } from "../core/experimental.ts";
@@ -32,9 +26,11 @@ import {
 import { requestTerminalColors } from "../modes/interactive/theme/theme-controller.ts";
 import { flushStdout } from "../utils/flush-stdout.ts";
 
-const OFFICIAL_PACKAGE_NAME = "@earendil-works/pi-coding-agent";
-const OFFICIAL_APP_NAME = "pi";
-const OFFICIAL_CONFIG_DIR_NAME = ".pi";
+// The distribution is "ours" when the running package declares this brand. A rebrand changes the
+// package name and `brand` block together, so the check stays self-consistent without editing code.
+const OFFICIAL_PACKAGE_NAME = PACKAGE_NAME;
+const OFFICIAL_APP_NAME = APP_NAME;
+const OFFICIAL_CONFIG_DIR_NAME = CONFIG_DIR_NAME;
 
 interface DistributionMetadata {
 	packageName: string;
@@ -124,8 +120,8 @@ async function clearStartupTui(ui: TUI): Promise<void> {
 
 /**
  * First-time setup runs when all of these hold:
- * - this is the official Pi distribution (not a fork/rebrand)
- * - experimental features are enabled (PI_EXPERIMENTAL=1)
+ * - this is the official Lingshu distribution (not a fork/rebrand)
+ * - experimental features are enabled (LINGSHU_EXPERIMENTAL=1)
  * - the default agent directory is used (no custom agent dir override)
  * - setup was not completed before (settings.json does not exist)
  */

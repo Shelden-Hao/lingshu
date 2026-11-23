@@ -4,9 +4,9 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
-import type { JsonValue } from "@earendil-works/chord/json";
-import type { SqliteDatabase, SqliteExecutor, SqliteValue } from "@earendil-works/chord/sqlite";
+import { BACKGROUND_CONTEXT } from "@lingshu/chord/context";
+import type { JsonValue } from "@lingshu/chord/json";
+import type { SqliteDatabase, SqliteExecutor, SqliteValue } from "@lingshu/chord/sqlite";
 import { afterEach, describe, expect, it } from "vitest";
 import { idFromNumber } from "../src/ids.ts";
 import { MemoryStorage } from "../src/storage/memory.ts";
@@ -40,7 +40,7 @@ afterEach(async () => {
 
 /** A SQLite database in a fresh directory, optionally seen through `wrap`. */
 async function openDatabase(): Promise<SqliteDatabase> {
-	const directory = await mkdtemp(join(tmpdir(), "pi-durable-sqlite-commit-"));
+	const directory = await mkdtemp(join(tmpdir(), "lingshu-durable-sqlite-commit-"));
 	directories.add(directory);
 	return openNodeSqliteDatabase(join(directory, "storage.sqlite"));
 }

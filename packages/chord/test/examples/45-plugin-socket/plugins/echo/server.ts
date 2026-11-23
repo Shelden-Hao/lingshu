@@ -1,7 +1,7 @@
 // The echo plugin: a WebSocket of its own protocol at `/echo/:room`, after the server checked who is connecting.
 
-import { defineFacet } from "@earendil-works/chord";
-import { Http } from "@earendil-works/chord/http";
+import { defineFacet } from "@lingshu/chord";
+import { Http } from "@lingshu/chord/http";
 
 export default defineFacet((_host, self) =>
 	self.contribute(Http, {

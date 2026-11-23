@@ -1,11 +1,6 @@
-import { type Op, track } from "@earendil-works/chord/delta";
-import { copyJson } from "@earendil-works/chord/json";
-import {
-	type AssistantMessage,
-	type AssistantMessageEvent,
-	type ToolCall,
-	ToolCallArgumentsStream,
-} from "@earendil-works/pi-ai";
+import { type AssistantMessage, type AssistantMessageEvent, type ToolCall, ToolCallArgumentsStream } from "@lingshu/ai";
+import { type Op, track } from "@lingshu/chord/delta";
+import { copyJson } from "@lingshu/chord/json";
 import { describe, expect, it } from "vitest";
 import type { LiveState } from "../src/harness/live.ts";
 import { PartialChanges, type PartialMessage } from "../src/harness/partial-changes.ts";

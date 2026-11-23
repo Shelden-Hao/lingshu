@@ -8,7 +8,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { describe, it, type TestContext } from "node:test";
 import { fileURLToPath } from "node:url";
-import { BACKGROUND_CONTEXT as context } from "@earendil-works/chord/context";
+import { BACKGROUND_CONTEXT as context } from "@lingshu/chord/context";
 import { Sessions, SessionWorker } from "../../plugins/sessions/contract.ts";
 import { ownerClient } from "../client.ts";
 import { CASES, cli } from "../commands.ts";
@@ -25,9 +25,9 @@ const INSTALL: string = P3_RELEASE;
 /** The installed package, and the packages it depends on. */
 const PACKAGE = join(INSTALL, "node_modules", "@earendil-works", "p3");
 const DEPENDENCIES = [
-	"@earendil-works/chord",
-	"@earendil-works/pi-schema",
-	"@earendil-works/pi-telemetry",
+	"@lingshu/chord",
+	"@lingshu/schema",
+	"@lingshu/telemetry",
 	"esbuild",
 	"ws",
 ];
@@ -67,11 +67,11 @@ describe("the installed release", { concurrency: true, timeout: CASE_MS }, () =>
 		const installed = (await readdir(join(INSTALL, "node_modules"))).filter((name) => !name.startsWith("."));
 		assert.deepEqual(installed.sort(), ["@earendil-works", "@esbuild", "esbuild", "ws"]);
 		const scoped = await readdir(join(INSTALL, "node_modules", "@earendil-works"));
-		assert.deepEqual(scoped.sort(), ["chord", "p3", "pi-schema", "pi-telemetry"]);
+		assert.deepEqual(scoped.sort(), ["chord", "p3", "lingshu-schema", "lingshu-telemetry"]);
 		const manifest = await json<Manifest>(join(PACKAGE, "package.json"));
 		assert.deepEqual(
 			[manifest.name, manifest.bin, manifest.private],
-			["@earendil-works/p3", { p3: "dist/p3.js" }, true],
+			["@lingshu/p3", { p3: "dist/p3.js" }, true],
 		);
 		assert.deepEqual(Object.keys(manifest.dependencies).sort(), DEPENDENCIES);
 		for (const name of DEPENDENCIES) {
@@ -232,7 +232,7 @@ const HELLO = {
 		include: ["contract.ts", "server.ts"],
 	}),
 	"contract.ts": [
-		'import { method, obj, oneOf, remote, Server, str } from "@earendil-works/p3/v1";',
+		'import { method, obj, oneOf, remote, Server, str } from "@lingshu/p3/v1";',
 		"",
 		"/** A greeting the server has for its owner, plain or loud. */",
 		'export const Hello = remote("hello.greeting", {',
@@ -243,7 +243,7 @@ const HELLO = {
 		"});",
 	].join("\n"),
 	"server.ts": [
-		'import { constant, defineFacet, forbidden } from "@earendil-works/p3/v1";',
+		'import { constant, defineFacet, forbidden } from "@lingshu/p3/v1";',
 		'import { Hello } from "./contract.ts";',
 		"",
 		"export default defineFacet((host) => {",
@@ -259,7 +259,7 @@ const HELLO = {
 	].join("\n"),
 	// The plugin's own client, outside the server: the compiled API modules run it.
 	"client.mjs": [
-		'import { BACKGROUND_CONTEXT as context, createHost, webSocketLink } from "@earendil-works/p3/v1";',
+		'import { BACKGROUND_CONTEXT as context, createHost, webSocketLink } from "@lingshu/p3/v1";',
 		'import { Hello } from "./contract.ts";',
 		"",
 		"const [port, token] = process.argv.slice(2);",
@@ -318,9 +318,9 @@ describe("a third-party plugin against the installed release", { timeout: CASE_M
 	it("imports the three API modules at run time, as a plugin's own tests outside the server do", async (t) => {
 		const dir = await hello(t);
 		const script = [
-			'const v1 = await import("@earendil-works/p3/v1");',
-			'const server = await import("@earendil-works/p3/v1/server");',
-			'const worker = await import("@earendil-works/p3/v1/worker");',
+			'const v1 = await import("@lingshu/p3/v1");',
+			'const server = await import("@lingshu/p3/v1/server");',
+			'const worker = await import("@lingshu/p3/v1/worker");',
 			"const names = (module, ...names) => names.map((name) => typeof module[name]);",
 			'console.log(JSON.stringify([names(v1, "defineFacet", "Server", "Session", "forward", "remote"),',
 			'	names(server, "Http", "SessionRoute", "AppInfo"), names(worker, "WorkerInfo")]));',

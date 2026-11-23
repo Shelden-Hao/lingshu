@@ -1,5 +1,5 @@
 import { setTimeout as sleep } from "node:timers/promises";
-import type { Models } from "@earendil-works/pi-ai/models";
+import type { Models } from "@lingshu/ai/models";
 import {
 	type Conversation,
 	type ConversationId,
@@ -9,7 +9,7 @@ import {
 	type LiveState,
 	ROOT_CONVERSATION_ID,
 	type TaskGraph,
-} from "@earendil-works/pi-durable";
+} from "@lingshu/durable";
 import {
 	type Ctx,
 	canSend,

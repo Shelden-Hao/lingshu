@@ -1,4 +1,4 @@
-// Adapted from earendil-works/pi (MIT); see third-party/pi.LICENSE.
+// Adapted from earendil-works/lingshu (MIT); see third-party/lingshu.LICENSE.
 /**
  * Resolve configuration values that may be shell commands, environment variables, or literals.
  * Used by auth-storage.ts and model-registry.ts.

@@ -69,8 +69,8 @@ const server = createHost<P>({ address: Server(), principal: { kind: "server" },
 const plugins = createPlugins({
 	roots: ["./plugins"],
 	kinds: {
-		server: { platform: "node", hostPackages: ["@earendil-works/chord", "@app/core"] },
-		worker: { platform: "node", hostPackages: ["@earendil-works/chord", "@app/core"] },
+		server: { platform: "node", hostPackages: ["@lingshu/chord", "@app/core"] },
+		worker: { platform: "node", hostPackages: ["@lingshu/chord", "@app/core"] },
 	},
 	onError,
 }, ctx);

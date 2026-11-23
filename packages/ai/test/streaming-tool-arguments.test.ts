@@ -1,10 +1,10 @@
 import type { ResponseStreamEvent } from "openai/resources/responses/responses.js";
 import { describe, expect, it } from "vitest";
 import { stream as streamAnthropic } from "../src/api/anthropic-messages.ts";
+import { stream as streamPiMessages } from "../src/api/lingshu-messages.ts";
 import { stream as streamMistral } from "../src/api/mistral-conversations.ts";
 import { stream as streamOpenAICompletions } from "../src/api/openai-completions.ts";
 import { processResponsesStream } from "../src/api/openai-responses-shared.ts";
-import { stream as streamPiMessages } from "../src/api/pi-messages.ts";
 import { fauxAssistantMessage, fauxProvider, fauxToolCall } from "../src/providers/faux.ts";
 import type { AssistantMessage, AssistantMessageEvent, Model, TranscriptContext } from "../src/types.ts";
 import { AssistantMessageEventStream } from "../src/utils/event-stream.ts";
@@ -288,14 +288,14 @@ const PATHS: readonly Path[] = [
 			),
 	},
 	{
-		name: "pi-messages",
+		name: "lingshu-messages",
 		stream: (deltas, args) =>
 			streamPiMessages(
 				{
 					...baseModel,
 					id: "auto",
 					name: "a",
-					api: "pi-messages",
+					api: "lingshu-messages",
 					provider: "radius",
 					baseUrl: "https://example.test/v1",
 				},

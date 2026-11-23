@@ -9,11 +9,11 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { BACKGROUND_CONTEXT as context } from "@earendil-works/chord/context";
-import { createModels } from "@earendil-works/pi-ai/models";
-import { fauxAssistantMessage, fauxProvider, fauxText, fauxToolCall } from "@earendil-works/pi-ai/providers/faux";
-import { CodemodeSandbox } from "@earendil-works/pi-codemode";
-import { num, obj, str } from "@earendil-works/pi-schema";
+import { createModels } from "@lingshu/ai/models";
+import { fauxAssistantMessage, fauxProvider, fauxText, fauxToolCall } from "@lingshu/ai/providers/faux";
+import { BACKGROUND_CONTEXT as context } from "@lingshu/chord/context";
+import { CodemodeSandbox } from "@lingshu/codemode";
+import { num, obj, str } from "@lingshu/schema";
 import { createCodemodeTool } from "../src/codemode/codemode.ts";
 import { createRegistry, defineExtension, defineTool, Harness } from "../src/index.ts";
 import { openNodeSqliteStorage } from "../src/storage/sqlite/node.ts";
@@ -43,7 +43,7 @@ const plain = defineTool({
 });
 
 async function run(mode: "codemode" | "plain", shape: Shape, n: number): Promise<{ ms: number; commits: number }> {
-	const directory = await mkdtemp(join(tmpdir(), "pi-codemode-bench-"));
+	const directory = await mkdtemp(join(tmpdir(), "lingshu-codemode-bench-"));
 	try {
 		const faux = fauxProvider();
 		const models = createModels();

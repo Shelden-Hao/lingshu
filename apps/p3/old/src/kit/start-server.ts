@@ -1,5 +1,5 @@
 // `startServer`: the p3 server. It opens the server's part of the data directory (its lock and at once its record,
-// `starting`; the layout, the Pi's config, the cookie secret, the store), creates the server host, Chord's HTTP
+// `starting`; the layout, the Lingshu's config, the cookie secret, the store), creates the server host, Chord's HTTP
 // component, its plugins component over p3's built-in root and the session workers, loads the server's plugins with
 // the kit's own facets (the start data, sign-ins, the owner link, the owner's stop, its identity), says `running` in its record
 // once it listens and its owner link is ready, and gives its caller the running app. Right after the listen, off the
@@ -8,13 +8,13 @@
 import { randomBytes } from "node:crypto";
 import { resolve } from "node:path";
 import { debuglog } from "node:util";
-import { createHost, type Facet, openStore, type Store, sqliteBackend } from "@earendil-works/chord";
-import type { Context } from "@earendil-works/chord/context";
-import { createHttp, HttpListener, type ListenAddress } from "@earendil-works/chord/http";
-import { createPlugins } from "@earendil-works/chord/plugins";
-import { openNodeSqliteDatabase } from "@earendil-works/chord/sqlite/node";
-import type { ProcessLock } from "@earendil-works/chord/workers";
-import { Server } from "@earendil-works/p3/v1";
+import { createHost, type Facet, openStore, type Store, sqliteBackend } from "@lingshu/chord";
+import type { Context } from "@lingshu/chord/context";
+import { createHttp, HttpListener, type ListenAddress } from "@lingshu/chord/http";
+import { createPlugins } from "@lingshu/chord/plugins";
+import { openNodeSqliteDatabase } from "@lingshu/chord/sqlite/node";
+import type { ProcessLock } from "@lingshu/chord/workers";
+import { Server } from "@lingshu/p3/v1";
 import { API, KINDS, NAME, PRINCIPALS } from "../app.ts";
 import type { P3Principal } from "../principals.ts";
 import { type App, type AppError, RunningApp } from "./app.ts";
@@ -37,12 +37,12 @@ const debug = debuglog("p3");
 
 /** What `startServer` takes: what the start script decides. */
 export type ServerOptions = {
-	/** The data directory (no environment variables): `~/.pi/p3` by default. */
+	/** The data directory (no environment variables): `~/.lingshu/p3` by default. */
 	readonly dataDir?: string;
 	/** p3's built-in plugins root: a plugin of it failing stops the start. */
 	readonly root: string;
 	/**
-	 * Where the server listens: an address for this start, or the Pi's own port, the one its config keeps from its first
+	 * Where the server listens: an address for this start, or the Lingshu's own port, the one its config keeps from its first
 	 * start, which takes `firstPort` (0: a free one).
 	 */
 	readonly listen: ListenAddress | { readonly host: string; readonly firstPort: number };
@@ -140,7 +140,7 @@ export async function startServer(options: ServerOptions, context: Context): Pro
 		{ name: "p3.sign-ins", facet: signIns.facet },
 		{ name: "p3.owner", facet: ownerFacet(link) },
 		{ name: "p3.stop", facet: stopFacet(options.onStop) },
-		{ name: "p3.identity", facet: identityFacet({ run, pid: process.pid, pi: config.id }, () => ownerToken) },
+		{ name: "p3.identity", facet: identityFacet({ run, pid: process.pid, lingshu: config.id }, () => ownerToken) },
 		...(options.facets ?? []),
 	];
 	const app = new RunningApp({ host, http, workers, store, plugins, lock }, layout);
@@ -161,7 +161,7 @@ export async function startServer(options: ServerOptions, context: Context): Pro
 		const running = {
 			state: "running",
 			run,
-			pi: config.id,
+			lingshu: config.id,
 			port: listening.port,
 			version,
 			startedAt: Date.now(),
@@ -185,7 +185,7 @@ function apiModules(kind: string): string[] {
 	return API.versions.flatMap((version) => [`${API.name}/${version}`, `${API.name}/${version}/${kind}`]);
 }
 
-/** The port of this start: the one `listen` names, else the Pi's own, `firstPort` at its first start. */
+/** The port of this start: the one `listen` names, else the Lingshu's own, `firstPort` at its first start. */
 function portOf(listen: ServerOptions["listen"], config: PiConfig): number {
 	return "port" in listen ? listen.port : (config.port ?? listen.firstPort);
 }
@@ -195,7 +195,7 @@ const SERVER_LOCK_MS = 1000;
 
 /**
  * The server's own part of the data directory `path`: its lock (one server per data directory), the layout made
- * private, the Pi's config, its sign-in cookie's name and secret, and the server's store; the lock released when the
+ * private, the Lingshu's config, its sign-in cookie's name and secret, and the server's store; the lock released when the
  * rest fails.
  */
 async function openServer(

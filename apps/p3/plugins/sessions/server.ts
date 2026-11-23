@@ -23,8 +23,8 @@ import {
 	type RowOf,
 	Session,
 	str,
-} from "@earendil-works/p3/v1";
-import { ServerRuntime, SessionRoute } from "@earendil-works/p3/v1/server";
+} from "@lingshu/p3/v1";
+import { ServerRuntime, SessionRoute } from "@lingshu/p3/v1/server";
 import { SessionsStore } from "./contract.server.ts";
 import {
 	CODING,

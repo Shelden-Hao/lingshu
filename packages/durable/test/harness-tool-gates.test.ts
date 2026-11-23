@@ -9,7 +9,7 @@ import {
 	fauxText,
 	fauxToolCall,
 	type ToolResultMessage,
-} from "@earendil-works/pi-ai";
+} from "@lingshu/ai";
 import {
 	defineExtension,
 	defineSignal,
@@ -24,8 +24,8 @@ import {
 	type TaskId,
 	ToolResultEntry,
 	ToolTask,
-} from "@earendil-works/pi-durable";
-import { bool, obj, str } from "@earendil-works/pi-schema";
+} from "@lingshu/durable";
+import { bool, obj, str } from "@lingshu/schema";
 import { afterEach, describe, expect, it } from "vitest";
 import { openNodeSqliteStorage } from "../src/storage/sqlite/node.ts";
 import { allEntries, type ChatSetup, chatSetup, openChat, waitFor } from "./chat-support.ts";
@@ -44,7 +44,7 @@ afterEach(async () => {
 });
 
 async function sqlitePath(): Promise<string> {
-	const directory = await mkdtemp(join(tmpdir(), "pi-durable-gates-"));
+	const directory = await mkdtemp(join(tmpdir(), "lingshu-durable-gates-"));
 	directories.add(directory);
 	return join(directory, "session.sqlite");
 }

@@ -1,8 +1,7 @@
 // The runtime's built-in header, status lines and footer fallback. The header follows coding-agent's startup header
-// (interactive-mode.ts BuiltInHeader, pi-logo.ts): logo, then the server origin and role in place of the version, then
+// (interactive-mode.ts BuiltInHeader, lingshu-logo.ts): logo, then the server origin and role in place of the version, then
 // key hints; Ctrl+O (expanded tools) shows the full list.
 import {
-	backgroundAnsi,
 	type Component,
 	foregroundAnsi,
 	rgbColor,
@@ -10,22 +9,20 @@ import {
 	TruncatedText,
 	truncateToWidth,
 	visibleWidth,
-} from "@earendil-works/pi-tui";
+} from "@lingshu/tui";
 import { lineText, type RenderContext } from "../render-context.ts";
 
 const CORAL = rgbColor(228, 138, 122);
-const BLUE = rgbColor(79, 142, 179);
+
 const YELLOW = rgbColor(234, 182, 93);
 const RESET = "\x1b[0m";
 
-/** pi-logo.ts: 4 cells by 2 lines of half blocks in fixed brand colors, in the theme's color mode. */
-export function piLogoLines(ctx: RenderContext): [string, string] {
+/** Brand wordmark for the header: the display name in the brand colors, plus an empty second line. */
+export function brandLogoLines(ctx: RenderContext): [string, string] {
 	const mode = ctx.theme.current.getColorMode();
 	const fg = (color: typeof CORAL) => foregroundAnsi(color, mode);
-	return [
-		`${fg(CORAL)}${backgroundAnsi(BLUE, mode)}▀${RESET}${fg(CORAL)}▀█${RESET} `,
-		`${fg(BLUE)}█▀${RESET} ${fg(YELLOW)}█${RESET}`,
-	];
+	const name = "Lingshu";
+	return [`${fg(CORAL)}${name.slice(0, 1)}${RESET}${fg(YELLOW)}${name.slice(1)}${RESET}`, ""];
 }
 
 export type HeaderSource = {
@@ -60,7 +57,7 @@ export class BuiltInHeader implements Component {
 		const key = JSON.stringify([source.ctx.theme.version, source.origin, source.role, source.connected, hints]);
 		if (key !== this.key) {
 			this.key = key;
-			const [top, bottom] = piLogoLines(source.ctx);
+			const [top, bottom] = brandLogoLines(source.ctx);
 			const where = [source.origin ? lineText(source.origin) : "", source.role ?? ""].filter(Boolean).join(" · ");
 			const state = source.connected ? "" : ` ${theme.fg("warning", "reconnecting…")}`;
 			const separator = theme.fg("muted", " · ");
@@ -79,7 +76,7 @@ export class BuiltInHeader implements Component {
 
 export type Notice = { kind: "info" | "warning" | "error"; text: string; count: number };
 
-/** Status and error lines (pi's showStatus/showError); a repeated message collapses into one line with a count. */
+/** Status and error lines (lingshu's showStatus/showError); a repeated message collapses into one line with a count. */
 export class StatusLines implements Component {
 	private ctx: RenderContext;
 	private notices: () => readonly Notice[];

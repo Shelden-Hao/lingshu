@@ -5,9 +5,9 @@ import type { ExtensionError, ExtensionFactory } from "../../../src/index.ts";
 import { createTestResourceLoader } from "../../utilities.ts";
 import { createHarness, type Harness } from "../harness.ts";
 
-// #11264: the event bus printed a throwing pi.events handler with console.error, which draws over the
+// #11264: the event bus printed a throwing lingshu.events handler with console.error, which draws over the
 // interactive TUI. Such errors now go to the extension error listener like other extension errors.
-describe("issue #11264 pi.events handler errors", () => {
+describe("issue #11264 lingshu.events handler errors", () => {
 	const harnesses: Harness[] = [];
 
 	afterEach(() => {
@@ -20,11 +20,11 @@ describe("issue #11264 pi.events handler errors", () => {
 	async function setup() {
 		const eventBus = createEventBus();
 		let release: () => void = () => {};
-		const factory: ExtensionFactory = (pi) => {
-			pi.events.on("test:boom", () => {
+		const factory: ExtensionFactory = (lingshu) => {
+			lingshu.events.on("test:boom", () => {
 				throw new Error("handler failed");
 			});
-			pi.events.on("test:late", async () => {
+			lingshu.events.on("test:late", async () => {
 				await new Promise<void>((resolve) => {
 					release = resolve;
 				});

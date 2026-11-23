@@ -4,14 +4,14 @@
 
 ### Added
 
-- Added `createMcpResultSchema(outputSchema)`, moved from pi's coding agent: the output schema of an MCP tool for programs that call it, the whole `CallToolResult` with the tool's own output schema as `structuredContent` (its local `$ref`s rewritten to resolve there).
-- Added `toMcpModelContent(server, result, options)`, moved from pi's coding agent: a result's model-facing content with embedded text blobs as text, binary resources saved through the caller's `McpOutputSaver` (left out without one), and resource links that name the caller's `readResourceTool`.
+- Added `createMcpResultSchema(outputSchema)`, moved from lingshu's coding agent: the output schema of an MCP tool for programs that call it, the whole `CallToolResult` with the tool's own output schema as `structuredContent` (its local `$ref`s rewritten to resolve there).
+- Added `toMcpModelContent(server, result, options)`, moved from lingshu's coding agent: a result's model-facing content with embedded text blobs as text, binary resources saved through the caller's `McpOutputSaver` (left out without one), and resource links that name the caller's `readResourceTool`.
 
 ## [1.6.0] - 2026-11-20
 
 ### Added
 
-- Added `mcpServerSummary(description, instructions)`, a server's one-line summary for the system prompt as pi's coding agent shows it: the first line of the configured `description`, else of the server's `initialize` instructions.
+- Added `mcpServerSummary(description, instructions)`, a server's one-line summary for the system prompt as lingshu's coding agent shows it: the first line of the configured `description`, else of the server's `initialize` instructions.
 
 ## [1.5.2] - 2026-11-10
 
@@ -19,20 +19,20 @@
 
 ### Added
 
-- Added `PipeTransport`, MCP's stdio transport over a program started by the caller through an `McpPipe` (`write`, `closeStdin`, `close`, `exited`), for example `@earendil-works/pi-env`'s `openProcess()` on another machine. `StdioTransport` and `PipeTransport` share the newline-delimited framing and the stderr tail.
-- Added MCP OAuth sign-in in two halves (`@earendil-works/pi-mcp/oauth`), moved from pi's coding agent: `startMcpSignIn()` refreshes the stored tokens or returns the authorization URL, and `completeMcpSignIn()` exchanges the code later, possibly in another request with the same state store. The code comes from a loopback callback server (`listenForLoopbackSignIn()`, `waitForLoopbackSignIn()`), the application's own callback route, or a pasted redirect URL (`responseFromRedirectUrl()`). Client ID Metadata Documents (`clientMetadataDocuments`) and the client name are the caller's. Aborting a sign-in's `signal` also stops `startMcpSignIn()` while it waits for the refresh lock; a store's `withRefreshLock()` throws `McpRefreshLockBusyError` when another process holds the lock too long, which makes `startMcpSignIn()` skip the refresh, while any other lock failure fails the sign-in. Also added `createMcpAuthProvider()`, which refreshes tokens once across requests and, through `McpOAuthServerStore.withRefreshLock()`, across processes; its `redirectUrl` option names a redirect URI the application signs in with, so tokens from a Client ID Metadata Document that lists only an https callback route can be refreshed. Also added the `refreshOnly` option of `authorizeMcp()`, which refreshes without registering a client or replacing a pending authorization's `state` and PKCE verifier.
-- Added helpers that let applications name and configure MCP tools like pi's coding agent, moved from it: `createMcpToolName()` (`mcp__<server>__<tool>`, sanitized, with a hash suffix for long or colliding names) and `mcpNamespace()`; `normalizeMcpInputSchema()`, which makes an input schema an object schema; `limitMcpContent()` and `MCP_OUTPUT_MAX_BYTES`, which cut model-facing text over 20KB in the middle and optionally save the full text through a caller's `McpOutputSaver`; and `validateMcpServerConfig()`, which validates one entry of the `mcpServers` configuration shape (stdio, Streamable HTTP, `oauth`, `enabled`, `description`, `timeout`), returns the entry tagged with its transport, and keeps the application's own fields for it to check afterwards. `isMcpServerOverride()` recognizes entries that only override a server defined elsewhere.
+- Added `PipeTransport`, MCP's stdio transport over a program started by the caller through an `McpPipe` (`write`, `closeStdin`, `close`, `exited`), for example `@lingshu/env`'s `openProcess()` on another machine. `StdioTransport` and `PipeTransport` share the newline-delimited framing and the stderr tail.
+- Added MCP OAuth sign-in in two halves (`@lingshu/mcp/oauth`), moved from lingshu's coding agent: `startMcpSignIn()` refreshes the stored tokens or returns the authorization URL, and `completeMcpSignIn()` exchanges the code later, possibly in another request with the same state store. The code comes from a loopback callback server (`listenForLoopbackSignIn()`, `waitForLoopbackSignIn()`), the application's own callback route, or a pasted redirect URL (`responseFromRedirectUrl()`). Client ID Metadata Documents (`clientMetadataDocuments`) and the client name are the caller's. Aborting a sign-in's `signal` also stops `startMcpSignIn()` while it waits for the refresh lock; a store's `withRefreshLock()` throws `McpRefreshLockBusyError` when another process holds the lock too long, which makes `startMcpSignIn()` skip the refresh, while any other lock failure fails the sign-in. Also added `createMcpAuthProvider()`, which refreshes tokens once across requests and, through `McpOAuthServerStore.withRefreshLock()`, across processes; its `redirectUrl` option names a redirect URI the application signs in with, so tokens from a Client ID Metadata Document that lists only an https callback route can be refreshed. Also added the `refreshOnly` option of `authorizeMcp()`, which refreshes without registering a client or replacing a pending authorization's `state` and PKCE verifier.
+- Added helpers that let applications name and configure MCP tools like lingshu's coding agent, moved from it: `createMcpToolName()` (`mcp__<server>__<tool>`, sanitized, with a hash suffix for long or colliding names) and `mcpNamespace()`; `normalizeMcpInputSchema()`, which makes an input schema an object schema; `limitMcpContent()` and `MCP_OUTPUT_MAX_BYTES`, which cut model-facing text over 20KB in the middle and optionally save the full text through a caller's `McpOutputSaver`; and `validateMcpServerConfig()`, which validates one entry of the `mcpServers` configuration shape (stdio, Streamable HTTP, `oauth`, `enabled`, `description`, `timeout`), returns the entry tagged with its transport, and keeps the application's own fields for it to check afterwards. `isMcpServerOverride()` recognizes entries that only override a server defined elsewhere.
 
 ### Fixed
 
 - The third-party licenses are in `THIRD_PARTY_NOTICES/`, renamed from `LICENSES/`, which Vite's license notices read as the package's license file, failing browser builds that bundle the package.
-- Fixed Streamable HTTP `application/json` responses bypassing `maxMessageBytes`; oversized JSON responses are now cancelled and rejected like oversized SSE events ([#11335](https://github.com/earendil-works/pi/issues/11335))
+- Fixed Streamable HTTP `application/json` responses bypassing `maxMessageBytes`; oversized JSON responses are now cancelled and rejected like oversized SSE events ([#11335](https://github.com/earendil-works/lingshu/issues/11335))
 - Fixed Streamable HTTP errors reading the whole HTTP error body; only the first 8 KiB kept in the error is read, and the rest is cancelled
-- Fixed `OAuthCallbackServer.close()` waiting for minutes when the browser kept an unused connection open to the callback port, for example a preconnect. It now closes the remaining connections ([#11311](https://github.com/earendil-works/pi/issues/11311))
-- Fixed large MCP stdio messages being repeatedly copied and scanned as chunks arrived, causing slow tool responses ([#11761](https://github.com/earendil-works/pi/issues/11761))
-- Fixed MCP Streamable HTTP SSE replies with CR-only line endings failing with "stream ended without a response" ([#11764](https://github.com/earendil-works/pi/issues/11764))
-- Fixed oversized MCP SSE responses keeping their HTTP connections open after the message-size limit rejected them ([#11729](https://github.com/earendil-works/pi/issues/11729))
-- Fixed MCP stdio server subprocesses surviving disconnect or pi exit on POSIX when the server's main process had already exited ([#11721](https://github.com/earendil-works/pi/issues/11721))
+- Fixed `OAuthCallbackServer.close()` waiting for minutes when the browser kept an unused connection open to the callback port, for example a preconnect. It now closes the remaining connections ([#11311](https://github.com/earendil-works/lingshu/issues/11311))
+- Fixed large MCP stdio messages being repeatedly copied and scanned as chunks arrived, causing slow tool responses ([#11761](https://github.com/earendil-works/lingshu/issues/11761))
+- Fixed MCP Streamable HTTP SSE replies with CR-only line endings failing with "stream ended without a response" ([#11764](https://github.com/earendil-works/lingshu/issues/11764))
+- Fixed oversized MCP SSE responses keeping their HTTP connections open after the message-size limit rejected them ([#11729](https://github.com/earendil-works/lingshu/issues/11729))
+- Fixed MCP stdio server subprocesses surviving disconnect or lingshu exit on POSIX when the server's main process had already exited ([#11721](https://github.com/earendil-works/lingshu/issues/11721))
 
 ## [1.5.0] - 2026-11-02
 
@@ -43,7 +43,7 @@
 ### Fixed
 
 - OAuth metadata parsing and `startAuthorization()` now accept only `http:` and `https:` URLs. Before, a server could supply a `file:` or custom protocol authorization endpoint (for example `search-ms:`), which the platform URL handler would launch on sign-in.
-- Fixed the excerpt of an HTTP error body in Streamable HTTP errors keeping the whole response body alive ([#9265](https://github.com/earendil-works/pi/issues/9265))
+- Fixed the excerpt of an HTTP error body in Streamable HTTP errors keeping the whole response body alive ([#9265](https://github.com/earendil-works/lingshu/issues/9265))
 
 ## [1.4.0] - 2026-10-21
 
@@ -53,28 +53,28 @@
 
 ### Breaking Changes
 
-- Changed `CallToolResult.structuredContent` from `Record<string, unknown>` to `unknown`: `callTool()` now accepts any JSON value as structured content, including arrays and `null`, as MCP 2026-07-28 allows, instead of failing with "Invalid MCP tools/call structured content" ([#10416](https://github.com/earendil-works/pi/issues/10416))
+- Changed `CallToolResult.structuredContent` from `Record<string, unknown>` to `unknown`: `callTool()` now accepts any JSON value as structured content, including arrays and `null`, as MCP 2026-07-28 allows, instead of failing with "Invalid MCP tools/call structured content" ([#10416](https://github.com/earendil-works/lingshu/issues/10416))
 
 ### Fixed
 
 - Fixed `authorizeMcp()` exchanging an authorization code whose `iss` parameter could not be checked because no authorization server metadata was discovered. It now throws `OAuthIssuerMismatchError`, whose `expected` is `undefined` in that case (RFC 9207). Reported by [@AizenvoltPrime](https://github.com/AizenvoltPrime)
-- Fixed `StreamableHttpTransport` retrying a request after an authorization refresh even though the caller had already cancelled it or it had timed out, so the server still executed it. `McpTransport.send()` now takes an optional `signal`, which `McpClient` aborts once a request settles ([#10598](https://github.com/earendil-works/pi/issues/10598))
+- Fixed `StreamableHttpTransport` retrying a request after an authorization refresh even though the caller had already cancelled it or it had timed out, so the server still executed it. `McpTransport.send()` now takes an optional `signal`, which `McpClient` aborts once a request settles ([#10598](https://github.com/earendil-works/lingshu/issues/10598))
 
 ## [1.1.0] - 2026-10-07
 
 ### Added
 
-- Added a `signal` option to `authorizeMcp()`, `registerClient()`, the token request functions, and the discovery functions, which aborts their requests. An aborted refresh no longer falls back to a new authorization ([#10565](https://github.com/earendil-works/pi/issues/10565))
+- Added a `signal` option to `authorizeMcp()`, `registerClient()`, the token request functions, and the discovery functions, which aborts their requests. An aborted refresh no longer falls back to a new authorization ([#10565](https://github.com/earendil-works/lingshu/issues/10565))
 
 ### Fixed
 
-- Fixed `StreamableHttpTransport.close()` calling `AuthProvider.token()`, which could refresh tokens over the network before the session DELETE and delay closing; the DELETE now reuses the token of the last request ([#10565](https://github.com/earendil-works/pi/issues/10565))
+- Fixed `StreamableHttpTransport.close()` calling `AuthProvider.token()`, which could refresh tokens over the network before the session DELETE and delay closing; the DELETE now reuses the token of the last request ([#10565](https://github.com/earendil-works/lingshu/issues/10565))
 
 ## [1.0.4] - 2026-10-05
 
 ### Fixed
 
-- Fixed dynamic client registration failing on OpenID Connect authorization servers with `invalid_redirect_uri` for loopback redirect URIs. `registerClient()` now sends `application_type` (MCP SEP-837), derived from `redirect_uris` when `OAuthClientMetadata.application_type` is not set: `native` for loopback hosts and custom schemes, otherwise `web` ([#10493](https://github.com/earendil-works/pi/issues/10493))
+- Fixed dynamic client registration failing on OpenID Connect authorization servers with `invalid_redirect_uri` for loopback redirect URIs. `registerClient()` now sends `application_type` (MCP SEP-837), derived from `redirect_uris` when `OAuthClientMetadata.application_type` is not set: `native` for loopback hosts and custom schemes, otherwise `web` ([#10493](https://github.com/earendil-works/lingshu/issues/10493))
 
 ## [1.0.3] - 2026-10-05
 
@@ -84,23 +84,23 @@
 
 ### Breaking Changes
 
-- `OAuthClientProvider.clientMetadataUrl` is replaced by `clientMetadataDocument(metadata)`, which returns the document URL and its redirect URI per authorization server, or `undefined` to register dynamically. It is called whenever no client information is stored, also when the server does not advertise support, and the document is no longer stored as client information ([#10302](https://github.com/earendil-works/pi/issues/10302))
+- `OAuthClientProvider.clientMetadataUrl` is replaced by `clientMetadataDocument(metadata)`, which returns the document URL and its redirect URI per authorization server, or `undefined` to register dynamically. It is called whenever no client information is stored, also when the server does not advertise support, and the document is no longer stored as client information ([#10302](https://github.com/earendil-works/lingshu/issues/10302))
 
 ### Added
 
-- `McpOAuthProviderOptions.clientMetadataDocument`, `OAuthCallbackServerOptions.extraPaths`, and a `path` argument for `OAuthCallbackServer.waitForCallback` that rejects responses on other paths ([#10302](https://github.com/earendil-works/pi/issues/10302))
+- `McpOAuthProviderOptions.clientMetadataDocument`, `OAuthCallbackServerOptions.extraPaths`, and a `path` argument for `OAuthCallbackServer.waitForCallback` that rejects responses on other paths ([#10302](https://github.com/earendil-works/lingshu/issues/10302))
 
 ## [1.0.0] - 2026-10-01
 
 ### Added
 
-- Added an `authorizationServerMetadataUrl` option to `authorizeMcp()` to use a configured authorization server metadata document instead of discovery ([#10172](https://github.com/earendil-works/pi/issues/10172)).
+- Added an `authorizationServerMetadataUrl` option to `authorizeMcp()` to use a configured authorization server metadata document instead of discovery ([#10172](https://github.com/earendil-works/lingshu/issues/10172)).
 - Added an `iss` option to `authorizeMcp()`. The authorization code is only exchanged when `iss` names the flow's authorization server, or is absent and the server's metadata does not set `authorization_response_iss_parameter_supported` (RFC 9207).
 - Added `stepUpScope()`, which combines the scopes of an `insufficient_scope` challenge with the scopes granted so far.
 
 ### Fixed
 
-- Fixed OAuth token and client registration responses with an empty or `null` optional field (such as `"scope": ""`) failing with `Invalid scope` and similar errors; such fields are now treated as absent ([#10266](https://github.com/earendil-works/pi/issues/10266)).
+- Fixed OAuth token and client registration responses with an empty or `null` optional field (such as `"scope": ""`) failing with `Invalid scope` and similar errors; such fields are now treated as absent ([#10266](https://github.com/earendil-works/lingshu/issues/10266)).
 - Fixed `expires_in: null` in a token response marking the access token as already expired.
 - Fixed invalid URLs in protected resource metadata aborting OAuth discovery instead of falling back to the MCP server's origin.
 - Fixed an empty requested scope, from `scope=""` in a `WWW-Authenticate` challenge or an empty `scopes_supported`, overriding the next scope source.
@@ -111,7 +111,7 @@
 
 ### Fixed
 
-- Fixed `StreamableHttpTransport` failing every request on Cloudflare Workers with `Illegal invocation` by calling `fetch`, including `UnauthorizedContext.fetch`, without a receiver ([#10188](https://github.com/earendil-works/pi/issues/10188))
+- Fixed `StreamableHttpTransport` failing every request on Cloudflare Workers with `Illegal invocation` by calling `fetch`, including `UnauthorizedContext.fetch`, without a receiver ([#10188](https://github.com/earendil-works/lingshu/issues/10188))
 
 ## [0.99.1] - 2026-09-29
 

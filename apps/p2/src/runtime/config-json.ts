@@ -1,4 +1,4 @@
-// Adapted from earendil-works/pi (MIT); see third-party/pi.LICENSE.
+// Adapted from earendil-works/lingshu (MIT); see third-party/lingshu.LICENSE.
 import { readFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { resolve } from "node:path";

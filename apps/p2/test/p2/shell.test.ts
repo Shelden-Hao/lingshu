@@ -11,9 +11,9 @@ import {
 	type ConversationView,
 	createRegistry,
 	Harness as DurableHarness,
-} from "@earendil-works/pi-durable";
-import { NodeExecutionEnv } from "@earendil-works/pi-durable/env/node";
-import { openNodeSqliteStorage } from "@earendil-works/pi-durable/storage/sqlite/node";
+} from "@lingshu/durable";
+import { NodeExecutionEnv } from "@lingshu/durable/env/node";
+import { openNodeSqliteStorage } from "@lingshu/durable/storage/sqlite/node";
 import { BACKGROUND_CONTEXT, follow } from "@p2/app/v1";
 import { Chat, SHELL_BUSY } from "../../plugins/chat/contract.ts";
 import chatWorker from "../../plugins/chat/worker.ts";

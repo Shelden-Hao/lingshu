@@ -77,13 +77,13 @@ import { splitErrorToolResultImages, transformMessages } from "./transform-messa
 
 /**
  * Resolve cache retention preference.
- * Defaults to "short" and uses PI_CACHE_RETENTION for backward compatibility.
+ * Defaults to "short" and uses LINGSHU_CACHE_RETENTION for backward compatibility.
  */
 function resolveCacheRetention(cacheRetention?: CacheRetention, env?: ProviderEnv): CacheRetention {
 	if (cacheRetention) {
 		return cacheRetention;
 	}
-	if (getProviderEnvValue("PI_CACHE_RETENTION", env) === "long") {
+	if (getProviderEnvValue("LINGSHU_CACHE_RETENTION", env) === "long") {
 		return "long";
 	}
 	return "short";
@@ -252,7 +252,7 @@ function getAnthropicCompat(model: Model<"anthropic-messages">) {
 
 /**
  * Message threads: the server keeps the conversation of a thread, so a request can continue
- * from the previous reply and send only the new messages. pi still builds the full request;
+ * from the previous reply and send only the new messages. lingshu still builds the full request;
  * `prepareThreadRequest()` compares it with the previous request of the session and sends
  * only the new part when nothing earlier changed.
  */
@@ -285,7 +285,7 @@ const NEW_THREAD_ERRORS: ReadonlySet<string> = new Set([
 /**
  * Sets a session's thread state, keeping at most `MAX_THREAD_STATE_ENTRIES` sessions.
  *
- * State is normally freed by `cleanupSessionResources(sessionId)` when a session ends, as pi's
+ * State is normally freed by `cleanupSessionResources(sessionId)` when a session ends, as lingshu's
  * coding agent does. The cap bounds memory for library users that never call it, for example a
  * server passing a new `sessionId` per conversation. Dropping the least recently updated session
  * is cheap: its thread has most likely expired on the server already (after a few minutes idle),
@@ -337,7 +337,7 @@ function hashThreadPrefix(
 		fallbacks,
 	]);
 	const conversation = JSON.stringify(messages, (key, value: unknown) => {
-		// Cache markers don't change what a message means, but they move: pi puts one on the newest
+		// Cache markers don't change what a message means, but they move: lingshu puts one on the newest
 		// message, so the message that had it in the last request has none in this one. Extensions
 		// may add markers anywhere too.
 		if (key === "cache_control") return undefined;
@@ -567,7 +567,7 @@ function assertRequestAuth(provider: string, apiKey: string | undefined, headers
  * Anthropic SDK client that never runs the SDK's own credential chain
  * (ANTHROPIC_PROFILE config files, federation env vars). Without this, every
  * client built with `apiKey: null, authToken: null` for header-owned auth would
- * also resolve and exchange SDK credentials behind pi's auth resolver.
+ * also resolve and exchange SDK credentials behind lingshu's auth resolver.
  */
 class PiAnthropic extends Anthropic {
 	protected override _shouldResolveDefaultCredentials(): boolean {
@@ -607,7 +607,7 @@ function getAnthropicFederation(
 }
 
 /**
- * The SDK caches the federated access token per client, but pi creates a client
+ * The SDK caches the federated access token per client, but lingshu creates a client
  * per request. Keep one client for the current federation config and fetch, and
  * clone it per request with `withOptions()`, which shares the token cache.
  */

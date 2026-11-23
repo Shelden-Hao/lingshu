@@ -1,9 +1,6 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { Context } from "@earendil-works/chord/context";
-import { withAbortSignal } from "@earendil-works/chord/context";
-import type { JsonValue } from "@earendil-works/chord/json";
 import {
 	createModels,
 	type FauxResponseFactory,
@@ -11,7 +8,10 @@ import {
 	fauxText,
 	fauxToolCall,
 	registerSessionResourceCleanup,
-} from "@earendil-works/pi-ai";
+} from "@lingshu/ai";
+import type { Context } from "@lingshu/chord/context";
+import { withAbortSignal } from "@lingshu/chord/context";
+import type { JsonValue } from "@lingshu/chord/json";
 import {
 	type Conversation,
 	type ConversationId,
@@ -25,8 +25,8 @@ import {
 	ProviderDoc,
 	type Storage,
 	type TaskId,
-} from "@earendil-works/pi-durable";
-import { obj } from "@earendil-works/pi-schema";
+} from "@lingshu/durable";
+import { obj } from "@lingshu/schema";
 import { describe, expect, it } from "vitest";
 import type { SessionImpl } from "../src/session/session.ts";
 import { openNodeSqliteStorage } from "../src/storage/sqlite/node.ts";
@@ -312,7 +312,7 @@ describe("Harness close", () => {
 	});
 
 	it("lets a new Harness open the same Storage once close resolved: no old invocation code runs", async () => {
-		const directory = await mkdtemp(join(tmpdir(), "pi-durable-lifecycle-"));
+		const directory = await mkdtemp(join(tmpdir(), "lingshu-durable-lifecycle-"));
 		try {
 			const path = join(directory, "session.sqlite");
 			const log: string[] = [];

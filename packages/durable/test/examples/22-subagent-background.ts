@@ -9,12 +9,12 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
-import type { AssistantMessage, FauxResponseStep } from "@earendil-works/pi-ai";
-import { createModels } from "@earendil-works/pi-ai/models";
-import { fauxAssistantMessage, fauxProvider, fauxText, fauxToolCall } from "@earendil-works/pi-ai/providers/faux";
-import { openaiProvider } from "@earendil-works/pi-ai/providers/openai";
-import { bool, obj, oneOf, opt, str } from "@earendil-works/pi-schema";
+import type { AssistantMessage, FauxResponseStep } from "@lingshu/ai";
+import { createModels } from "@lingshu/ai/models";
+import { fauxAssistantMessage, fauxProvider, fauxText, fauxToolCall } from "@lingshu/ai/providers/faux";
+import { openaiProvider } from "@lingshu/ai/providers/openai";
+import { BACKGROUND_CONTEXT } from "@lingshu/chord/context";
+import { bool, obj, oneOf, opt, str } from "@lingshu/schema";
 import {
 	AssistantEntry,
 	type ConversationId,
@@ -256,7 +256,7 @@ if (process.env.OPENAI_API_KEY !== undefined) {
 }
 const registry = createRegistry();
 registry.install(SubagentTools);
-const directory = await mkdtemp(join(tmpdir(), "pi-durable-subagents-"));
+const directory = await mkdtemp(join(tmpdir(), "lingshu-durable-subagents-"));
 const open = async () => {
 	const harness = await Harness.open(
 		await openNodeSqliteStorage(join(directory, "session.sqlite")),

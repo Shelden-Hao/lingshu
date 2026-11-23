@@ -8,10 +8,10 @@ import {
 	defineExtension,
 	type PromptInput,
 	section,
-} from "@earendil-works/pi-durable";
-import type { ExecutionEnv } from "@earendil-works/pi-durable/env";
-import { RemoteExecutionEnv } from "@earendil-works/pi-env";
-import { num, obj, opt, str } from "@earendil-works/pi-schema";
+} from "@lingshu/durable";
+import type { ExecutionEnv } from "@lingshu/durable/env";
+import { RemoteExecutionEnv } from "@lingshu/env";
+import { num, obj, opt, str } from "@lingshu/schema";
 import {
 	BACKGROUND_CONTEXT,
 	type Context,
@@ -47,15 +47,15 @@ import { envFiles, promptObserver } from "./environment.ts";
 import { expandPrompt } from "./templates.ts";
 
 /**
- * What the agent should know about the app it runs in, and where its private data lives (Pi Mobile's app guide,
+ * What the agent should know about the app it runs in, and where its private data lives (Lingshu Mobile's app guide,
  * adapted). `app` is p2's own directory (`WorkerInit.app`): its documentation and source, for questions about p2
- * itself. A remote session loads its skills from its environment's `~/.pi/p2/skills`.
+ * itself. A remote session loads its skills from its environment's `~/.lingshu/p2/skills`.
  */
 export function appGuide(app: string, dataDir: string, env?: string | null): string {
 	const skills = env
-		? `${JSON.stringify("~/.pi/p2/skills")} on the remote environment "${env}"`
+		? `${JSON.stringify("~/.lingshu/p2/skills")} on the remote environment "${env}"`
 		: JSON.stringify(join(dataDir, "skills"));
-	return `You are running inside Pi (p2, the plugin-based Pi Mobile).
+	return `You are running inside Lingshu (p2, the plugin-based Lingshu Mobile).
 Application source and documentation: ${JSON.stringify(app)} (not the session cwd). For app changes, first read docs/handoff.md and docs/p2-notes.md there; plugins live in plugins/<name>/. Read them only when working on the app itself.
 Private configuration/data: ${JSON.stringify(dataDir)}. Models: ${JSON.stringify(join(dataDir, "models.json"))}; settings: ${JSON.stringify(join(dataDir, "settings.json"))}; global instructions: ${JSON.stringify(join(dataDir, "AGENTS.md"))}; skills: ${skills}. Before editing, read ${JSON.stringify(join(app, "README.md"))}'s Configuration section and plugins/models/model-config.ts or src/runtime/settings.ts under the app directory. Valid configuration changes hot-reload; in-flight requests keep their captured configuration.
 Keep auth.json, owner keys/tokens and session data private. Never print, publish or commit credentials.`;
@@ -116,14 +116,14 @@ function promptLoads(
 				paths: async () => (env instanceof RemoteExecutionEnv ? remotePaths(env.connection) : nodePath),
 				skillsRoot: async () =>
 					remote
-						? await env.absolutePath("~/.pi/p2/skills", BACKGROUND_CONTEXT).then((result) => {
+						? await env.absolutePath("~/.lingshu/p2/skills", BACKGROUND_CONTEXT).then((result) => {
 								if (!result.ok) throw new Error(result.error.message);
 								return result.value;
 							})
 						: join(dataDir, "skills"),
 				promptsRoot: async () =>
 					remote
-						? await env.absolutePath("~/.pi/p2/prompts", BACKGROUND_CONTEXT).then((result) => {
+						? await env.absolutePath("~/.lingshu/p2/prompts", BACKGROUND_CONTEXT).then((result) => {
 								if (!result.ok) throw new Error(result.error.message);
 								return result.value;
 							})

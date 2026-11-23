@@ -9,9 +9,9 @@ import {
 	deny,
 	type Facet,
 	orderedEntries,
-} from "@earendil-works/chord";
-import type { Session } from "@earendil-works/p3/v1";
-import { LinkOpened, ServerRuntime, SessionRoute, WorkerRunners } from "@earendil-works/p3/v1/server";
+} from "@lingshu/chord";
+import type { Session } from "@lingshu/p3/v1";
+import { LinkOpened, ServerRuntime, SessionRoute, WorkerRunners } from "@lingshu/p3/v1/server";
 import type { P3Principal } from "./principals.ts";
 
 /**

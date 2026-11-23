@@ -1,6 +1,6 @@
 // The subagent tool's model listing: every available model or a filtered part, and close matches for a mistyped one.
 
-import type { Api, Model } from "@earendil-works/pi-ai";
+import type { Api, Model } from "@lingshu/ai";
 
 /** What the listing reads of a model. */
 export type ListedModel = Pick<Model<Api>, "provider" | "id" | "name">;

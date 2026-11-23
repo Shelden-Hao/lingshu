@@ -9,7 +9,7 @@
 
 import type { IncomingMessage } from "node:http";
 import type { Duplex } from "node:stream";
-import type { TelemetryCarrier, TelemetryContext } from "@earendil-works/pi-telemetry";
+import type { TelemetryCarrier, TelemetryContext } from "@lingshu/telemetry";
 import {
 	awaitWithContext,
 	type Context,

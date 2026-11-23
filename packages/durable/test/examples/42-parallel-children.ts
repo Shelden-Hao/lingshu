@@ -2,11 +2,12 @@
 // process while they run. Each wake adds the ended calls to its checkpoint; the last one collects every result by key.
 // Run from packages/durable:
 //   node --conditions=source --experimental-strip-types test/examples/42-parallel-children.ts
-import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
-import type { ToolResultMessage } from "@earendil-works/pi-ai";
-import { createModels } from "@earendil-works/pi-ai/models";
-import { fauxAssistantMessage, fauxProvider, fauxToolCall } from "@earendil-works/pi-ai/providers/faux";
-import { obj, str } from "@earendil-works/pi-schema";
+
+import type { ToolResultMessage } from "@lingshu/ai";
+import { createModels } from "@lingshu/ai/models";
+import { fauxAssistantMessage, fauxProvider, fauxToolCall } from "@lingshu/ai/providers/faux";
+import { BACKGROUND_CONTEXT } from "@lingshu/chord/context";
+import { obj, str } from "@lingshu/schema";
 import {
 	createRegistry,
 	defineExtension,

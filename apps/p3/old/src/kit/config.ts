@@ -1,4 +1,4 @@
-// A Pi's own config, `pi.json` in its data directory: its id (random, made at its first start: what tells this Pi from
+// A Lingshu's own config, `lingshu.json` in its data directory: its id (random, made at its first start: what tells this Lingshu from
 // another on the same machine, for instance in the name of its sign-in cookie) and the port it listens on (kept from
 // its first start, so its address stays the same).
 
@@ -7,7 +7,7 @@ import { readFile } from "node:fs/promises";
 import { ifExists } from "./layout.ts";
 import { writeSecret } from "./secrets.ts";
 
-/** A Pi's config: its id, and its port once it listened on one of its own. */
+/** A Lingshu's config: its id, and its port once it listened on one of its own. */
 export type PiConfig = { readonly id: string; readonly port?: number };
 
 /** The config in the file `path`, made with a fresh id when the file is missing. */
@@ -19,7 +19,7 @@ export async function openConfig(path: string): Promise<PiConfig> {
 	return config;
 }
 
-/** The config in the file `path`; `undefined` when the Pi never started. */
+/** The config in the file `path`; `undefined` when the Lingshu never started. */
 export async function readConfig(path: string): Promise<PiConfig | undefined> {
 	const text = await ifExists(readFile(path, "utf8"));
 	if (text === undefined) return undefined;

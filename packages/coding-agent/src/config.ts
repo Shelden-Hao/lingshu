@@ -3,6 +3,7 @@ import { createRequire } from "module";
 import { homedir } from "os";
 import { basename, dirname, join, resolve, sep, win32 } from "path";
 import { fileURLToPath } from "url";
+import { type Brand, type BrandPackageJson, brandEnv, inheritLegacyEnv, resolveBrand } from "./branding.ts";
 import { spawnProcessSync } from "./utils/child-process.ts";
 import { normalizePath } from "./utils/paths.ts";
 import { stripBom } from "./utils/text.ts";
@@ -335,11 +336,11 @@ export function getSelfUpdateCommand(
 }
 
 /**
- * The self-update command configured by the user: `PI_SELF_UPDATE_COMMAND` (whitespace-separated
+ * The self-update command configured by the user: `LINGSHU_SELF_UPDATE_COMMAND` (whitespace-separated
  * argv, no quoting), else the global `selfUpdateCommand` setting. Overrides install-method detection.
  */
 export function getConfiguredSelfUpdateArgv(setting: string[] | undefined): string[] | undefined {
-	const fromEnv = process.env.PI_SELF_UPDATE_COMMAND?.trim().split(/\s+/).filter(Boolean);
+	const fromEnv = process.env.LINGSHU_SELF_UPDATE_COMMAND?.trim().split(/\s+/).filter(Boolean);
 	if (fromEnv?.length) return fromEnv;
 	return setting?.length ? setting : undefined;
 }
@@ -368,7 +369,7 @@ export function getSelfUpdateUnavailableInstruction(
 	const method = detectInstallMethod();
 	const target = normalizeSelfUpdatePackageTarget(updatePackageTarget);
 	if (method === "bun-binary") {
-		return `Download from: https://github.com/earendil-works/pi/releases/latest`;
+		return `Download from: https://github.com/earendil-works/lingshu/releases/latest`;
 	}
 	const command = getSelfUpdateCommandForMethod(method, packageName, target, npmCommand);
 	// Path-based detection also matches installs that only live under a package manager's directory,
@@ -417,7 +418,7 @@ export function findNodePackageDir(startDir: string): string {
 
 export function getPackageDir(): string {
 	// Allow override via environment variable (useful for Nix/Guix where store paths tokenize poorly)
-	const envDir = process.env.PI_PACKAGE_DIR;
+	const envDir = process.env.LINGSHU_PACKAGE_DIR;
 	if (envDir) {
 		return normalizePath(envDir);
 	}
@@ -537,7 +538,7 @@ export function resolveCodemodeWorkerSpecifier(
 let codemodeWorkerDataUrl: URL | undefined;
 
 /**
- * Get the codemode worker entry, or undefined to use the worker that ships next to pi-codemode.
+ * Get the codemode worker entry, or undefined to use the worker that ships next to lingshu-codemode.
  * The Bun and Node release builds both pass the worker as an extra entrypoint.
  */
 export function getCodemodeWorkerSpecifier(): string | URL | undefined {
@@ -554,7 +555,7 @@ export function getCodemodeWorkerSpecifier(): string | URL | undefined {
 export type InstallChange = { kind: "updated"; version: string } | { kind: "removed" };
 
 /**
- * Detect that the package this process runs from changed on disk, for example after `pi update`
+ * Detect that the package this process runs from changed on disk, for example after `lingshu update`
  * in another terminal. Code loaded on demand can then be missing or from another version.
  *
  * Checks the package.json read at startup. Resolving it again would walk up past a deleted install
@@ -575,16 +576,11 @@ export function detectInstallChange(packageJsonPath = startupPackageJsonPath): I
 }
 
 // =============================================================================
-// App Config (from package.json piConfig)
+// App Config (from package.json brand block, see branding.ts)
 // =============================================================================
 
-interface PackageJson {
-	name?: string;
+interface PackageJson extends BrandPackageJson {
 	version?: string;
-	piConfig?: {
-		name?: string;
-		configDir?: string;
-	};
 }
 
 let pkg: PackageJson = {};
@@ -599,34 +595,45 @@ try {
 	if (err.code !== "ENOENT") throw e;
 }
 
-const piConfigName: string | undefined = pkg.piConfig?.name;
-export const PACKAGE_NAME: string = pkg.name || "@earendil-works/pi-coding-agent";
-export const APP_NAME: string = piConfigName || "pi";
-export const APP_TITLE: string = piConfigName ? APP_NAME : "π";
-export const CONFIG_DIR_NAME: string = pkg.piConfig?.configDir || ".pi";
+/**
+ * Brand identity: product name, config directory, environment prefix, logo. Resolved from
+ * environment overrides, then the package.json `brand` block, then the defaults in branding.ts.
+ */
+export const BRAND: Brand = resolveBrand(pkg);
+// Existing installations keep working: PI_* vars are copied to <ENV_PREFIX>_* when not already set.
+inheritLegacyEnv(BRAND);
+
+export const PACKAGE_NAME: string = pkg.name || "@lingshu/coding-agent";
+export const APP_NAME: string = BRAND.name;
+export const APP_TITLE: string = BRAND.title;
+export const APP_DISPLAY_NAME: string = BRAND.displayName;
+export const APP_TAGLINE: string = BRAND.tagline;
+export const HOMEPAGE: string = BRAND.homepage;
+export const CONFIG_DIR_NAME: string = BRAND.configDir;
+/** Prefix of every environment variable this product reads, e.g. `LINGSHU` for `LINGSHU_DEBUG_REDRAW`. */
+export const ENV_PREFIX: string = BRAND.envPrefix;
 export const VERSION: string = pkg.version || "0.0.0";
 
-// e.g., PI_CODING_AGENT_DIR or TAU_CODING_AGENT_DIR
-export const ENV_AGENT_DIR = `${APP_NAME.toUpperCase()}_CODING_AGENT_DIR`;
-export const ENV_SESSION_DIR = `${APP_NAME.toUpperCase()}_CODING_AGENT_SESSION_DIR`;
-
+// e.g., LINGSHU_CODING_AGENT_DIR (LINGSHU_CODING_AGENT_DIR still works through inheritLegacyEnv)
+export const ENV_AGENT_DIR = brandEnv(BRAND, "CODING_AGENT_DIR");
+export const ENV_SESSION_DIR = brandEnv(BRAND, "CODING_AGENT_SESSION_DIR");
 export function expandTildePath(path: string): string {
 	return normalizePath(path);
 }
 
-const DEFAULT_SHARE_VIEWER_URL = "https://pi.dev/session/";
+const DEFAULT_SHARE_VIEWER_URL = BRAND.shareViewerUrl;
 
 /** Get the share viewer URL for a gist ID. */
 export function getShareViewerUrl(gistId: string): string {
-	const baseUrl = process.env.PI_SHARE_VIEWER_URL || DEFAULT_SHARE_VIEWER_URL;
+	const baseUrl = process.env[brandEnv(BRAND, "SHARE_VIEWER_URL")] || DEFAULT_SHARE_VIEWER_URL;
 	return `${baseUrl}#${gistId}`;
 }
 
 // =============================================================================
-// User Config Paths (~/.pi/agent/*)
+// User Config Paths (~/<configDir>/agent/*)
 // =============================================================================
 
-/** Get the agent config directory (e.g., ~/.pi/agent/) */
+/** Get the agent config directory (e.g., ~/.lingshu/agent/) */
 export function getAgentDir(): string {
 	const envDir = process.env[ENV_AGENT_DIR];
 	if (envDir) {

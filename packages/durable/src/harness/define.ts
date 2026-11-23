@@ -1,4 +1,4 @@
-import type { JsonValue } from "@earendil-works/chord/json";
+import type { JsonValue } from "@lingshu/chord/json";
 import type { Task } from "../types.ts";
 import type {
 	AnyTask,

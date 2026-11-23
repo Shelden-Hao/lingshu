@@ -2,12 +2,12 @@ import { spawn } from "node:child_process";
 import { mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { Context } from "@earendil-works/chord/context";
-import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
-import type { ToolExecutionApi } from "@earendil-works/pi-durable";
-import type { ExecutionEnv, FileError, Result } from "@earendil-works/pi-durable/env";
-import { NodeExecutionEnv } from "@earendil-works/pi-durable/env/node";
-import { createBashTool, createReadTool } from "@earendil-works/pi-durable/tools";
+import type { Context } from "@lingshu/chord/context";
+import { BACKGROUND_CONTEXT } from "@lingshu/chord/context";
+import type { ToolExecutionApi } from "@lingshu/durable";
+import type { ExecutionEnv, FileError, Result } from "@lingshu/durable/env";
+import { NodeExecutionEnv } from "@lingshu/durable/env/node";
+import { createBashTool, createReadTool } from "@lingshu/durable/tools";
 import { afterAll, describe, expect, it } from "vitest";
 import { Connection } from "../src/connection.ts";
 import { RemoteExecutionEnv } from "../src/remote-env.ts";
@@ -22,12 +22,12 @@ afterAll(() => {
 });
 
 function pair(): { local: ExecutionEnv; remote: ExecutionEnv; roots: [string, string] } {
-	const localRoot = mkdtempSync(join(tmpdir(), "pi-env-local-"));
-	const remoteRoot = mkdtempSync(join(tmpdir(), "pi-env-remote-"));
+	const localRoot = mkdtempSync(join(tmpdir(), "lingshu-env-local-"));
+	const remoteRoot = mkdtempSync(join(tmpdir(), "lingshu-env-remote-"));
 	dirs.push(localRoot, remoteRoot);
 	return {
 		local: new NodeExecutionEnv({ cwd: localRoot }),
-		remote: new RemoteExecutionEnv({ connection, id: "pi-env:test", cwd: remoteRoot }),
+		remote: new RemoteExecutionEnv({ connection, id: "lingshu-env:test", cwd: remoteRoot }),
 		roots: [localRoot, remoteRoot],
 	};
 }

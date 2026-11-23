@@ -1,8 +1,8 @@
 // Owner notices (browser-safe): errors and results the server reports to the owner (refused reloads, failed workers),
 // served by the logs plugin and shown by every owner page and TUI.
 
-import { method, remote } from "@earendil-works/chord";
-import { arr, num, obj, str } from "@earendil-works/pi-schema";
+import { method, remote } from "@lingshu/chord";
+import { arr, num, obj, str } from "@lingshu/schema";
 import { serverHost } from "./chord.ts";
 
 export const NoticesSchema = arr(

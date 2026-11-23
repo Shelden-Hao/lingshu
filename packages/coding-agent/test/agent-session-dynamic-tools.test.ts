@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { getModel } from "@earendil-works/pi-ai/compat";
+import { getModel } from "@lingshu/ai/compat";
 import { Type } from "typebox";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { DefaultResourceLoader } from "../src/core/resource-loader.ts";
@@ -15,7 +15,7 @@ describe("AgentSession dynamic tool registration", () => {
 	let agentDir: string;
 
 	beforeEach(() => {
-		tempDir = join(tmpdir(), `pi-dynamic-tool-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+		tempDir = join(tmpdir(), `lingshu-dynamic-tool-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 		agentDir = join(tempDir, "agent");
 		mkdirSync(agentDir, { recursive: true });
 	});
@@ -36,8 +36,8 @@ describe("AgentSession dynamic tool registration", () => {
 			agentDir,
 			settingsManager,
 			extensionFactories: [
-				(pi) => {
-					pi.registerTool(
+				(lingshu) => {
+					lingshu.registerTool(
 						createBashTool(tempDir, {
 							spawnHook: (ctx) => {
 								sessionEnv = ctx.env;
@@ -45,7 +45,7 @@ describe("AgentSession dynamic tool registration", () => {
 							},
 						}),
 					);
-					pi.registerTool({
+					lingshu.registerTool({
 						...createBashTool(tempDir, {
 							exposeSessionEnvironment: false,
 							spawnHook: (ctx) => {
@@ -78,20 +78,20 @@ describe("AgentSession dynamic tool registration", () => {
 		);
 		await bashTool.execute("bash-env", { command: "printf ok" });
 		expect(sessionEnv).toMatchObject({
-			PI_SESSION_ID: session.sessionId,
-			PI_SESSION_FILE: session.sessionFile,
-			PI_PROVIDER: model.provider,
-			PI_MODEL: model.id,
-			PI_REASONING_LEVEL: session.thinkingLevel,
+			LINGSHU_SESSION_ID: session.sessionId,
+			LINGSHU_SESSION_FILE: session.sessionFile,
+			LINGSHU_PROVIDER: model.provider,
+			LINGSHU_MODEL: model.id,
+			LINGSHU_REASONING_LEVEL: session.thinkingLevel,
 		});
 
 		const optedOutBashTool = session.agent.state.tools.find((tool) => tool.name === "bash_without_session_env")!;
 		await optedOutBashTool.execute("bash-no-env", { command: "printf ok" });
-		expect(optedOutEnv).not.toHaveProperty("PI_SESSION_ID");
-		expect(optedOutEnv).not.toHaveProperty("PI_SESSION_FILE");
-		expect(optedOutEnv).not.toHaveProperty("PI_PROVIDER");
-		expect(optedOutEnv).not.toHaveProperty("PI_MODEL");
-		expect(optedOutEnv).not.toHaveProperty("PI_REASONING_LEVEL");
+		expect(optedOutEnv).not.toHaveProperty("LINGSHU_SESSION_ID");
+		expect(optedOutEnv).not.toHaveProperty("LINGSHU_SESSION_FILE");
+		expect(optedOutEnv).not.toHaveProperty("LINGSHU_PROVIDER");
+		expect(optedOutEnv).not.toHaveProperty("LINGSHU_MODEL");
+		expect(optedOutEnv).not.toHaveProperty("LINGSHU_REASONING_LEVEL");
 
 		session.dispose();
 	});
@@ -105,9 +105,9 @@ describe("AgentSession dynamic tool registration", () => {
 			agentDir,
 			settingsManager,
 			extensionFactories: [
-				(pi) => {
-					pi.on("session_start", () => {
-						pi.registerTool({
+				(lingshu) => {
+					lingshu.on("session_start", () => {
+						lingshu.registerTool({
 							name: "dynamic_tool",
 							label: "Dynamic Tool",
 							description: "Tool registered from session_start",
@@ -217,9 +217,9 @@ describe("AgentSession dynamic tool registration", () => {
 			agentDir,
 			settingsManager,
 			extensionFactories: [
-				(pi) => {
-					pi.on("session_start", () => {
-						pi.registerTool({
+				(lingshu) => {
+					lingshu.on("session_start", () => {
+						lingshu.registerTool({
 							name: "hidden_tool",
 							label: "Hidden Tool",
 							description: "Description should not appear in available tools",

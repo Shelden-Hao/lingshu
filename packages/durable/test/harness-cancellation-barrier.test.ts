@@ -1,4 +1,4 @@
-import type { Context } from "@earendil-works/chord/context";
+import type { Context } from "@lingshu/chord/context";
 import {
 	type CommitResult,
 	createSession,
@@ -7,7 +7,7 @@ import {
 	type Seq,
 	type StorageWrite,
 	type TaskId,
-} from "@earendil-works/pi-durable";
+} from "@lingshu/durable";
 import { describe, expect, it } from "vitest";
 import { commitWrites } from "../src/testing/commit-writes.ts";
 import { context, flush } from "./session-support.ts";

@@ -21,8 +21,8 @@ import {
 	opt,
 	str,
 	union,
-} from "@earendil-works/chord";
-import type { Context } from "@earendil-works/chord/context";
+} from "@lingshu/chord";
+import type { Context } from "@lingshu/chord/context";
 import {
 	Authenticators,
 	cookie,
@@ -32,7 +32,7 @@ import {
 	type Provenance,
 	readCookie,
 	readSignedCookie,
-} from "@earendil-works/chord/http";
+} from "@lingshu/chord/http";
 import { P3Principal } from "../principals.ts";
 import { hashToken, matchesHash, newToken } from "./secrets.ts";
 
@@ -71,12 +71,12 @@ export const SignIns = local("p3.sign-ins", {
 });
 
 /**
- * The sign-in cookie of one Pi: its name, which holds the Pi's id (a browser shares cookies between the ports of one
+ * The sign-in cookie of one Lingshu: its name, which holds the Lingshu's id (a browser shares cookies between the ports of one
  * host, so two Pis on a machine need two names), and the secret that signs it.
  */
 export type SignInCookie = { readonly name: string; readonly secret: string };
 
-/** The sign-in cookie of the Pi `id`, signed with `secret`. */
+/** The sign-in cookie of the Lingshu `id`, signed with `secret`. */
 export function signInCookieOf(id: string, secret: string): SignInCookie {
 	return { name: `p3-${id}`, secret };
 }

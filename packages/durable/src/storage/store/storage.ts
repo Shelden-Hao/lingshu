@@ -10,10 +10,10 @@ import {
 	type SeriesCommit,
 	type Store,
 	StoreOwnerTables,
-} from "@earendil-works/chord";
-import type { Context } from "@earendil-works/chord/context";
-import type { JsonValue } from "@earendil-works/chord/json";
-import type { SqliteExecutor } from "@earendil-works/chord/sqlite";
+} from "@lingshu/chord";
+import type { Context } from "@lingshu/chord/context";
+import type { JsonValue } from "@lingshu/chord/json";
+import type { SqliteExecutor } from "@lingshu/chord/sqlite";
 import { StorageRequestError } from "../../errors.ts";
 import { idFromNumber, seqFromNumber } from "../../ids.ts";
 import type {

@@ -43,8 +43,8 @@ export function settledCalls(callId: string, details: unknown): readonly NestedC
 	return calls;
 }
 
-/** Code mode's internal tools' prefix (`pi.codemode.models.classify`): scripts call them by the rest. */
-const INTERNAL = /^pi\.codemode\./;
+/** Code mode's internal tools' prefix (`lingshu.codemode.models.classify`): scripts call them by the rest. */
+const INTERNAL = /^lingshu\.codemode\./;
 
 /**
  * A script call's own calls: the settled list from its result's details (none when it is malformed, rather than wrong

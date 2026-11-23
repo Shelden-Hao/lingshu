@@ -37,15 +37,15 @@ test("builds revision scoped storage keys", () => {
 	);
 });
 
-test("orders Pi versions with semver precedence", () => {
+test("orders Lingshu versions with semver precedence", () => {
 	assert.ok(compareModelCatalogPiVersions("0.85.0", "0.84.4") > 0);
 	assert.ok(compareModelCatalogPiVersions("0.85.0-rc.1", "0.85.0") < 0);
 	assert.ok(compareModelCatalogPiVersions("0.85.0-rc.2", "0.85.0-rc.10") < 0);
 	assert.equal(compareModelCatalogPiVersions("v1.0.0", "1.0.0+build"), 0);
-	assert.throws(() => compareModelCatalogPiVersions("0.85", "0.85.0"), /Invalid Pi version/);
+	assert.throws(() => compareModelCatalogPiVersions("0.85", "0.85.0"), /Invalid Lingshu version/);
 });
 
-test("selects the newest catalog a Pi version supports", () => {
+test("selects the newest catalog a Lingshu version supports", () => {
 	// Regression test for #9099: released clients before 0.85.0 cannot use the mixed-API catalog.
 	assert.equal(selectModelCatalog(index, "0.84.4")?.revision, legacyRevision);
 	assert.equal(selectModelCatalog(index, "0.85.0-rc.1")?.revision, legacyRevision);
@@ -55,16 +55,16 @@ test("selects the newest catalog a Pi version supports", () => {
 	assert.equal(selectModelCatalog(index, undefined)?.revision, mixedApiRevision);
 });
 
-test("serves Pi user agents the catalog for their version", () => {
+test("serves Lingshu user agents the catalog for their version", () => {
 	// Regression test for #9099: released clients identify themselves only by User-Agent.
 	assert.deepEqual(
 		parseModelCatalogRequest(
 			"https://pi.dev/api/models/providers/openrouter?types=chat%2Cimage",
-			"pi/0.84.4 (linux; node/v22.0.0; x64)",
+			"lingshu/0.84.4 (linux; node/v22.0.0; x64)",
 		),
 		{ kind: "catalog", piVersion: "0.84.4", representation: "typed" },
 	);
-	assert.deepEqual(parseModelCatalogRequest("https://pi.dev/api/models", "pi/0.84.4"), {
+	assert.deepEqual(parseModelCatalogRequest("https://pi.dev/api/models", "lingshu/0.84.4"), {
 		kind: "catalog",
 		piVersion: "0.84.4",
 		representation: "legacy",
@@ -73,7 +73,10 @@ test("serves Pi user agents the catalog for their version", () => {
 
 test("serves explicit and unversioned catalog requests", () => {
 	assert.deepEqual(
-		parseModelCatalogRequest("https://pi.dev/api/models?pi-version=0.83.0", "pi/0.85.1 (linux; node/v22.0.0; x64)"),
+		parseModelCatalogRequest(
+			"https://pi.dev/api/models?lingshu-version=0.83.0",
+			"lingshu/0.85.1 (linux; node/v22.0.0; x64)",
+		),
 		{ kind: "catalog", piVersion: "0.83.0", representation: "legacy" },
 	);
 	assert.deepEqual(parseModelCatalogRequest("https://pi.dev/api/models?types=chat", "curl/8.0.0"), {
@@ -81,7 +84,7 @@ test("serves explicit and unversioned catalog requests", () => {
 		piVersion: undefined,
 		representation: "typed",
 	});
-	assert.deepEqual(parseModelCatalogRequest("https://pi.dev/api/models", "pi/latest"), {
+	assert.deepEqual(parseModelCatalogRequest("https://pi.dev/api/models", "lingshu/latest"), {
 		kind: "catalog",
 		piVersion: undefined,
 		representation: "legacy",
@@ -89,11 +92,11 @@ test("serves explicit and unversioned catalog requests", () => {
 });
 
 test("rejects invalid catalog request parameters", () => {
-	assert.deepEqual(parseModelCatalogRequest("https://pi.dev/api/models?pi-version=latest", undefined), {
+	assert.deepEqual(parseModelCatalogRequest("https://pi.dev/api/models?lingshu-version=latest", undefined), {
 		kind: "invalid",
-		error: "Invalid Pi version.",
+		error: "Invalid Lingshu version.",
 	});
-	assert.deepEqual(parseModelCatalogRequest("https://pi.dev/api/models?types=", "pi/0.84.4"), {
+	assert.deepEqual(parseModelCatalogRequest("https://pi.dev/api/models?types=", "lingshu/0.84.4"), {
 		kind: "invalid",
 		error: "Invalid model types.",
 	});

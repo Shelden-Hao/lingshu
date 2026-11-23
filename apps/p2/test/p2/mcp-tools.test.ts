@@ -1,8 +1,8 @@
-// MCP tools as Durable tools (plugins/mcp/tools.ts): pi's names, with the hash suffix for every colliding name whatever
-// the order; pi's exposures (code mode only by default, `tool_search` without code mode); one composing extension whose
-// wraps give each conversation the servers its location's lease uses, each with its namespace, pi's one-line summary
+// MCP tools as Durable tools (plugins/mcp/tools.ts): lingshu's names, with the hash suffix for every colliding name whatever
+// the order; lingshu's exposures (code mode only by default, `tool_search` without code mode); one composing extension whose
+// wraps give each conversation the servers its location's lease uses, each with its namespace, lingshu's one-line summary
 // and instructions; variants of one tool at two locations, the session's with the plain name; calls only as the variant
-// the caller's instance describes; the `mcp_servers` section per conversation without code mode; pi's `CallToolResult`
+// the caller's instance describes; the `mcp_servers` section per conversation without code mode; lingshu's `CallToolResult`
 // as every tool's structured output, whole (error results included); error results with text; and the model's own
 // calls' results cut, with the full text saved where the conversation works.
 import assert from "node:assert/strict";
@@ -17,9 +17,9 @@ import type {
 	PromptSection,
 	ToolExecutionApi,
 	ToolRegistration,
-} from "@earendil-works/pi-durable";
-import { NodeExecutionEnv } from "@earendil-works/pi-durable/env/node";
-import { type CallToolResult, createMcpResultSchema, MCP_OUTPUT_MAX_BYTES } from "@earendil-works/pi-mcp";
+} from "@lingshu/durable";
+import { NodeExecutionEnv } from "@lingshu/durable/env/node";
+import { type CallToolResult, createMcpResultSchema, MCP_OUTPUT_MAX_BYTES } from "@lingshu/mcp";
 import { BACKGROUND_CONTEXT, type Location } from "@p2/app/v1";
 import type { P2Tool } from "@p2/app/v1/worker";
 import type { Instance, McpTool, SessionLease } from "../../plugins/mcp/contract.ts";
@@ -83,7 +83,7 @@ const registrations = (tools: readonly ServerTool[], reach: McpReach = "codemode
 };
 const names = (tools: readonly ServerTool[]) => registrations(tools).map((registration) => registration.name);
 
-test("tool names: pi's, and every tool of a colliding name gets the hash suffix whatever the order", () => {
+test("tool names: lingshu's, and every tool of a colliding name gets the hash suffix whatever the order", () => {
 	const plain = [
 		{ server: "docs", tool: tool("search") },
 		{ server: "docs", tool: tool("a-b") },
@@ -117,11 +117,11 @@ test("tool names: a collision across servers suffixes both tools too", () => {
 	assert.equal(names([{ server: "a", tool: tool("b__c") }])[0], "mcp__a__b__c");
 });
 
-test("exposure: as pi's default, code mode only, deferred so the codemode section leaves the tools out", () => {
+test("exposure: as lingshu's default, code mode only, deferred so the codemode section leaves the tools out", () => {
 	const tools = [{ server: "docs", tool: tool("search") }];
 	const [scripted] = registrations(tools);
 	assert.deepEqual([scripted!.deferred, scripted!.callers], [true, ["tools"]]);
-	// Without code mode (pi's fallback), `tool_search` loads them for the model.
+	// Without code mode (lingshu's fallback), `tool_search` loads them for the model.
 	const [loaded] = registrations(tools, "tool_search");
 	assert.deepEqual([loaded!.deferred, loaded!.callers], [true, undefined]);
 });
@@ -174,7 +174,7 @@ async function sectionView(extension: Extension<P2Tool>, conversationId: number)
 	};
 }
 
-test("namespaces: each server's own, with pi's summary, then where the tools are", async () => {
+test("namespaces: each server's own, with lingshu's summary, then where the tools are", async () => {
 	const extension = extensionOf([
 		instance("app", { tools: [tool("read")], instructions: "Read before you write.\nNever write twice." }),
 		instance("my-docs", { auth: "oauth", tools: [tool("search")], description: " Searches the docs. " }),
@@ -194,7 +194,7 @@ test("namespaces: each server's own, with pi's summary, then where the tools are
 		description: 'Read before you write.\nTools of the MCP server "app" (find them with searchTools()).',
 		instructions: "Read before you write.\nNever write twice.",
 	});
-	// As in pi, a summary is cut at 250 characters.
+	// As in lingshu, a summary is cut at 250 characters.
 	assert.equal(namespaces[1]!.description.split("\n")[0], `${"x".repeat(249)}…`);
 	// The configured description wins; an OAuth server says how the user signs in, signed in or not.
 	assert.match(namespaces[2]!.description, /^Searches the docs\.\nTools of the MCP server "my-docs"/);
@@ -419,7 +419,7 @@ function registration(
 	return { registered: registered!, calls, run: () => registered!.execute({ q: "x" }, api, BACKGROUND_CONTEXT) };
 }
 
-test("results: pi's CallToolResult without _meta for scripts, error results included; errors always have text", async () => {
+test("results: lingshu's CallToolResult without _meta for scripts, error results included; errors always have text", async () => {
 	const schema = { type: "object", properties: { hits: { type: "number" } } };
 	const structured = {
 		content: [{ type: "text" as const, text: "2 hits" }],
@@ -487,7 +487,7 @@ test("results: the model's own calls get them cut, the full text saved where it 
 	assert.match(only(nowhere.output), /\[Could not save the full output: no execution environment\]$/);
 });
 
-test("results: pi's model-facing content, binary resources saved where the conversation works for the model's own calls", async () => {
+test("results: lingshu's model-facing content, binary resources saved where the conversation works for the model's own calls", async () => {
 	const pdf = {
 		uri: "file:///r/report.pdf",
 		mimeType: "application/pdf",

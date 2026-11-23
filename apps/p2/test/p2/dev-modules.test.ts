@@ -28,7 +28,7 @@ test("load hooks hash actual project/workspace sources; only loaded content chan
 	await writeFile(join(project, "tsconfig.json"), JSON.stringify({ compilerOptions: { paths: {} } }));
 	await writeFile(
 		join(directory, "tsconfig.json"),
-		JSON.stringify({ compilerOptions: { paths: { "@earendil-works/dev-probe": ["packages/probe/src/index.ts"] } } }),
+		JSON.stringify({ compilerOptions: { paths: { "@lingshu/dev-probe": ["packages/probe/src/index.ts"] } } }),
 	);
 	const runtime = join(project, "src/runtime/probe.ts");
 	const workspace = join(directory, "packages/probe/src/index.ts");
@@ -39,7 +39,7 @@ test("load hooks hash actual project/workspace sources; only loaded content chan
 	const entry = join(project, "src/hosts/entry.ts");
 	await writeFile(
 		entry,
-		'import "../runtime/probe.ts"; import "@earendil-works/dev-probe"; import "../../plugins/reloadable.ts?chord2-reload=1"; setInterval(() => {}, 1000);',
+		'import "../runtime/probe.ts"; import "@lingshu/dev-probe"; import "../../plugins/reloadable.ts?chord2-reload=1"; setInterval(() => {}, 1000);',
 	);
 	const child = fork(entry, [], {
 		execArgv: ["--import", join(project, "src/source.ts")],

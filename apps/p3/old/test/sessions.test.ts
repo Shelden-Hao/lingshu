@@ -7,9 +7,9 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, it } from "node:test";
-import { isChordError } from "@earendil-works/chord";
-import { BACKGROUND_CONTEXT as context } from "@earendil-works/chord/context";
-import type { P3Principal } from "@earendil-works/p3/v1";
+import { isChordError } from "@lingshu/chord";
+import { BACKGROUND_CONTEXT as context } from "@lingshu/chord/context";
+import type { P3Principal } from "@lingshu/p3/v1";
 import {
 	CODING,
 	SessionFacts,

@@ -22,10 +22,10 @@ describe("normalizeChangelogLinks", () => {
 
 		expect(normalizeChangelogLinks(markdown, entry)).toBe(
 			[
-				"[Project Trust](https://github.com/earendil-works/pi/blob/v0.79.0/packages/coding-agent/README.md#project-trust)",
-				"[Extensions](https://github.com/earendil-works/pi/blob/v0.79.0/packages/coding-agent/docs/extensions.md#project_trust)",
-				"[Examples](https://github.com/earendil-works/pi/tree/v0.79.0/packages/coding-agent/examples/extensions/)",
-				"[Root README](https://github.com/earendil-works/pi/blob/v0.79.0/README.md#supply-chain-hardening)",
+				"[Project Trust](https://github.com/earendil-works/lingshu/blob/v0.79.0/packages/coding-agent/README.md#project-trust)",
+				"[Extensions](https://github.com/earendil-works/lingshu/blob/v0.79.0/packages/coding-agent/docs/extensions.md#project_trust)",
+				"[Examples](https://github.com/earendil-works/lingshu/tree/v0.79.0/packages/coding-agent/examples/extensions/)",
+				"[Root README](https://github.com/earendil-works/lingshu/blob/v0.79.0/README.md#supply-chain-hardening)",
 			].join("\n"),
 		);
 	});
@@ -33,17 +33,17 @@ describe("normalizeChangelogLinks", () => {
 	test("canonicalizes old repository URLs without changing external links", () => {
 		const markdown = [
 			"[#5167](https://github.com/earendil-works/pi-mono/pull/5167)",
-			"[#4163](https://github.com/badlogic/pi-mono/issues/4163)",
-			"[Agent README](https://github.com/badlogic/pi-mono/blob/main/packages/agent/README.md)",
+			"[#4163](https://github.com/badlogic/lingshu-mono/issues/4163)",
+			"[Agent README](https://github.com/badlogic/lingshu-mono/blob/main/packages/agent/README.md)",
 			"[External](https://example.com/docs)",
 			"[Local anchor](#settings)",
 		].join("\n");
 
 		expect(normalizeChangelogLinks(markdown, "0.79.0")).toBe(
 			[
-				"[#5167](https://github.com/earendil-works/pi/pull/5167)",
-				"[#4163](https://github.com/earendil-works/pi/issues/4163)",
-				"[Agent README](https://github.com/earendil-works/pi/blob/v0.79.0/packages/agent/README.md)",
+				"[#5167](https://github.com/earendil-works/lingshu/pull/5167)",
+				"[#4163](https://github.com/earendil-works/lingshu/issues/4163)",
+				"[Agent README](https://github.com/earendil-works/lingshu/blob/v0.79.0/packages/agent/README.md)",
 				"[External](https://example.com/docs)",
 				"[Local anchor](#settings)",
 			].join("\n"),
@@ -81,7 +81,7 @@ describe("getNewEntries", () => {
 describe("parseChangelog", () => {
 	// Runs in the TUI (startup notes, /changelog), where a direct write draws over the screen (#11264).
 	test("returns no entries for an unreadable changelog without printing", () => {
-		const dir = mkdtempSync(join(tmpdir(), "pi-changelog-"));
+		const dir = mkdtempSync(join(tmpdir(), "lingshu-changelog-"));
 		const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 		try {
 			// A directory exists but cannot be read as a file (EISDIR).

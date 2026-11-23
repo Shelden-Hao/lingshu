@@ -77,14 +77,14 @@ const HeldSettings = createContext<{
 	readonly serverName: Held<typeof ServerNameSettings> | undefined;
 }>({ settings: undefined, serverName: undefined });
 
-/** Opens Settings on p2-mac's Pi > Settings… (Cmd+,): its bridge sends "pi-host-menu" (HostBridge.swift). */
+/** Opens Settings on p2-mac's Lingshu > Settings… (Cmd+,): its bridge sends "lingshu-host-menu" (HostBridge.swift). */
 function listenForMenuSettings(): () => void {
 	const chosen = (event: Event) => {
 		// Trust boundary: any script of the page can dispatch the event; only the item's name is read.
 		if ((event as CustomEvent<{ item?: unknown } | null>).detail?.item === "settings") openSettings();
 	};
-	window.addEventListener("pi-host-menu", chosen);
-	return () => window.removeEventListener("pi-host-menu", chosen);
+	window.addEventListener("lingshu-host-menu", chosen);
+	return () => window.removeEventListener("lingshu-host-menu", chosen);
 }
 
 function GearButton() {

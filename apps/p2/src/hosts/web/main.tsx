@@ -2,16 +2,16 @@
 // `startPage` with p2's API modules for the plugins' web scripts, p2's core facet and look (`themes: false`: p2's
 // stylesheet and theme switch), its connection state and error reports, and the React root. A page p2 serves follows
 // the server's scripts (a plugin's change applies in place; a new base bundle reloads the page); Radius Cloud Brain's
-// page (built offline by scripts/cloud-bundle.ts, its Chord URL in `#root`'s `data-pi-bootstrap`) is static.
-import * as schema from "@earendil-works/pi-schema";
+// page (built offline by scripts/cloud-bundle.ts, its Chord URL in `#root`'s `data-lingshu-bootstrap`) is static.
+import * as schema from "@lingshu/schema";
 import * as React from "react";
 import * as jsx from "react/jsx-runtime";
 import * as ReactDom from "react-dom";
 import { createRoot } from "react-dom/client";
 import "../../web/elanor.css";
 import "../../web/style.css";
-import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
-import { startPage } from "@earendil-works/chord/web";
+import { BACKGROUND_CONTEXT } from "@lingshu/chord/context";
+import { startPage } from "@lingshu/chord/web";
 import * as api from "../../api/v1/index.ts";
 import * as apiWeb from "../../api/v1/web.ts";
 import { Access } from "../../runtime/access.ts";
@@ -33,11 +33,11 @@ const MODULES: Readonly<Record<(typeof WEB_PACKAGES)[number], unknown>> = {
 	react: React,
 	"react/jsx-runtime": jsx,
 	"react-dom": ReactDom,
-	"@earendil-works/pi-schema": schema,
+	"@lingshu/schema": schema,
 };
 
 /**
- * Pi Mobile closes an ended share's socket with 1008; chord2 links carry no such code, so a guest's page asks its
+ * Lingshu Mobile closes an ended share's socket with 1008; chord2 links carry no such code, so a guest's page asks its
  * own server: an admitted guest gets the page, an ended share's cookie a sign-in refusal (401/403). Unreachable
  * (offline, a restart): not ended, keep reconnecting.
  */
@@ -48,7 +48,7 @@ const shareHasEnded = (): Promise<boolean> =>
 	);
 
 /**
- * Radius Cloud Brain's page: the Chord URL Radius gives it (`#root`'s `data-pi-bootstrap`), naming this client (p2
+ * Radius Cloud Brain's page: the Chord URL Radius gives it (`#root`'s `data-lingshu-bootstrap`), naming this client (p2
  * refuses a link naming neither its base bundle nor its client: src/runtime/stale-page.ts); none on p2's own pages.
  */
 function cloudChordUrl(): string | undefined {

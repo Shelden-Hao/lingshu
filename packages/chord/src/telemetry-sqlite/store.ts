@@ -9,7 +9,7 @@ import type {
 	StoredSpan,
 	StoredTrace,
 	TraceQuery,
-} from "@earendil-works/pi-telemetry";
+} from "@lingshu/telemetry";
 import type { SqliteDatabase, SqliteValue } from "../sqlite/index.ts";
 
 type SpanRow = {

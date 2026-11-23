@@ -1,4 +1,4 @@
-// Tests of the schema switch from TypeBox to pi-schema (decision "A schema package beneath pi-ai and Chord"): the same
+// Tests of the schema switch from TypeBox to lingshu-schema (decision "A schema package beneath lingshu-ai and Chord"): the same
 // declarations give byte-identical fingerprints and normal forms, and data stored by the code before the switch loads
 // after it (`recorded.json` and `stored/` were made with the TypeBox helpers, see `write-stored.ts`).
 

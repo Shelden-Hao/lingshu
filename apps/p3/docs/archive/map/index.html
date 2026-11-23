@@ -225,9 +225,9 @@ other columns keeps its own table keyed by session id.</p>
 <span class="tk-k">import</span> { homedir } <span class="tk-k">from</span> <span class="tk-s">"node:os"</span>;
 <span class="tk-k">import</span> { join } <span class="tk-k">from</span> <span class="tk-s">"node:path"</span>;
 <span class="tk-k">import</span> { fileURLToPath } <span class="tk-k">from</span> <span class="tk-s">"node:url"</span>;
-<span class="tk-k">import</span> { startServer } <span class="tk-k">from</span> <span class="tk-s">"@earendil-works/chord/app"</span>;
-<span class="tk-k">import</span> { BACKGROUND_CONTEXT <span class="tk-k">as</span> context } <span class="tk-k">from</span> <span class="tk-s">"@earendil-works/chord/context"</span>;
-<span class="tk-k">import</span> { pageScripts } <span class="tk-k">from</span> <span class="tk-s">"@earendil-works/chord/surfaces"</span>;
+<span class="tk-k">import</span> { startServer } <span class="tk-k">from</span> <span class="tk-s">"@lingshu/chord/app"</span>;
+<span class="tk-k">import</span> { BACKGROUND_CONTEXT <span class="tk-k">as</span> context } <span class="tk-k">from</span> <span class="tk-s">"@lingshu/chord/context"</span>;
+<span class="tk-k">import</span> { pageScripts } <span class="tk-k">from</span> <span class="tk-s">"@lingshu/chord/surfaces"</span>;
 <span class="tk-k">import</span> * <span class="tk-k">as</span> v1 <span class="tk-k">from</span> <span class="tk-s">"@p3/app/v1"</span>;
 <span class="tk-k">import</span> { API, KINDS } <span class="tk-k">from</span> <span class="tk-s">"./src/kinds.ts"</span>;
 <span class="tk-k">import</span> <span class="tk-k">type</span> { <span class="tk-t">P3Principal</span> } <span class="tk-k">from</span> <span class="tk-s">"./src/principals.ts"</span>;
@@ -264,13 +264,13 @@ other columns keeps its own table keyed by session id.</p>
 );
 console.<span class="tk-f">log</span>(<span class="tk-s">`Open ${app.ownerLink()}`</span>);</code></pre>
 <pre><code><span class="tk-c">// apps/p3/worker.ts</span>
-<span class="tk-k">import</span> { startWorker } <span class="tk-k">from</span> <span class="tk-s">"@earendil-works/chord/app"</span>;
+<span class="tk-k">import</span> { startWorker } <span class="tk-k">from</span> <span class="tk-s">"@lingshu/chord/app"</span>;
 <span class="tk-k">import</span> { API, KINDS } <span class="tk-k">from</span> <span class="tk-s">"./src/kinds.ts"</span>;
 
 <span class="tk-f">startWorker</span>({ api: API, kinds: KINDS, onError: (error) =&gt; console.<span class="tk-f">error</span>(<span class="tk-s">"p3 session:"</span>, error) });</code></pre>
 <p><code>src/kinds.ts</code> holds <code>API</code> (<code>{ name: &quot;@p3/app&quot;, versions: [&quot;v1&quot;], modules: { ... } }</code>) and <code>KINDS</code>: <code>server</code> and
-<code>worker</code> on Node, <code>web</code> in the browser with React. The worker kind also lists <code>@earendil-works/pi-ai</code> and
-<code>@earendil-works/pi-durable</code> as host packages, so plugins import them by name and every plugin shares the process&#39;s one
+<code>worker</code> on Node, <code>web</code> in the browser with React. The worker kind also lists <code>@lingshu/ai</code> and
+<code>@lingshu/durable</code> as host packages, so plugins import them by name and every plugin shares the process&#39;s one
 instance (decision 2).</p>
 <p>The principal is the kit&#39;s minimum plus the worker:</p>
 <pre><code><span class="tk-c">// apps/p3/src/principals.ts</span>
@@ -299,12 +299,12 @@ re-exports the Chord surface p3 supports, the way example 61&#39;s does, plus p3
 }
 
 <span class="tk-k">export</span> <span class="tk-k">type</span> { <span class="tk-t">P3Principal</span> } <span class="tk-k">from</span> <span class="tk-s">"../../principals.ts"</span>;
-<span class="tk-k">export</span> { <span class="tk-t">AppInfo</span>, <span class="tk-t">HostRuntime</span>, <span class="tk-t">KeepAlive</span>, <span class="tk-t">WorkerInfo</span> } <span class="tk-k">from</span> <span class="tk-s">"@earendil-works/chord/app"</span>;   <span class="tk-c">// HostRuntime, KeepAlive: decision 1</span></code></pre>
+<span class="tk-k">export</span> { <span class="tk-t">AppInfo</span>, <span class="tk-t">HostRuntime</span>, <span class="tk-t">KeepAlive</span>, <span class="tk-t">WorkerInfo</span> } <span class="tk-k">from</span> <span class="tk-s">"@lingshu/chord/app"</span>;   <span class="tk-c">// HostRuntime, KeepAlive: decision 1</span></code></pre>
 <p>The worker module declares the three registries a session&#39;s worker is built around. It declares them only (their
 tokens); the <code>harness</code> plugin serves them.</p>
 <pre><code><span class="tk-c">// apps/p3/src/api/v1/worker.ts</span>
-<span class="tk-k">import</span> <span class="tk-k">type</span> { <span class="tk-t">Provider</span> } <span class="tk-k">from</span> <span class="tk-s">"@earendil-works/pi-ai"</span>;
-<span class="tk-k">import</span> <span class="tk-k">type</span> { <span class="tk-t">Extension</span>, <span class="tk-t">Harness</span> <span class="tk-k">as</span> <span class="tk-t">DurableHarness</span> } <span class="tk-k">from</span> <span class="tk-s">"@earendil-works/pi-durable"</span>;
+<span class="tk-k">import</span> <span class="tk-k">type</span> { <span class="tk-t">Provider</span> } <span class="tk-k">from</span> <span class="tk-s">"@lingshu/ai"</span>;
+<span class="tk-k">import</span> <span class="tk-k">type</span> { <span class="tk-t">Extension</span>, <span class="tk-t">Harness</span> <span class="tk-k">as</span> <span class="tk-t">DurableHarness</span> } <span class="tk-k">from</span> <span class="tk-s">"@lingshu/durable"</span>;
 
 <span class="tk-c">/** Durable extensions: one per contributing plugin (a writable when its tools change at runtime). */</span>
 <span class="tk-k">export</span> <span class="tk-k">const</span> <span class="tk-t">Extensions</span> = <span class="tk-f">defineRegistry</span>&lt;<span class="tk-t">Extension</span>, <span class="tk-k">readonly</span> <span class="tk-t">Extension</span>[]&gt;(<span class="tk-s">"p3.extensions"</span>, { version: <span class="tk-n">1</span> });
@@ -341,7 +341,7 @@ calls <code>chord()</code> yet; a test proves a Durable context from the harness
 <span class="tk-c">/** Moves the page to `path` without a reload (`history.pushState`). */</span>
 <span class="tk-k">export</span> <span class="tk-k">function</span> <span class="tk-f">navigate</span>(path: string): <span class="tk-k">void</span>;
 
-<span class="tk-k">export</span> { useHold, useHost, useMessages, usePageState, useRegistry, useWatch } <span class="tk-k">from</span> <span class="tk-s">"@earendil-works/chord/react"</span>;</code></pre>
+<span class="tk-k">export</span> { useHold, useHost, useMessages, usePageState, useRegistry, useWatch } <span class="tk-k">from</span> <span class="tk-s">"@lingshu/chord/react"</span>;</code></pre>
 <p><code>Sidebar</code> and <code>Screens</code> are served by the page&#39;s own core facet in <code>src/web/main.tsx</code> (as example 61&#39;s <code>Panels</code>): the
 slots are base code, what fills them is plugins.</p>
 <div class="note review"><b class="tag">Review: the model providers&#39; shape is step 1&#39;s</b><p>The handoff leaves the providers registry&#39;s shape undecided. Step 0 takes the smallest one that runs: one pi-ai
@@ -355,9 +355,9 @@ server refreshing tokens) may change the contribution; the token&#39;s version m
 <p class="dropcap">The <code>harness</code> plugin&#39;s worker facet serves the three registries and one host-lifetime object, <code>Harness</code>, which owns the
 Durable harness as a native.</p>
 <pre><code><span class="tk-c">// apps/p3/plugins/harness/worker.ts</span>
-<span class="tk-k">import</span> { createModels } <span class="tk-k">from</span> <span class="tk-s">"@earendil-works/pi-ai"</span>;
-<span class="tk-k">import</span> { <span class="tk-t">Harness</span> <span class="tk-k">as</span> <span class="tk-t">DurableHarness</span> } <span class="tk-k">from</span> <span class="tk-s">"@earendil-works/pi-durable"</span>;
-<span class="tk-k">import</span> { <span class="tk-t">StoreStorage</span> } <span class="tk-k">from</span> <span class="tk-s">"@earendil-works/pi-durable/storage/store"</span>;
+<span class="tk-k">import</span> { createModels } <span class="tk-k">from</span> <span class="tk-s">"@lingshu/ai"</span>;
+<span class="tk-k">import</span> { <span class="tk-t">Harness</span> <span class="tk-k">as</span> <span class="tk-t">DurableHarness</span> } <span class="tk-k">from</span> <span class="tk-s">"@lingshu/durable"</span>;
+<span class="tk-k">import</span> { <span class="tk-t">StoreStorage</span> } <span class="tk-k">from</span> <span class="tk-s">"@lingshu/durable/storage/store"</span>;
 <span class="tk-k">import</span> { <span class="tk-t">ChordRoot</span>, defineFacet, <span class="tk-t">HostRuntime</span>, <span class="tk-t">KeepAlive</span>, local, withContextValue } <span class="tk-k">from</span> <span class="tk-s">"@p3/app/v1"</span>;
 <span class="tk-k">import</span> { <span class="tk-t">Extensions</span>, <span class="tk-t">HarnessNative</span>, <span class="tk-t">ModelProviders</span> } <span class="tk-k">from</span> <span class="tk-s">"@p3/app/v1/worker"</span>;
 <span class="tk-k">import</span> { durableRegistry } <span class="tk-k">from</span> <span class="tk-s">"./registry.ts"</span>;
@@ -462,7 +462,7 @@ plugin does not have. Pages and terminals have no store and are not served it.</
 
 <section class="chapter" id="fake"><header class="opener"><div class="numeral">V</div><h2>The Fake Model</h2><p class="lede">The first model provider: a plugin, a registry contribution, nothing else.</p></header>
 <pre><code><span class="tk-c">// apps/p3/plugins/fake-model/worker.ts</span>
-<span class="tk-k">import</span> { fauxAssistantMessage, <span class="tk-k">type</span> <span class="tk-t">FauxResponseFactory</span>, fauxProvider } <span class="tk-k">from</span> <span class="tk-s">"@earendil-works/pi-ai"</span>;
+<span class="tk-k">import</span> { fauxAssistantMessage, <span class="tk-k">type</span> <span class="tk-t">FauxResponseFactory</span>, fauxProvider } <span class="tk-k">from</span> <span class="tk-s">"@lingshu/ai"</span>;
 <span class="tk-k">import</span> { defineFacet } <span class="tk-k">from</span> <span class="tk-s">"@p3/app/v1"</span>;
 <span class="tk-k">import</span> { <span class="tk-t">ModelProviders</span> } <span class="tk-k">from</span> <span class="tk-s">"@p3/app/v1/worker"</span>;
 
@@ -829,7 +829,7 @@ registries <code>HostRuntime</code> and <code>KeepAlive</code>; alternatives B (
 plugins import React; recommended, because re-exporting Durable&#39;s whole extension surface through <code>@p3/app/v1/worker</code>
 would copy its API into p3&#39;s and pin it to p3&#39;s versions. The alternative re-exports what p3 supports and nothing
 else (stricter, more upkeep per Durable change).</li>
-<li><strong>Data directory and port</strong>: <code>~/.p3</code> (the kit&#39;s default for the name <code>p3</code>) and 8789, next to p2&#39;s <code>~/.pi/p2</code> and<ol start="8788">
+<li><strong>Data directory and port</strong>: <code>~/.p3</code> (the kit&#39;s default for the name <code>p3</code>) and 8789, next to p2&#39;s <code>~/.lingshu/p2</code> and<ol start="8788">
 <li>Recommended as is.</li>
 </ol>
 </li>

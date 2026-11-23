@@ -1,7 +1,7 @@
 // The audit plugin: no routes of its own, one wrap around every route (`scope: "all"`), outermost (`observe`).
 
-import { defineFacet } from "@earendil-works/chord";
-import { Http } from "@earendil-works/chord/http";
+import { defineFacet } from "@lingshu/chord";
+import { Http } from "@lingshu/chord/http";
 
 export default defineFacet((_host, self) =>
 	self.contribute(Http, {

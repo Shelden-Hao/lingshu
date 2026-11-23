@@ -19,9 +19,9 @@ import {
 	type Step,
 	type StoreWrite,
 	writeContent,
-} from "@earendil-works/chord";
-import type { Context } from "@earendil-works/chord/context";
-import type { JsonValue } from "@earendil-works/chord/json";
+} from "@lingshu/chord";
+import type { Context } from "@lingshu/chord/context";
+import type { JsonValue } from "@lingshu/chord/json";
 import { StorageRequestError } from "../../errors.ts";
 import type {
 	DocumentContent,

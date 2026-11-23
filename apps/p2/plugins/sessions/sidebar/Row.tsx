@@ -1,5 +1,5 @@
 // The rows of the sidebar and its list pages, items of Elanor's side navigation. A session and each of its subagents
-// are the same item (`AgentItem`): a status, a name and a detail. The status is pi's working dots while it runs, a blue
+// are the same item (`AgentItem`): a status, a name and a detail. The status is lingshu's working dots while it runs, a blue
 // dot for an answer not read yet, a red dot for a failure, nothing while idle; a session's is what wants the owner
 // first, then any of its conversations working, and work its status does not show shows as dots before the detail. The
 // detail is how long ago its last message was; under a fine pointer, on hover or keyboard focus, it gives way to the item's one action, an icon button:
@@ -42,7 +42,7 @@ export function FailedMark({ label, title }: { label: string; title: string }) {
 }
 
 /**
- * What the sessions a collapsed group or rollup hides do: how many run (pi's dots), how many failed (the warning sign),
+ * What the sessions a collapsed group or rollup hides do: how many run (lingshu's dots), how many failed (the warning sign),
  * how many have an unread answer (a blue count). Nothing when none does.
  */
 export function HiddenAttention({ activity }: { activity: Activity }) {
@@ -306,7 +306,7 @@ function sessionStatus(session: SidebarRow): ItemStatus {
 
 /**
  * A session's running conversations while its status shows that it waits for the owner (a failure or an unread
- * answer): pi's dots before the age, with their count when several run. Nothing while its status shows working or
+ * answer): lingshu's dots before the age, with their count when several run. Nothing while its status shows working or
  * nothing runs.
  */
 function BackgroundWork({ session, status }: { session: SidebarRow; status: ItemStatus }) {

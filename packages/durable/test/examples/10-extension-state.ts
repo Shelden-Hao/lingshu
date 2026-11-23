@@ -2,10 +2,10 @@
 // Run from packages/durable:
 //   node --conditions=source --experimental-strip-types test/examples/10-extension-state.ts
 
-import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
-import { createModels } from "@earendil-works/pi-ai/models";
-import { fauxAssistantMessage, fauxProvider, fauxToolCall } from "@earendil-works/pi-ai/providers/faux";
-import { obj, str } from "@earendil-works/pi-schema";
+import { createModels } from "@lingshu/ai/models";
+import { fauxAssistantMessage, fauxProvider, fauxToolCall } from "@lingshu/ai/providers/faux";
+import { BACKGROUND_CONTEXT } from "@lingshu/chord/context";
+import { obj, str } from "@lingshu/schema";
 import {
 	createRegistry,
 	defineDoc,

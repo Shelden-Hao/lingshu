@@ -12,9 +12,9 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { isDeepStrictEqual } from "node:util";
-import { constant, query } from "@earendil-works/chord";
-import { BACKGROUND_CONTEXT as context } from "@earendil-works/chord/context";
-import { arr, compile, obj, opt, str } from "@earendil-works/pi-schema";
+import { constant, query } from "@lingshu/chord";
+import { BACKGROUND_CONTEXT as context } from "@lingshu/chord/context";
+import { arr, compile, obj, opt, str } from "@lingshu/schema";
 import { Shares } from "../plugins/sharing/contract.ts";
 import {
 	GrantRows,

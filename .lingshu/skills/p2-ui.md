@@ -118,5 +118,5 @@ base web bundle (`src/web`, `src/api`), contracts and workspace packages need a 
   emulation has limits: no real long press or OS text selection, no soft keyboard; test those paths by their
   handlers (timers, `pointerdown`).
 - Run them on slayer (`CHROMIUM_BIN=/home/badlogic/.local/bin/chromium-docker`, Node 24) in a scratch clone, never in
-  `~/pi` or `~/p2-live`. Screenshots: `call("Page.captureScreenshot")` at 390×844.
+  `~/lingshu` or `~/p2-live`. Screenshots: `call("Page.captureScreenshot")` at 390×844.
 - Before reporting: `npm run check` in `apps/p2` (tsc clean, Biome 0 diagnostics).

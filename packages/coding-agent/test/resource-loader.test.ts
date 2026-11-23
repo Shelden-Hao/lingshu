@@ -41,11 +41,11 @@ describe("DefaultResourceLoader", () => {
 		});
 
 		it("should not treat a project manifest as the owner of a project extension", async () => {
-			const extensionsDir = join(cwd, ".pi", "extensions");
+			const extensionsDir = join(cwd, ".lingshu", "extensions");
 			mkdirSync(extensionsDir, { recursive: true });
 			writeFileSync(
 				join(cwd, "package.json"),
-				JSON.stringify({ dependencies: { "@earendil-works/pi-coding-agent": "1.0.0" } }),
+				JSON.stringify({ dependencies: { "@lingshu/coding-agent": "1.0.0" } }),
 			);
 			writeFileSync(join(extensionsDir, "project-extension.ts"), "export default function() {}");
 
@@ -63,7 +63,7 @@ describe("DefaultResourceLoader", () => {
 			mkdirSync(extensionsDir, { recursive: true });
 			writeFileSync(
 				join(packageRoot, "package.json"),
-				JSON.stringify({ dependencies: { "@earendil-works/pi-coding-agent": "1.0.0" } }),
+				JSON.stringify({ dependencies: { "@lingshu/coding-agent": "1.0.0" } }),
 			);
 			writeFileSync(join(extensionsDir, "package-extension.ts"), "export default function() {}");
 
@@ -79,14 +79,14 @@ describe("DefaultResourceLoader", () => {
 				{
 					path: join(packageRoot, "package.json"),
 					warning:
-						'Host-provided extension packages must be declared in peerDependencies with a "*" range, not dependencies: @earendil-works/pi-coding-agent. Installed copies can bypass the extension loader and create duplicate runtime modules.',
+						'Host-provided extension packages must be declared in peerDependencies with a "*" range, not dependencies: @lingshu/coding-agent. Installed copies can bypass the extension loader and create duplicate runtime modules.',
 				},
 			]);
 		});
 
 		// #11088
 		it("should warn and keep loading when a configured package cannot be installed", async () => {
-			vi.stubEnv("PI_OFFLINE", "");
+			vi.stubEnv("LINGSHU_OFFLINE", "");
 			const loader = new DefaultResourceLoader({
 				cwd,
 				agentDir,
@@ -103,12 +103,14 @@ describe("DefaultResourceLoader", () => {
 			expect(warnings).toHaveLength(1);
 			expect(warnings[0].path).toBe("npm:broken-package");
 			expect(warnings[0].warning).toMatch(/^failed to install \(.*failed with code 1\)\./);
-			expect(warnings[0].warning).toContain('Run "pi remove npm:broken-package" to remove it from settings.json.');
+			expect(warnings[0].warning).toContain(
+				'Run "lingshu remove npm:broken-package" to remove it from settings.json.',
+			);
 		});
 
 		// #11088
-		it("should point temporary extension sources at the source instead of pi remove", async () => {
-			vi.stubEnv("PI_OFFLINE", "");
+		it("should point temporary extension sources at the source instead of lingshu remove", async () => {
+			vi.stubEnv("LINGSHU_OFFLINE", "");
 			const loader = new DefaultResourceLoader({
 				cwd,
 				agentDir,
@@ -124,18 +126,18 @@ describe("DefaultResourceLoader", () => {
 			expect(warnings).toHaveLength(1);
 			expect(warnings[0].path).toBe("npm:broken-package");
 			expect(warnings[0].warning).toContain("Check the source and try again.");
-			expect(warnings[0].warning).not.toContain("pi remove");
+			expect(warnings[0].warning).not.toContain("lingshu remove");
 		});
 
 		// #11088
-		it("should point project extension packages at pi remove --local", async () => {
-			vi.stubEnv("PI_OFFLINE", "");
+		it("should point project extension packages at lingshu remove --local", async () => {
+			vi.stubEnv("LINGSHU_OFFLINE", "");
 			writeFileSync(
 				join(agentDir, "settings.json"),
 				JSON.stringify({ npmCommand: [process.execPath, "-e", "process.exit(1)"] }),
 			);
-			mkdirSync(join(cwd, ".pi"), { recursive: true });
-			writeFileSync(join(cwd, ".pi", "settings.json"), JSON.stringify({ packages: ["npm:broken-package"] }));
+			mkdirSync(join(cwd, ".lingshu"), { recursive: true });
+			writeFileSync(join(cwd, ".lingshu", "settings.json"), JSON.stringify({ packages: ["npm:broken-package"] }));
 			const loader = new DefaultResourceLoader({
 				cwd,
 				agentDir,
@@ -146,12 +148,12 @@ describe("DefaultResourceLoader", () => {
 
 			const warnings = loader.getExtensions().warnings ?? [];
 			expect(warnings).toHaveLength(1);
-			expect(warnings[0].warning).toContain('Run "pi remove npm:broken-package --local"');
+			expect(warnings[0].warning).toContain('Run "lingshu remove npm:broken-package --local"');
 		});
 
 		// #11088
 		it("should warn once about a failing install when project trust is resolved", async () => {
-			vi.stubEnv("PI_OFFLINE", "");
+			vi.stubEnv("LINGSHU_OFFLINE", "");
 			const loader = new DefaultResourceLoader({
 				cwd,
 				agentDir,
@@ -204,7 +206,7 @@ Skill content here.`,
 		});
 
 		it("should ignore extra markdown files in auto-discovered skill dirs", async () => {
-			const skillDir = join(agentDir, "skills", "pi-skills", "browser-tools");
+			const skillDir = join(agentDir, "skills", "lingshu-skills", "browser-tools");
 			mkdirSync(skillDir, { recursive: true });
 			writeFileSync(
 				join(skillDir, "SKILL.md"),
@@ -266,7 +268,7 @@ Prompt content.`,
 
 		it("should prefer project resources over user on name collisions", async () => {
 			const userPromptsDir = join(agentDir, "prompts");
-			const projectPromptsDir = join(cwd, ".pi", "prompts");
+			const projectPromptsDir = join(cwd, ".lingshu", "prompts");
 			mkdirSync(userPromptsDir, { recursive: true });
 			mkdirSync(projectPromptsDir, { recursive: true });
 			const userPromptPath = join(userPromptsDir, "commit.md");
@@ -275,7 +277,7 @@ Prompt content.`,
 			writeFileSync(projectPromptPath, "Project prompt");
 
 			const userSkillDir = join(agentDir, "skills", "collision-skill");
-			const projectSkillDir = join(cwd, ".pi", "skills", "collision-skill");
+			const projectSkillDir = join(cwd, ".lingshu", "skills", "collision-skill");
 			mkdirSync(userSkillDir, { recursive: true });
 			mkdirSync(projectSkillDir, { recursive: true });
 			const userSkillPath = join(userSkillDir, "SKILL.md");
@@ -302,9 +304,9 @@ Project skill`,
 			) as { name: string; vars?: Record<string, string> };
 			baseTheme.name = "collision-theme";
 			const userThemePath = join(agentDir, "themes", "collision.json");
-			const projectThemePath = join(cwd, ".pi", "themes", "collision.json");
+			const projectThemePath = join(cwd, ".lingshu", "themes", "collision.json");
 			mkdirSync(join(agentDir, "themes"), { recursive: true });
-			mkdirSync(join(cwd, ".pi", "themes"), { recursive: true });
+			mkdirSync(join(cwd, ".lingshu", "themes"), { recursive: true });
 			writeFileSync(userThemePath, JSON.stringify(baseTheme, null, 2));
 			if (baseTheme.vars) {
 				baseTheme.vars.accent = "#ff00ff";
@@ -329,8 +331,8 @@ Project skill`,
 			mkdirSync(sharedExtDir, { recursive: true });
 			writeFileSync(
 				join(sharedExtDir, "shared.ts"),
-				`export default function(pi) {
-	pi.registerCommand("shared", {
+				`export default function(lingshu) {
+	lingshu.registerCommand("shared", {
 		description: "shared command",
 		handler: async () => {},
 	});
@@ -338,9 +340,9 @@ Project skill`,
 			);
 
 			mkdirSync(agentDir, { recursive: true });
-			mkdirSync(join(cwd, ".pi"), { recursive: true });
+			mkdirSync(join(cwd, ".lingshu"), { recursive: true });
 			symlinkSync(sharedExtDir, join(agentDir, "extensions"), "dir");
-			symlinkSync(sharedExtDir, join(cwd, ".pi", "extensions"), "dir");
+			symlinkSync(sharedExtDir, join(cwd, ".lingshu", "extensions"), "dir");
 
 			const loader = new DefaultResourceLoader({ cwd, agentDir });
 			await loader.reload();
@@ -351,12 +353,12 @@ Project skill`,
 
 			// mergePaths processes project paths before user paths, so the project
 			// alias is the canonical survivor.
-			expect(extensionsResult.extensions[0].path).toBe(join(cwd, ".pi", "extensions", "shared.ts"));
+			expect(extensionsResult.extensions[0].path).toBe(join(cwd, ".lingshu", "extensions", "shared.ts"));
 		});
 
 		it("should load user extensions before trust and reuse them after trust resolves", async () => {
 			const userExtDir = join(agentDir, "extensions");
-			const projectExtDir = join(cwd, ".pi", "extensions");
+			const projectExtDir = join(cwd, ".lingshu", "extensions");
 			mkdirSync(userExtDir, { recursive: true });
 			mkdirSync(projectExtDir, { recursive: true });
 			const loadCountKey = `__piTrustPreloadCount_${Date.now()}_${Math.random().toString(36).slice(2)}`;
@@ -365,9 +367,9 @@ Project skill`,
 			writeFileSync(
 				join(userExtDir, "user.ts"),
 				`globalThis[${JSON.stringify(loadCountKey)}] = (globalThis[${JSON.stringify(loadCountKey)}] ?? 0) + 1;
-export default function(pi) {
-	pi.on("project_trust", () => ({ trusted: "yes" }));
-	pi.registerCommand("user-trust", {
+export default function(lingshu) {
+	lingshu.on("project_trust", () => ({ trusted: "yes" }));
+	lingshu.registerCommand("user-trust", {
 		description: "user trust",
 		handler: async () => {},
 	});
@@ -375,8 +377,8 @@ export default function(pi) {
 			);
 			writeFileSync(
 				join(projectExtDir, "project.ts"),
-				`export default function(pi) {
-	pi.registerCommand("project-trusted", {
+				`export default function(lingshu) {
+	lingshu.registerCommand("project-trusted", {
 		description: "project trusted",
 		handler: async () => {},
 	});
@@ -395,7 +397,7 @@ export default function(pi) {
 
 			const extensionsResult = loader.getExtensions();
 			expect(extensionsResult.extensions.map((extension) => extension.path)).toEqual([
-				join(cwd, ".pi", "extensions", "project.ts"),
+				join(cwd, ".lingshu", "extensions", "project.ts"),
 				join(userExtDir, "user.ts"),
 			]);
 			expect(globalState[loadCountKey]).toBe(1);
@@ -403,18 +405,18 @@ export default function(pi) {
 
 		it("should keep both extensions loaded when command names collide", async () => {
 			const userExtDir = join(agentDir, "extensions");
-			const projectExtDir = join(cwd, ".pi", "extensions");
+			const projectExtDir = join(cwd, ".lingshu", "extensions");
 			mkdirSync(userExtDir, { recursive: true });
 			mkdirSync(projectExtDir, { recursive: true });
 
 			writeFileSync(
 				join(projectExtDir, "project.ts"),
-				`export default function(pi) {
-	pi.registerCommand("deploy", {
+				`export default function(lingshu) {
+	lingshu.registerCommand("deploy", {
 		description: "project deploy",
 		handler: async () => {},
 	});
-	pi.registerCommand("project-only", {
+	lingshu.registerCommand("project-only", {
 		description: "project only",
 		handler: async () => {},
 	});
@@ -423,12 +425,12 @@ export default function(pi) {
 
 			writeFileSync(
 				join(userExtDir, "user.ts"),
-				`export default function(pi) {
-	pi.registerCommand("deploy", {
+				`export default function(lingshu) {
+	lingshu.registerCommand("deploy", {
 		description: "user deploy",
 		handler: async () => {},
 	});
-	pi.registerCommand("user-only", {
+	lingshu.registerCommand("user-only", {
 		description: "user only",
 		handler: async () => {},
 	});
@@ -570,8 +572,8 @@ Content`,
 			expect(agentsFiles).toEqual([]);
 		});
 
-		it("should discover SYSTEM.md from cwd/.pi", async () => {
-			const piDir = join(cwd, ".pi");
+		it("should discover SYSTEM.md from cwd/.lingshu", async () => {
+			const piDir = join(cwd, ".lingshu");
 			mkdirSync(piDir, { recursive: true });
 			writeFileSync(join(piDir, "SYSTEM.md"), "You are a helpful assistant.");
 
@@ -582,7 +584,7 @@ Content`,
 		});
 
 		it("should skip project resources that require trust when project is not trusted", async () => {
-			const piDir = join(cwd, ".pi");
+			const piDir = join(cwd, ".lingshu");
 			const extensionsDir = join(piDir, "extensions");
 			const skillDir = join(piDir, "skills", "project-skill");
 			const promptsDir = join(piDir, "prompts");
@@ -628,7 +630,7 @@ Project skill content`,
 		});
 
 		it("should discover APPEND_SYSTEM.md", async () => {
-			const piDir = join(cwd, ".pi");
+			const piDir = join(cwd, ".lingshu");
 			mkdirSync(piDir, { recursive: true });
 			writeFileSync(join(piDir, "APPEND_SYSTEM.md"), "Additional instructions.");
 
@@ -641,7 +643,7 @@ Project skill content`,
 
 	describe("system prompt sources", () => {
 		it("exposes discovered project SYSTEM.md as the system prompt source", async () => {
-			const piDir = join(cwd, ".pi");
+			const piDir = join(cwd, ".lingshu");
 			const systemPromptPath = join(piDir, "SYSTEM.md");
 			mkdirSync(piDir, { recursive: true });
 			writeFileSync(systemPromptPath, "Project system prompt.");
@@ -684,7 +686,7 @@ Project skill content`,
 		});
 
 		it("exposes discovered APPEND_SYSTEM.md as an append system prompt source", async () => {
-			const piDir = join(cwd, ".pi");
+			const piDir = join(cwd, ".lingshu");
 			const appendSystemPromptPath = join(piDir, "APPEND_SYSTEM.md");
 			mkdirSync(piDir, { recursive: true });
 			writeFileSync(appendSystemPromptPath, "Project append prompt.");
@@ -1019,10 +1021,10 @@ Content`,
 			writeFileSync(
 				join(ext1Dir, "index.ts"),
 				`
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import type { ExtensionAPI } from "@lingshu/coding-agent";
 import { Type } from "typebox";
-export default function(pi: ExtensionAPI) {
-  pi.registerTool({
+export default function(lingshu: ExtensionAPI) {
+  lingshu.registerTool({
     name: "duplicate-tool",
     description: "First",
     parameters: Type.Object({}),
@@ -1034,10 +1036,10 @@ export default function(pi: ExtensionAPI) {
 			writeFileSync(
 				join(ext2Dir, "index.ts"),
 				`
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import type { ExtensionAPI } from "@lingshu/coding-agent";
 import { Type } from "typebox";
-export default function(pi: ExtensionAPI) {
-  pi.registerTool({
+export default function(lingshu: ExtensionAPI) {
+  lingshu.registerTool({
     name: "duplicate-tool",
     description: "Second",
     parameters: Type.Object({}),
@@ -1061,16 +1063,16 @@ export default function(pi: ExtensionAPI) {
 			writeFileSync(
 				join(globalExtDir, "global.ts"),
 				`
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import type { ExtensionAPI } from "@lingshu/coding-agent";
 import { Type } from "typebox";
-export default function(pi: ExtensionAPI) {
-  pi.registerTool({
+export default function(lingshu: ExtensionAPI) {
+  lingshu.registerTool({
     name: "duplicate-tool",
     description: "global tool",
     parameters: Type.Object({}),
     execute: async () => ({ result: "global" }),
   });
-  pi.registerCommand("deploy", {
+  lingshu.registerCommand("deploy", {
     description: "global command",
     handler: async () => {},
   });
@@ -1080,16 +1082,16 @@ export default function(pi: ExtensionAPI) {
 			writeFileSync(
 				explicitExtPath,
 				`
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import type { ExtensionAPI } from "@lingshu/coding-agent";
 import { Type } from "typebox";
-export default function(pi: ExtensionAPI) {
-  pi.registerTool({
+export default function(lingshu: ExtensionAPI) {
+  lingshu.registerTool({
     name: "duplicate-tool",
     description: "explicit tool",
     parameters: Type.Object({}),
     execute: async () => ({ result: "explicit" }),
   });
-  pi.registerCommand("deploy", {
+  lingshu.registerCommand("deploy", {
     description: "explicit command",
     handler: async () => {},
   });
@@ -1129,9 +1131,9 @@ export default function(pi: ExtensionAPI) {
 			writeFileSync(
 				join(globalExtDir, "other-mcp.ts"),
 				`
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-export default function(pi: ExtensionAPI) {
-  pi.registerCommand("mcp", { description: "other mcp", handler: async () => {} });
+import type { ExtensionAPI } from "@lingshu/coding-agent";
+export default function(lingshu: ExtensionAPI) {
+  lingshu.registerCommand("mcp", { description: "other mcp", handler: async () => {} });
 }`,
 			);
 
@@ -1142,13 +1144,14 @@ export default function(pi: ExtensionAPI) {
 					{
 						name: "mcp",
 						replaceable: true,
-						factory: (pi) => pi.registerCommand("mcp", { description: "built-in mcp", handler: async () => {} }),
+						factory: (lingshu) =>
+							lingshu.registerCommand("mcp", { description: "built-in mcp", handler: async () => {} }),
 					},
 					{
 						name: "llama",
 						replaceable: true,
-						factory: (pi) =>
-							pi.registerCommand("llama", { description: "built-in llama", handler: async () => {} }),
+						factory: (lingshu) =>
+							lingshu.registerCommand("llama", { description: "built-in llama", handler: async () => {} }),
 					},
 				],
 			});
@@ -1195,8 +1198,8 @@ export default function(pi: ExtensionAPI) {
 		});
 
 		it("should skip disabledBuiltinExtensions even when settings or -e enable them", async () => {
-			mkdirSync(join(cwd, ".pi"), { recursive: true });
-			writeFileSync(join(cwd, ".pi", "settings.json"), JSON.stringify({ extensions: ["+builtin:mcp"] }));
+			mkdirSync(join(cwd, ".lingshu"), { recursive: true });
+			writeFileSync(join(cwd, ".lingshu", "settings.json"), JSON.stringify({ extensions: ["+builtin:mcp"] }));
 			const loaded: string[] = [];
 			const loader = new DefaultResourceLoader({
 				cwd,
@@ -1219,9 +1222,9 @@ export default function(pi: ExtensionAPI) {
 			const userExtDir = join(agentDir, "extensions");
 			mkdirSync(userExtDir, { recursive: true });
 			writeFileSync(join(userExtDir, "user.ts"), "export default function() {}");
-			mkdirSync(join(cwd, ".pi"), { recursive: true });
+			mkdirSync(join(cwd, ".lingshu"), { recursive: true });
 			// A project override gives the built-in project scope, which must not move it ahead.
-			writeFileSync(join(cwd, ".pi", "settings.json"), JSON.stringify({ extensions: ["+builtin:mcp"] }));
+			writeFileSync(join(cwd, ".lingshu", "settings.json"), JSON.stringify({ extensions: ["+builtin:mcp"] }));
 			const loader = new DefaultResourceLoader({
 				cwd,
 				agentDir,
@@ -1258,9 +1261,9 @@ export default function(pi: ExtensionAPI) {
 
 		it("should apply project built-in extension overrides after trust resolves", async () => {
 			writeFileSync(join(agentDir, "settings.json"), JSON.stringify({ extensions: ["-builtin:mcp"] }));
-			mkdirSync(join(cwd, ".pi"), { recursive: true });
+			mkdirSync(join(cwd, ".lingshu"), { recursive: true });
 			writeFileSync(
-				join(cwd, ".pi", "settings.json"),
+				join(cwd, ".lingshu", "settings.json"),
 				JSON.stringify({ extensions: ["+builtin:mcp", "-builtin:llama"] }),
 			);
 			const loaded: string[] = [];
@@ -1327,7 +1330,7 @@ export default function(pi: ExtensionAPI) {
 			expect(files.map((f) => f.content)).toEqual(["worktree instructions"]);
 		});
 
-		// https://github.com/earendil-works/pi/issues/10681
+		// https://github.com/earendil-works/lingshu/issues/10681
 		it("should load the worktree's context once when it symlinks to the main repo's file", () => {
 			const { main, worktree, worktreeSrc } = setupNestedWorktree();
 			writeFileSync(join(main, "AGENTS.md"), "main repo instructions");

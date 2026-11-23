@@ -27,7 +27,7 @@ Goals:
 
 - **One pipeline** for built-in, global, package and project plugins; built-ins are not special.
 - **Every surface from the same plugin set:** server, session worker, web, TUI.
-- **Global packages from npm and git**, like pi's packages (`packages/coding-agent/docs/packages.md`).
+- **Global packages from npm and git**, like lingshu's packages (`packages/coding-agent/docs/packages.md`).
 - **Project plugins** from a session's working directory, local or remote, without leaking into other sessions.
 - **Nothing from a project runs before the owner approves it, and only the approved bytes run.**
 - **No leaks across scope changes:** a web page, TUI worker or session worker that loaded a plugin set is thrown
@@ -56,10 +56,10 @@ Non-goals (v1):
   **Project scope:** the base scope plus the approved project plugins of one directory.
 - **Scope key:** `(env id, canonical session cwd)`. **Revision:** the digest of an immutable project snapshot (6.2).
 - **Host packages:** packages the running p2 supplies to every plugin as single instances: p2's API
-  (`@p2/app/v1`, re-exporting the part of Chord v2 plugins use, with per-kind modules), `@earendil-works/pi-ai`, `pi-codemode`, `pi-durable`, `pi-env`, `pi-tui`, `pi-schema` (all `@earendil-works/`),
+  (`@p2/app/v1`, re-exporting the part of Chord v2 plugins use, with per-kind modules), `@lingshu/ai`, `lingshu-codemode`, `lingshu-durable`, `lingshu-env`, `lingshu-tui`, `lingshu-schema` (all `@lingshu/`),
   `react`, `react-dom` (with subpaths such as `react/jsx-runtime`, `react-dom/client`), and p2 itself
-  (`@earendil-works/p2/runtime/*`, `@earendil-works/p2/plugins/*`).
-- **Data directory:** `P2_DATA_DIR` (default `~/.pi/p2`), written `<data>` below.
+  (`@lingshu/p2/runtime/*`, `@lingshu/p2/plugins/*`).
+- **Data directory:** `P2_DATA_DIR` (default `~/.lingshu/p2`), written `<data>` below.
 
 ## 3. Sources
 
@@ -68,17 +68,17 @@ Non-goals (v1):
 | Built-in | the app's `plugins/` | the app | all | none |
 | Global | `<data>/plugins/<name>/` | files present | all | the owner put them there |
 | Global package | `<data>/packages/…` (8) | `packages` in `<data>/settings.json` | all | the owner installed it |
-| Project | `<cwd>/.pi/p2/plugins/<name>/` | files present | worker, web, tui | project trust (6) |
+| Project | `<cwd>/.lingshu/p2/plugins/<name>/` | files present | worker, web, tui | project trust (6) |
 
 - **Server facets never come from a project.** The server serves every session. A project plugin with a `server`
   module is refused as a whole (owner notice); loading its other facets would leave it half-working.
 - **Disabling:** `plugins.disabled` in `<data>/settings.json` lists names not to load, built-ins included. A plugin
   that holds a disabled plugin's contracts fails at activation with a notice naming it and the type (4.2).
-  `<cwd>/.pi/p2/settings.json` (part of the project snapshot) may only disable **project** plugins; any other key is
+  `<cwd>/.lingshu/p2/settings.json` (part of the project snapshot) may only disable **project** plugins; any other key is
   ignored with a notice.
-- **Project skills and prompts:** `<cwd>/.pi/skills` and `<cwd>/.pi/prompts`, which p2 loads today without asking
-  (`plugins/prompt/context-files.ts`), move under the same directory trust decision (pi parity). **Behavior
-  change:** they no longer load in untrusted directories. `AGENTS.md` files stay ungated, as in pi.
+- **Project skills and prompts:** `<cwd>/.lingshu/skills` and `<cwd>/.lingshu/prompts`, which p2 loads today without asking
+  (`plugins/prompt/context-files.ts`), move under the same directory trust decision (lingshu parity). **Behavior
+  change:** they no longer load in untrusted directories. `AGENTS.md` files stay ungated, as in lingshu.
 
 ## 4. Discovery, dependencies, names
 
@@ -116,7 +116,7 @@ A plugin refers to another plugin's modules in one of two ways:
 - **Relative imports** within its own root (`../chat/contract.ts`), as built-ins do.
 - **`p2:plugins/<name>/<path>`** across roots: a virtual specifier resolved **per scope** to wherever plugin `<name>`
   lives in that scope (built-in, global, package or snapshot), by the facet bundler's resolver (14.2).
-  `@earendil-works/p2/plugins/<name>/…` stays the name for built-in contracts (it resolves to the host's files).
+  `@lingshu/p2/plugins/<name>/…` stays the name for built-in contracts (it resolves to the host's files).
 
 Under D each facet is its own bundle, so another plugin's file is **copied into the importing facet** (14.4, B2).
 Cross-plugin imports are therefore limited to contracts and side-effect-free modules (`contract.ts`, `protocol.ts`, an
@@ -170,7 +170,7 @@ notice):
 
 ### 4.4 Resources
 
-Like a pi package, a plugin may carry `skills/<name>/SKILL.md`, `prompts/*.md` and `themes/*.json` (or list them under
+Like a lingshu package, a plugin may carry `skills/<name>/SKILL.md`, `prompts/*.md` and `themes/*.json` (or list them under
 `"p2": { "skills": […], "prompts": […], "themes": […] }` in `package.json`). They follow the facet scope rules:
 base resources in every scope, project plugin resources only in their approved scope. Clashes follow existing
 precedence (global before project) and are reported. A resource-only plugin needs no code.
@@ -240,8 +240,8 @@ not isolation**: project web code can do anything same-origin code can (11).
 
 ### 6.1 Trust decisions
 
-- `<data>/trust.json` (p2's own, separate from pi's `~/.pi/agent/trust.json`) stores decisions per canonical
-  directory `(env, path)`; the closest saved decision of the directory or a parent applies, as in pi.
+- `<data>/trust.json` (p2's own, separate from lingshu's `~/.lingshu/agent/trust.json`) stores decisions per canonical
+  directory `(env, path)`; the closest saved decision of the directory or a parent applies, as in lingshu.
 - `defaultProjectTrust`: `"ask"` (default) or `"never"`. There is no `"always"` (A.2).
 - Modes per trusted directory:
   - **Directory (default):** the owner's Reload (6.3) is the approval of each new revision.
@@ -254,7 +254,7 @@ not isolation**: project web code can do anything same-origin code can (11).
 ### 6.2 Snapshots
 
 A snapshot is an immutable, content-addressed copy of a project's plugin inputs on the p2 host:
-`<data>/project-snapshots/<digest>/` with `plugins/**` and `settings.json` from `<cwd>/.pi/p2/`.
+`<data>/project-snapshots/<digest>/` with `plugins/**` and `settings.json` from `<cwd>/.lingshu/p2/`.
 
 - **Capture:** the session worker reads the files through its environment (local or remote, as it reads
   `AGENTS.md`), bounded (initial limits: 500 files, 8 MiB total, 1 MiB per file; regular files only, symlinks
@@ -267,7 +267,7 @@ A snapshot is an immutable, content-addressed copy of a project's plugin inputs 
 
 ### 6.3 Change flow
 
-1. The worker watches `<cwd>/.pi/p2/` through its environment (`runtime/observe.ts`, including directory creation
+1. The worker watches `<cwd>/.lingshu/p2/` through its environment (`runtime/observe.ts`, including directory creation
    and rescans after overflow or reconnect). A change only **marks the scope dirty**; the worker captures a candidate
    snapshot.
 2. The owner sees "Project plugins changed: Reload" with a **change summary**: files added/removed/changed, facets
@@ -375,7 +375,7 @@ by object identity. One instance per process still matters for:
 - React (hooks, `HostContext` in `runtime/web.tsx`);
 - p2 runtime module state (`runtime/logs.ts`, `runtime/linger.ts` and others), React contexts in `src/web/*`
   (`composer-state.tsx`), `TuiRuntime`/`TuiScope`;
-- pi-tui classes that plugins test with `instanceof` (`Text`, `Container`: `plugins/artifacts/tui.ts:29`,
+- lingshu-tui classes that plugins test with `instanceof` (`Text`, `Container`: `plugins/artifacts/tui.ts:29`,
   `plugins/send-file/tui.ts:37`, `plugins/subagents/tui.ts:23`).
 
 So everything under `apps/p2/src/**` is host code too (14.4, B3), although plugins import it by relative path.
@@ -383,7 +383,7 @@ So everything under `apps/p2/src/**` is host code too (14.4, B3), although plugi
 ### 9.2 Mapping
 
 Under D (14.2) the base bundle contains every host package and `apps/p2/src/**` once. Each facet bundle marks them
-external (an esbuild `onResolve` plugin: bare host specifiers, `@earendil-works/p2/*`, and relative paths that leave
+external (an esbuild `onResolve` plugin: bare host specifiers, `@lingshu/p2/*`, and relative paths that leave
 the plugin into `apps/p2/src/`) and receives them as parameters when it is evaluated. A check fails the build if a
 facet bundle contains a host package or a `src/**` file (14.5).
 
@@ -395,10 +395,10 @@ through `accepts[M]`. That only works if the plugin carries its own contract ver
 resolved to the running p2's modules, every plugin would carry the current version, the adapter would never apply, and
 a plugin compiled against v1 types would break at runtime.
 
-- p2 publishes its contracts as a versioned package (e.g. `@earendil-works/p2-contracts`). A contract's `version` is its
+- p2 publishes its contracts as a versioned package (e.g. `@lingshu/p2-contracts`). A contract's `version` is its
   major version: additive changes need no bump (Chord's coverage check admits them); a breaking change bumps it and
   adds an `accepts` adapter for the previous version for as long as it is supported.
-- A plugin depends on that package (`"@earendil-works/p2-contracts": "^1"`) and builds against it.
+- A plugin depends on that package (`"@lingshu/p2-contracts": "^1"`) and builds against it.
 - The loader never maps contract modules to the host's instance, unlike host packages (9.1, 9.2). Contracts are plain
   data (14.3), so copies are harmless. Under D each facet bundle inlines the contract modules it imports, resolved
   **from the plugin's own `node_modules`**, never from p2's tree; the bundle check (14.5) must allow them and fail on
@@ -409,7 +409,7 @@ a plugin compiled against v1 types would break at runtime.
 
 ### 9.3 Publishing
 
-When p2 becomes an npm package (`@earendil-works/p2`, compiled JavaScript with an `exports` map for `./runtime/*`,
+When p2 becomes an npm package (`@lingshu/p2`, compiled JavaScript with an `exports` map for `./runtime/*`,
 `./plugins/*` contracts and the CLI), built-ins live in `dist/plugins/`. Plugin authors list p2 as a
 `devDependency` and `peerDependency`; the loader checks the peer range (meaningless in repo mode, where the package
 is `p2@0.0.1`, so skipped there). Needed work: an installation-relative resolver (the source resolver reads the
@@ -445,7 +445,7 @@ The same fallbacks render project entries for guests, who always get the base sc
 
 | Code | Runs where | Rights |
 | --- | --- | --- |
-| Built-in, global, package: server and worker facets | the p2 host | the owner's OS account (like pi extensions) |
+| Built-in, global, package: server and worker facets | the p2 host | the owner's OS account (like lingshu extensions) |
 | Project worker facets | the p2 host, **also for remote sessions** (the phone, next to `auth.json`) | the owner's OS account |
 | Web facets (base, or project for the owner) | the viewer's browser, main thread, same origin | **all of the viewer's rights**: for the owner every owner API, including a host shell through terminals |
 | TUI facets | the viewer's machine, permission-dropped worker | only the launcher's grants |
@@ -491,7 +491,7 @@ Each step lands with its tests; later steps assume earlier ones.
 | # | Step | Acceptance (tests) |
 | --- | --- | --- |
 | 1 | **Roots and discovery:** multi-root `listPlugins`, module→plugin map, `plugins.disabled`, name rules, per-plugin loading. Under Vite, the hard-coded web list becomes a generated virtual module of the selected plugins, so disabling works on every surface. | a disabled plugin whose module top level records a side effect is never imported (server, worker, web, TUI); a plugin whose `setup` throws yields a notice and the others load; two plugins with one name, or a contract name without prefix, are refused with a notice; load order stays irrelevant |
-| 2 | **Host mapping and global plugins:** D bundles for server and worker facets (12.1, step 5), `p2:plugins/…`, `<data>/plugins`. External web facets are listed as "waiting for the web bundle" until step 4; TUI works now (esbuild). | a global plugin with its own `node_modules/@earendil-works/chord/old` gets the host instance (`isChordError` and `Ctx` checks pass across); its own npm dependency is bundled and runs; `import.meta.url` is its real file (injected); a global plugin named like a built-in is refused; reloading it 6× leaves no more generations alive than 3× |
+| 2 | **Host mapping and global plugins:** D bundles for server and worker facets (12.1, step 5), `p2:plugins/…`, `<data>/plugins`. External web facets are listed as "waiting for the web bundle" until step 4; TUI works now (esbuild). | a global plugin with its own `node_modules/@lingshu/chord/old` gets the host instance (`isChordError` and `Ctx` checks pass across); its own npm dependency is bundled and runs; `import.meta.url` is its real file (injected); a global plugin named like a built-in is refused; reloading it 6× leaves no more generations alive than 3× |
 | 3 | **Global packages:** install/remove/update/list, staged atomic installs, lockfiles, resources (skills, prompts, themes). | npm and https-git installs load; a package with a host peer gets no physical host copy at runtime; an interrupted update keeps the old revision working; a native addon is refused; an http git source is refused; a skill from a package appears in `/skill:` |
 | 4 | **D web bundles with push** (a base bundle plus one classic script and one CSS file per facet; the TUI likewise), then remove Vite (list below). | two owner tabs reload via `ClientBundle` after a web edit and Reload, without `visibilitychange`; a guest can fetch the base bundle's assets but no `/src/…` path; the terminal's wasm loads; the page has a CSP nonce and works with the existing CSP; bundles are cached immutable and manifests `no-store`; a failed web build keeps the old bundle and no backend change commits |
 | 5 | **Project scopes and trust:** snapshots, `trust.json`, catalog scope, bootstrap and `/__p2_web/scope`, TUI `?session=`, launcher partitioning, per-worker install (7.4), provenance and fallbacks, skills/prompts gate, slot restriction. | see below |
@@ -511,10 +511,10 @@ Step 5 acceptance:
   running everywhere; a worker facet that throws at load yields a notice and the other project plugins load.
 - **Name clash:** a project plugin named like a global plugin, or a project tool without prefix, is refused with a
   notice; the session works.
-- **Trust change:** an agent (or guest-prompted) write to `.pi/p2/plugins` only marks dirty; approving loads exactly
+- **Trust change:** an agent (or guest-prompted) write to `.lingshu/p2/plugins` only marks dirty; approving loads exactly
   the summarized digest (a file changed after capture is not executed); revocation applies the base scope like a new
   revision (7.4), refusing while tasks of the leaving plugin are live; pin mode requires the review for a one-byte
-  change; project `.pi/skills` do not load in an untrusted directory.
+  change; project `.lingshu/skills` do not load in an untrusted directory.
 - **TUI:** A→B swap does not replay A's pending send into B; B→A restores A's draft.
 - **Relocation:** moving a session between two project directories switches pages and TUIs via `ClientBundle`.
 
@@ -550,7 +550,7 @@ D removes `nodeLoader`'s module copy per reload.
 
 | Question | Decision |
 | --- | --- |
-| Project plugin directory | `<cwd>/.pi/p2/plugins` (pi ignores `.pi/p2`; mirrors `<data>/plugins`) |
+| Project plugin directory | `<cwd>/.lingshu/p2/plugins` (lingshu ignores `.lingshu/p2`; mirrors `<data>/plugins`) |
 | Project packages | not in v1 |
 | Trust granularity | per directory, changes only by explicit Reload with summary; optional pin to content (6) |
 | Project web facets for guests | no in v1; base bundle with fallback renderers; TUI likewise (5.1) |
@@ -564,13 +564,13 @@ D removes `nodeLoader`'s module copy per reload.
 | Dev loop | runtime changes restart the affected hosts; plugin changes reload in place (4.1) |
 | Scope selection | catalog scope, bootstrap script, TUI `?session=`, launcher-owned snapshots (5.2) |
 | Names | prefixes, checked at load; per-plugin loading (4.3) |
-| Project `.pi/skills`, `.pi/prompts` | gated by project trust (behavior change; 3) |
+| Project `.lingshu/skills`, `.lingshu/prompts` | gated by project trust (behavior change; 3) |
 | Global plugin dependencies | own `package.json`/`node_modules`; cycles keep current order rules; `.js` allowed for packages |
 
 ### 13.2 Open
 
 1. **Skills of base plugins on remote sessions.** Their files are on the host. Recommended: upload bounded,
-   content-addressed copies (`~/.pi/p2/plugin-skills/<plugin>/<hash>/` on the remote, like the daemon deployment)
+   content-addressed copies (`~/.lingshu/p2/plugin-skills/<plugin>/<hash>/` on the remote, like the daemon deployment)
    and offer the skill only after the upload succeeded. Until then: local sessions only, listed as unavailable on
    remote sessions (not hidden).
 2. **Publishing:** whether and when `apps/p2` leaves the private tree, and which modules `exports` makes public.
@@ -579,7 +579,7 @@ D removes `nodeLoader`'s module copy per reload.
    with B's code. Options: include a per-project plugin identity in provenance and treat a mismatch as "not available
    here", or accept it as the owner's choice.
 4. **Guest opt-in per share** for project web facets: disclosure and consent design.
-5. **Project root:** the session cwd only (as pi), or the nearest ancestor with `.pi/p2` (sessions in subdirectories
+5. **Project root:** the session cwd only (as lingshu), or the nearest ancestor with `.lingshu/p2` (sessions in subdirectories
    of a repository would then share its plugins).
 6. **Browser compile cache** (14.2): whether Blink/V8 keeps every classic script it compiled, as Node does; measure
    before web D, else bound in-place web reloads (a full reload after N generations).
@@ -603,7 +603,7 @@ win is bundling the base, not the plugins.
 
 ### 14.2 Model D
 
-- **Base bundle:** host packages (Chord, pi-durable, pi-ai, pi-env, pi-codemode, pi-tui, pi-schema, React, and `ws`,
+- **Base bundle:** host packages (Chord, lingshu-durable, lingshu-ai, lingshu-env, lingshu-codemode, lingshu-tui, lingshu-schema, React, and `ws`,
   `yaml`, 14.4 B7), p2's runtime and hosts (`apps/p2/src/**`). One per surface; it changes only with p2 itself.
 - **One script per facet:** an esbuild bundle of the facet and its plugin's files, wrapped as a function of its host
   packages: `(require, …) => facet`. Host packages and `src/**` are external and passed in (9.2); the facet's file
@@ -634,7 +634,7 @@ Browsers are measured before web D (13.2, question 6).
 It exists only because the TUI's `ctx.surface("chat")` is untyped (`plugins/chat-mode/tui.ts`, `plugins/send-file/tui.ts`,
 importing `ChatSurface` from `../chat/tui.ts`). Under D it is always false. Fix: `ctx.surface` takes a typed key
 (`defineSurface<ChatApi>("chat")`) resolved by name, like contracts; chat-mode's reply policy becomes a registry entry or
-document chat reads; send-file reads its tool calls from the `Chat` view. `instanceof` on base classes (pi-tui `Text`,
+document chat reads; send-file reads its tool calls from the `Chat` view. `instanceof` on base classes (lingshu-tui `Text`,
 `Container`) is fine.
 
 ### 14.4 Blockers for D
@@ -643,11 +643,11 @@ document chat reads; send-file reads its tool calls from the `Chat` view. `insta
 - **B2 Cross-plugin files are copied** into each importing facet, with their module state: `envs/DirectoryPicker.tsx`,
   `subagents/tools.ts`, `files/downloads.ts`, `envs/remote-env.ts` and `config.ts`, `conversations/origin.ts`,
   `workspace/protocol.ts`, `chat/tui.ts`. Rule: contracts and side-effect-free modules only (4.2).
-- **B3 `apps/p2/src/**` is single-instance host code** (9.1): `HostContext`, `src/web` contexts, `TuiRuntime`, pi-tui
+- **B3 `apps/p2/src/**` is single-instance host code** (9.1): `HostContext`, `src/web` contexts, `TuiRuntime`, lingshu-tui
   classes. The bundler externalizes relative paths into `src/` (9.2).
 - **B4 `import.meta.url`:** `plugins/dev-tools/worker.ts`, `plugins/prompt/worker.ts`, `plugins/terminals/detached.ts`.
   Inject per file.
-- **B5 Dynamic `import()`:** none in plugin code; the base keeps resolving pi-ai's lazy API loaders and pi-codemode's
+- **B5 Dynamic `import()`:** none in plugin code; the base keeps resolving lingshu-ai's lazy API loaders and lingshu-codemode's
   worker-thread entries.
 - **B6 Top-level await:** none in facets; `plugins/terminals/main.ts` and `plugins/radius/login.ts` are process entries.
 - **B7 CommonJS and builtins:** `ws` and `yaml` become host packages; Node builtins come through a `require` the loader
@@ -682,13 +682,13 @@ Drop: restart when idle, variants A and B, C's hook.
 Every finding was checked against the code; the claims cited above were confirmed (Chord `not_coordinator` and
 longest-prefix module lists; name-based binding; `discoverPluginTypes` importing every facet, since removed;
 `/version` on `visibilitychange` only; the fixed TUI manifest and cross-identity snapshots; global `no-store`; Durable
-silently skipping extensions and blocking tasks; ungated `.pi/skills`/`.pi/prompts`; `?url` wasm; `import.meta.url`
+silently skipping extensions and blocking tasks; ungated `.lingshu/skills`/`.lingshu/prompts`; `?url` wasm; `import.meta.url`
 users).
 Where this design deviates from a reviewer or the owner's brief:
 
 1. **Tool names use `<plugin>_`, not `<plugin>.`.** Provider APIs (Anthropic, OpenAI) restrict tool names to
    `[a-zA-Z0-9_-]{1,64}`; a dot would break the tool on those providers. All other names use `<plugin>.`.
-2. **No `defaultProjectTrust: "always"`** (pi has it): it would activate project code without the owner, contrary to
+2. **No `defaultProjectTrust: "always"`** (lingshu has it): it would activate project code without the owner, contrary to
    6.1.
 3. **In-place project reload protocols** (Fable B1/B2, Sol B2, Astra B3: server-coordinated per-session reloads,
    stable facet names, transactional base+project reloads): revision 2 found them unnecessary because project facets
@@ -699,7 +699,7 @@ Where this design deviates from a reviewer or the owner's brief:
    passing host packages in and injects `import.meta.url` (7.1, 14.2).
 5. **esbuild metafile instead of the TypeScript parser** (Opus I4): moot. Discovery no longer parses anything (owner
    decision); dependencies resolve at runtime (4.2).
-6. **Project packages under `~/.pi/p2/project-packages`** (Fable B3, Opus I7, Astra/Sol §13.2): deferred with
+6. **Project packages under `~/.lingshu/p2/project-packages`** (Fable B3, Opus I7, Astra/Sol §13.2): deferred with
    project packages (not in v1).
 7. **Guests get approved project web facets** (Fable, Astra §13.4): overridden by the owner decision (base scope only).
 8. **Directory trust with automatic in-place reload** (Fable B4): overridden; changes apply only by Reload.

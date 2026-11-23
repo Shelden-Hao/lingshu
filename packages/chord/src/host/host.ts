@@ -9,7 +9,7 @@ import {
 	type SpanAttributes,
 	type TelemetryContext,
 	type TelemetrySpan,
-} from "@earendil-works/pi-telemetry";
+} from "@lingshu/telemetry";
 import {
 	awaitWithContext,
 	BACKGROUND_CONTEXT,

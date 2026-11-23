@@ -1,4 +1,4 @@
-import { fauxAssistantMessage } from "@earendil-works/pi-ai";
+import { fauxAssistantMessage } from "@lingshu/ai";
 import {
 	defineExtension,
 	defineTask,
@@ -7,7 +7,7 @@ import {
 	hook,
 	MemoryStorage,
 	UserEntry,
-} from "@earendil-works/pi-durable";
+} from "@lingshu/durable";
 import { describe, expect, it } from "vitest";
 import { allEntries, chatSetup, openChat } from "./chat-support.ts";
 import { context } from "./session-support.ts";
@@ -43,7 +43,7 @@ describe("entry reads for hooks and tasks", () => {
 		const { harness, root } = await openChat(new MemoryStorage(), setup);
 		await (await root.submit({ type: "input", content: "go" }, context)).wait(context);
 		// The answer is not committed yet when `onYield` asks.
-		expect(seen).toEqual([{ kinds: ["pi.user"], user: "pi.user" }]);
+		expect(seen).toEqual([{ kinds: ["lingshu.user"], user: "lingshu.user" }]);
 		await harness.close(context);
 	});
 
@@ -83,7 +83,7 @@ describe("entry reads for hooks and tasks", () => {
 		);
 		await harness.waitForTask(id, context);
 		const entries = await allEntries(root);
-		expect(entries.map((entry) => entry.kind)).toEqual(["pi.user", "pi.assistant"]);
+		expect(entries.map((entry) => entry.kind)).toEqual(["lingshu.user", "lingshu.assistant"]);
 		expect(pages.map((page) => page.map((entry) => entry.id))).toEqual([
 			[entries[0]!.id],
 			[entries[1]!.id],

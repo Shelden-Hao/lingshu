@@ -100,10 +100,10 @@ describe("the release build", () => {
 
 	it("compiles the API modules for a plugin's type check: Chord imported from the dependency, relative files as JavaScript", async () => {
 		const code = await readFile(join(built.dist, "api", "v1", "index.js"), "utf8");
-		assert.match(code, /export \* from "@earendil-works\/chord";/);
+		assert.match(code, /export \* from "@lingshu\/chord";/);
 		assert.match(code, /from "\.\.\/\.\.\/kit\/forward\.js";/);
 		const declaration = await readFile(join(built.dist, "api", "v1", "server.d.ts"), "utf8");
-		assert.match(declaration, /export declare const SessionRoute: import\("@earendil-works\/chord"\)\.Contract</);
+		assert.match(declaration, /export declare const SessionRoute: import\("@lingshu\/chord"\)\.Contract</);
 		// No type is named by a path into another package's files.
 		for (const file of built.files.filter((name) => name.endsWith(".d.ts"))) {
 			assert.doesNotMatch(await readFile(join(built.dist, file), "utf8"), /node_modules|packages\/chord/, file);
@@ -232,11 +232,11 @@ describe("the build's guards", () => {
 	});
 
 	it("refuse a dependency pinned to another version than the workspace's, which the bundle inlines", () => {
-		const manifest = { version: "0.0.1", dependencies: { "@earendil-works/chord": "1.5.2", esbuild: "0.28.2" } };
-		checkVersions(manifest, { "@earendil-works/chord": "1.5.2", esbuild: "0.28.2" });
+		const manifest = { version: "0.0.1", dependencies: { "@lingshu/chord": "1.5.2", esbuild: "0.28.2" } };
+		checkVersions(manifest, { "@lingshu/chord": "1.5.2", esbuild: "0.28.2" });
 		assert.throws(
-			() => checkVersions(manifest, { "@earendil-works/chord": "1.5.3", esbuild: "0.28.2" }),
-			/@earendil-works\/chord is pinned to 1\.5\.2, the workspace has 1\.5\.3$/,
+			() => checkVersions(manifest, { "@lingshu/chord": "1.5.3", esbuild: "0.28.2" }),
+			/@lingshu\/chord is pinned to 1\.5\.2, the workspace has 1\.5\.3$/,
 		);
 	});
 });

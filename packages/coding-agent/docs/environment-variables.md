@@ -1,9 +1,9 @@
 # Environment Variables
 
-Pi uses environment variables in three ways:
+Lingshu uses environment variables in three ways:
 
-- Variables such as `PI_OFFLINE` configure the Pi process.
-- Pi sets process markers so child processes can identify Pi as the launching agent.
+- Variables such as `LINGSHU_OFFLINE` configure the Lingshu process.
+- Lingshu sets process markers so child processes can identify Lingshu as the launching agent.
 - Commands run by the LLM-callable shell tools receive `PI_*` variables describing the current session.
 
 Provider API-key variables are documented separately in [Providers](providers.md#use-an-api-key-from-the-environment).
@@ -12,37 +12,37 @@ Provider API-key variables are documented separately in [Providers](providers.md
 
 The CLI and RPC entry points set two process markers:
 
-- `AI_AGENT=pi` is a generic marker that lets tooling identify Pi as the agent that launched the process.
-- `PI_CODING_AGENT=true` is Pi-specific and lets child processes detect that they run inside Pi.
+- `AI_AGENT=lingshu` is a generic marker that lets tooling identify Lingshu as the agent that launched the process.
+- `LINGSHU_CODING_AGENT=true` is Lingshu-specific and lets child processes detect that they run inside Lingshu.
 
-Child processes inherit both markers. They are not session-specific and are not set automatically when Pi is embedded through the SDK.
+Child processes inherit both markers. They are not session-specific and are not set automatically when Lingshu is embedded through the SDK.
 
 ## Shell Tool Session Environment
 
-Commands run by the `bash` and `powershell` tools receive the current Pi session state:
+Commands run by the `bash` and `powershell` tools receive the current Lingshu session state:
 
 | Variable | Description |
 |----------|-------------|
-| `PI_SESSION_ID` | Current session ID |
-| `PI_SESSION_FILE` | Absolute path to the current session JSONL file; unset for ephemeral sessions |
-| `PI_PROVIDER` | Currently selected model provider |
-| `PI_MODEL` | Currently selected model ID |
-| `PI_REASONING_LEVEL` | Current effective reasoning level: `off`, `minimal`, `low`, `medium`, `high`, `xhigh`, or `max` |
+| `LINGSHU_SESSION_ID` | Current session ID |
+| `LINGSHU_SESSION_FILE` | Absolute path to the current session JSONL file; unset for ephemeral sessions |
+| `LINGSHU_PROVIDER` | Currently selected model provider |
+| `LINGSHU_MODEL` | Currently selected model ID |
+| `LINGSHU_REASONING_LEVEL` | Current effective reasoning level: `off`, `minimal`, `low`, `medium`, `high`, `xhigh`, or `max` |
 
-The values are resolved when each command starts. Switching models or changing the reasoning level therefore affects the next shell command without restarting Pi. `PI_PROVIDER` and `PI_MODEL` identify the selected Pi model, not a different upstream model that a router may choose internally.
+The values are resolved when each command starts. Switching models or changing the reasoning level therefore affects the next shell command without restarting Lingshu. `LINGSHU_PROVIDER` and `LINGSHU_MODEL` identify the selected Lingshu model, not a different upstream model that a router may choose internally.
 
 When asked which model or provider is running, inspect these variables instead of inferring the answer from the system prompt:
 
 ```bash
-printf '%s/%s\n' "$PI_PROVIDER" "$PI_MODEL"
-printf 'reasoning=%s session=%s\n' "$PI_REASONING_LEVEL" "$PI_SESSION_ID"
+printf '%s/%s\n' "$LINGSHU_PROVIDER" "$LINGSHU_MODEL"
+printf 'reasoning=%s session=%s\n' "$LINGSHU_REASONING_LEVEL" "$LINGSHU_SESSION_ID"
 ```
 
 The session file can be inspected directly when the session is persistent:
 
 ```bash
-if [ -n "$PI_SESSION_FILE" ]; then
-  tail -n 1 "$PI_SESSION_FILE"
+if [ -n "$LINGSHU_SESSION_FILE" ]; then
+  tail -n 1 "$LINGSHU_SESSION_FILE"
 fi
 ```
 
@@ -50,7 +50,7 @@ These variables are injected into the LLM-callable `bash` and `powershell` tools
 
 ### Custom Shell Tools
 
-Tools created with `createBashTool()` or `createPowerShellTool()` expose the session environment by default when registered with Pi. Injection happens before `spawnHook`, so a hook receives the variables in `ctx.env`:
+Tools created with `createBashTool()` or `createPowerShellTool()` expose the session environment by default when registered with Lingshu. Injection happens before `spawnHook`, so a hook receives the variables in `ctx.env`:
 
 ```typescript
 const bashTool = createBashTool(cwd, {
@@ -70,33 +70,33 @@ const powershellTool = createPowerShellTool(cwd, {
 });
 ```
 
-When disabled, Pi removes inherited values for these variables so nested Pi processes do not expose stale parent-session metadata.
+When disabled, Lingshu removes inherited values for these variables so nested Lingshu processes do not expose stale parent-session metadata.
 
-## Pi Process Configuration
+## Lingshu Process Configuration
 
-These variables are read by Pi itself:
+These variables are read by Lingshu itself:
 
 | Variable | Description |
 |----------|-------------|
-| `PI_CODING_AGENT_DIR` | Override the config directory; default is `~/.pi/agent` |
-| `PI_CODING_AGENT_SESSION_DIR` | Override session storage; overridden by `--session-dir` |
-| `PI_PACKAGE_DIR` | Override the package directory, useful for Nix/Guix store paths |
-| `PI_OFFLINE` | Disable automatic network activity, including model catalog refreshes |
-| `PI_SKIP_VERSION_CHECK` | Disable the `pi.dev` latest-version request |
-| `PI_SELF_UPDATE_COMMAND` | Command `pi update` runs to update Pi itself, split on whitespace, with `{packageName}`, `{version}`, and `{installSpec}` placeholders. Takes precedence over the `selfUpdateCommand` setting. See [Custom update command](cli.md#custom-update-command) |
-| `PI_TELEMETRY` | Override install/update telemetry and provider attribution headers: `1`/`true`/`yes` or `0`/`false`/`no` |
-| `PI_CODEMODE_MAX_WORKERS` | Maximum codemode workers alive at once across all sessions in the process; default `2`. Each worker's script may use up to 256 MB. Raise it when one process runs several sessions, such as in-process subagents. Further scripts wait for a free worker. See [Codemode](codemode.md) |
-| `PI_CACHE_RETENTION` | Set to `long` for extended provider prompt caching where supported |
-| `PI_SHARE_VIEWER_URL` | Override the base URL used by `/share` |
-| `PI_RADIUS_GATEWAY` | Override the Radius gateway origin used by `/bug` uploads |
-| `PI_CLEAR_ON_SHRINK` | Set to `1` to clear empty rows when rendered content shrinks; the `terminal.clearOnShrink` setting takes precedence. See [Settings](settings.md) |
-| `PI_HARDWARE_CURSOR` | Set to `1` to show the hardware cursor; see [Terminal setup](terminal-setup.md) |
-| `PI_CLIPBOARD_OSC52` | Set to `1` to also send copied text to the terminal with OSC 52 after the local clipboard write, as Pi does over SSH. Use it when a remote client reaches Pi without SSH variables, such as a multiplexer attached from another machine or a remote IDE daemon |
-| `PI_HYPERLINKS` | Override OSC 8 hyperlink detection with `1`, `0`, or `auto` |
-| `PI_PROGRAM_STATUS` | Override OSC 7501 program status detection: `1` always reports, `0` never reports; otherwise Pi reports only after the terminal confirms support. See [Terminal setup](terminal-setup.md#program-status) |
-| `PI_IMAGE_PROTOCOL` | Override inline image detection with `kitty`, `iterm2`, `none`, or `auto` |
-| `PI_TRUE_COLOR` | Override truecolor detection with `1`, `0`, or `auto` |
-| `PI_TUI_ESC_TIMEOUT` | How long to wait after a lone ESC before treating it as Escape, in milliseconds; defaults to `100` over SSH and `10` otherwise. Increase if Alt-key input is misread as Escape |
+| `LINGSHU_CODING_AGENT_DIR` | Override the config directory; default is `~/.lingshu/agent` |
+| `LINGSHU_CODING_AGENT_SESSION_DIR` | Override session storage; overridden by `--session-dir` |
+| `LINGSHU_PACKAGE_DIR` | Override the package directory, useful for Nix/Guix store paths |
+| `LINGSHU_OFFLINE` | Disable automatic network activity, including model catalog refreshes |
+| `LINGSHU_SKIP_VERSION_CHECK` | Disable the `pi.dev` latest-version request |
+| `LINGSHU_SELF_UPDATE_COMMAND` | Command `lingshu update` runs to update Lingshu itself, split on whitespace, with `{packageName}`, `{version}`, and `{installSpec}` placeholders. Takes precedence over the `selfUpdateCommand` setting. See [Custom update command](cli.md#custom-update-command) |
+| `LINGSHU_TELEMETRY` | Override install/update telemetry and provider attribution headers: `1`/`true`/`yes` or `0`/`false`/`no` |
+| `LINGSHU_CODEMODE_MAX_WORKERS` | Maximum codemode workers alive at once across all sessions in the process; default `2`. Each worker's script may use up to 256 MB. Raise it when one process runs several sessions, such as in-process subagents. Further scripts wait for a free worker. See [Codemode](codemode.md) |
+| `LINGSHU_CACHE_RETENTION` | Set to `long` for extended provider prompt caching where supported |
+| `LINGSHU_SHARE_VIEWER_URL` | Override the base URL used by `/share` |
+| `LINGSHU_RADIUS_GATEWAY` | Override the Radius gateway origin used by `/bug` uploads |
+| `LINGSHU_CLEAR_ON_SHRINK` | Set to `1` to clear empty rows when rendered content shrinks; the `terminal.clearOnShrink` setting takes precedence. See [Settings](settings.md) |
+| `LINGSHU_HARDWARE_CURSOR` | Set to `1` to show the hardware cursor; see [Terminal setup](terminal-setup.md) |
+| `LINGSHU_CLIPBOARD_OSC52` | Set to `1` to also send copied text to the terminal with OSC 52 after the local clipboard write, as Lingshu does over SSH. Use it when a remote client reaches Lingshu without SSH variables, such as a multiplexer attached from another machine or a remote IDE daemon |
+| `LINGSHU_HYPERLINKS` | Override OSC 8 hyperlink detection with `1`, `0`, or `auto` |
+| `LINGSHU_PROGRAM_STATUS` | Override OSC 7501 program status detection: `1` always reports, `0` never reports; otherwise Lingshu reports only after the terminal confirms support. See [Terminal setup](terminal-setup.md#program-status) |
+| `LINGSHU_IMAGE_PROTOCOL` | Override inline image detection with `kitty`, `iterm2`, `none`, or `auto` |
+| `LINGSHU_TRUE_COLOR` | Override truecolor detection with `1`, `0`, or `auto` |
+| `LINGSHU_TUI_ESC_TIMEOUT` | How long to wait after a lone ESC before treating it as Escape, in milliseconds; defaults to `100` over SSH and `10` otherwise. Increase if Alt-key input is misread as Escape |
 | `VISUAL`, `EDITOR` | External editor fallback when `externalEditor` is unset |
 | `HTTP_PROXY`, `HTTPS_PROXY` | Proxy outbound HTTP requests |
 

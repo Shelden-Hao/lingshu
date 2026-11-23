@@ -1,10 +1,10 @@
 // References as p2's UIs (the TUI, the web) hold them: following a value with its current one first, waiting until a
 // reference is live, and releasing a held reference a little later so that coming back to it is instant.
 
-import type { Contract, Held, RefState, Registry, RegistryValue } from "@earendil-works/chord";
-import type { Context } from "@earendil-works/chord/context";
-import { BACKGROUND_CONTEXT, withAbortSignal } from "@earendil-works/chord/context";
-import type { NativeWatchable, Watchable } from "@earendil-works/chord/watch";
+import type { Contract, Held, RefState, Registry, RegistryValue } from "@lingshu/chord";
+import type { Context } from "@lingshu/chord/context";
+import { BACKGROUND_CONTEXT, withAbortSignal } from "@lingshu/chord/context";
+import type { NativeWatchable, Watchable } from "@lingshu/chord/watch";
 
 /** What every held reference has: its state (loading, live, failed, ended) and its release. */
 export type HeldRef = { readonly state: NativeWatchable<RefState>; release(): void };

@@ -1,6 +1,6 @@
 // The memory test's session (`release/memory.test.ts`), run in a session worker (`test/memory/worker.ts`) as slice 3
 // will run one there: Durable's `Harness` on the worker's store, the coding tools (read, write, edit, bash; Photon
-// images), a `NodeExecutionEnv`, a prompt section, a subagent tool, pi-ai's real Anthropic and OpenAI providers pointed
+// images), a `NodeExecutionEnv`, a prompt section, a subagent tool, lingshu-ai's real Anthropic and OpenAI providers pointed
 // at the test's HTTPS stub, and telemetry recorded and sent to the server every second. Then the schedule: idle, one
 // streamed answer, a burst of 20 turns with tool calls and a change of provider, five subagent conversations streaming
 // at once; idle between. Each phase is a line in the file `P3_MEMORY_PHASES` names, for the test to read; after an idle
@@ -9,17 +9,17 @@
 
 import { appendFileSync, mkdtempSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import type { Context } from "@earendil-works/chord/context";
-import { sendWorkerTelemetry, TelemetryRecorder } from "@earendil-works/chord/telemetry-ingest";
-import { createModels } from "@earendil-works/pi-ai/models";
-import { anthropicProvider } from "@earendil-works/pi-ai/providers/anthropic";
-import { openaiProvider } from "@earendil-works/pi-ai/providers/openai";
-import { createRegistry, defineExtension, defineTool, Harness, section } from "@earendil-works/pi-durable";
-import { NodeExecutionEnv } from "@earendil-works/pi-durable/env/node";
-import { createNodePhotonImages } from "@earendil-works/pi-durable/images/node";
-import { StoreStorage } from "@earendil-works/pi-durable/storage/store";
-import { createCodingTools } from "@earendil-works/pi-durable/tools";
-import { obj, str } from "@earendil-works/pi-schema";
+import type { Context } from "@lingshu/chord/context";
+import { sendWorkerTelemetry, TelemetryRecorder } from "@lingshu/chord/telemetry-ingest";
+import { createModels } from "@lingshu/ai/models";
+import { anthropicProvider } from "@lingshu/ai/providers/anthropic";
+import { openaiProvider } from "@lingshu/ai/providers/openai";
+import { createRegistry, defineExtension, defineTool, Harness, section } from "@lingshu/durable";
+import { NodeExecutionEnv } from "@lingshu/durable/env/node";
+import { createNodePhotonImages } from "@lingshu/durable/images/node";
+import { StoreStorage } from "@lingshu/durable/storage/store";
+import { createCodingTools } from "@lingshu/durable/tools";
+import { obj, str } from "@lingshu/schema";
 import type { WorkerSession } from "../../src/kit/worker.ts";
 import { words } from "./stub.ts";
 

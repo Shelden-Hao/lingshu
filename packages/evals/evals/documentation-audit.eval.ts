@@ -1,7 +1,7 @@
 import { globSync } from "node:fs";
 import { isAbsolute, relative, resolve } from "node:path";
-import { Type } from "@earendil-works/pi-ai";
-import { defineTool } from "@earendil-works/pi-coding-agent";
+import { Type } from "@lingshu/ai";
+import { defineTool } from "@lingshu/coding-agent";
 import { expect } from "vitest";
 import { describeEval, toolCalls } from "vitest-evals";
 import { createPiCodingAgentHarness } from "../src/harness.ts";
@@ -44,7 +44,7 @@ const harness = createPiCodingAgentHarness({
 describeEval("Audit documentation against implementation", { harness }, (it) => {
 	it.for(pages)("$path matches the implementation", async ({ path }, { run }) => {
 		const documentationPath = resolve(docsRoot, path);
-		const result = await run(`Audit this Pi documentation page against the repository implementation.
+		const result = await run(`Audit this Lingshu documentation page against the repository implementation.
 
 Documentation page: ${documentationPath}
 Repository root: ${repositoryRoot}

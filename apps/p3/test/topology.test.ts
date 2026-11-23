@@ -3,9 +3,9 @@
 
 import assert from "node:assert/strict";
 import { afterEach, describe, it } from "node:test";
-import { isChordError } from "@earendil-works/chord";
-import { BACKGROUND_CONTEXT as context } from "@earendil-works/chord/context";
-import type { P3Principal } from "@earendil-works/p3/v1";
+import { isChordError } from "@lingshu/chord";
+import { BACKGROUND_CONTEXT as context } from "@lingshu/chord/context";
+import type { P3Principal } from "@lingshu/p3/v1";
 import { SessionFacts, SessionStart, Sessions, SessionsList, SessionWorker } from "../plugins/sessions/contract.ts";
 import { SignIns } from "../plugins/sign-in/contract.ts";
 import { Probe } from "./plugins/probe/contract.ts";
@@ -46,7 +46,7 @@ describe("reloads while in use", () => {
 		assert.equal(list.variant, "owner");
 		assert.equal(worker.variant, "owner");
 		if (list.variant !== "owner" || worker.variant !== "owner") return;
-		await t.reload("@earendil-works/p3-sessions");
+		await t.reload("@lingshu/p3-sessions");
 		const second = await sessions.create({ title: "two" }, context);
 		await until(list.list, (value) => value.rows.some((row) => row.id === second), context);
 		await sessions.rename({ id, title: "renamed" }, context);
@@ -58,7 +58,7 @@ describe("reloads while in use", () => {
 		const { t, owner, sessions, id } = await withSession();
 		const worker = await owner.get(SessionWorker, { session: id }, context);
 		if (worker.variant !== "owner") return assert.fail(worker.variant);
-		await t.reload("@earendil-works/p3-sessions", id);
+		await t.reload("@lingshu/p3-sessions", id);
 		await sessions.rename({ id, title: "renamed" }, context);
 		await until(worker.session, (row) => row?.title === "renamed", context);
 		assert.deepEqual(t.errors, []);
@@ -70,7 +70,7 @@ describe("reloads while in use", () => {
 			const signIns = await ctx.get(SignIns, {});
 			return signIns.issue({ principal: OWNER, label: "test", kind: "device" }, ctx);
 		}, context);
-		await t.reload("@earendil-works/p3-sign-in");
+		await t.reload("@lingshu/p3-sign-in");
 		const verified = await t.server.root(
 			async (ctx) => (await ctx.get(SignIns, {})).verify(issued.token, ctx),
 			context,
@@ -81,7 +81,7 @@ describe("reloads while in use", () => {
 	it("the runner's worker facet: a worker still stops itself once idle", async () => {
 		const { t, owner, id } = await withSession(200);
 		const probe = await owner.get(Probe, { session: id }, context);
-		await t.reload("@earendil-works/p3-runner", id);
+		await t.reload("@lingshu/p3-runner", id);
 		probe.release();
 		await eventually(
 			async () => t.closed,

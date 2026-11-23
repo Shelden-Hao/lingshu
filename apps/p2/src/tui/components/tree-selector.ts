@@ -12,7 +12,7 @@ import {
 	Spacer,
 	Text,
 	truncateToWidth,
-} from "@earendil-works/pi-tui";
+} from "@lingshu/tui";
 import { keyHint, lineText } from "../render-context.ts";
 import { DynamicBorder, type SelectorContext } from "./selectors.ts";
 
@@ -203,7 +203,7 @@ function buildTree(nodes: readonly TreeSelectorNode[]): TreeNode[] {
 	return roots;
 }
 
-/** pi's label input, for a branch: Enter saves the trimmed text (empty: see `TreeSelectorComponent`), Escape cancels. */
+/** lingshu's label input, for a branch: Enter saves the trimmed text (empty: see `TreeSelectorComponent`), Escape cancels. */
 class LabelInput implements Component, Focusable {
 	private readonly input = new Input();
 	private readonly ctx: SelectorContext;
@@ -253,7 +253,7 @@ class LabelInput implements Component, Focusable {
 }
 
 /**
- * pi's `/tree` selector over the session's branches: Enter continues the session at the chosen message; the label key
+ * lingshu's `/tree` selector over the session's branches: Enter continues the session at the chosen message; the label key
  * renames the branch holding the selected message (`onRename`; empty resets conversation 1 to the session title). The
  * owner of the selector shows a saved label with `setLabel`.
  */

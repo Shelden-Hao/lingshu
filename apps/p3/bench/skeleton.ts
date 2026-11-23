@@ -11,9 +11,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { parseArgs } from "node:util";
-import { createHost, type Host, webSocketLink } from "@earendil-works/chord";
-import { BACKGROUND_CONTEXT as context } from "@earendil-works/chord/context";
-import type { P3Principal } from "@earendil-works/p3/v1";
+import { createHost, type Host, webSocketLink } from "@lingshu/chord";
+import { BACKGROUND_CONTEXT as context } from "@lingshu/chord/context";
+import type { P3Principal } from "@lingshu/p3/v1";
 import { Sessions, SessionWorker } from "../plugins/sessions/contract.ts";
 import { COMMAND } from "../src/install.ts";
 
@@ -42,7 +42,7 @@ try {
 	line("server: launch to listening, cold (first)", `${launches[0]!.toFixed(0)} ms`);
 	line("server: launch to listening, warm", stats(launches.slice(1)));
 
-	const server = await launch(join(root, "pi"));
+	const server = await launch(join(root, "lingshu"));
 	try {
 		const client = await ownerClient(server.dataDir, server.port);
 		const sessions = await client.get(Sessions, {}, context);

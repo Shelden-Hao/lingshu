@@ -1,9 +1,9 @@
-// Async locking/write slice from earendil-works/pi auth-storage.ts (MIT).
-// See third-party/pi.LICENSE. Keep writes in-place under the refresh lock.
+// Async locking/write slice from earendil-works/lingshu auth-storage.ts (MIT).
+// See third-party/lingshu.LICENSE. Keep writes in-place under the refresh lock.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
-import type { AuthOperationOptions } from "@earendil-works/pi-ai";
+import type { AuthOperationOptions } from "@lingshu/ai";
 import lockfile from "proper-lockfile";
 import { normalizePath } from "./config-json.ts";
 

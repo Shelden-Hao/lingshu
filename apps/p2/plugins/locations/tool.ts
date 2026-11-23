@@ -6,8 +6,8 @@ import {
 	type DocumentReader,
 	defineExtension,
 	ROOT_CONVERSATION_ID,
-} from "@earendil-works/pi-durable";
-import { nul, obj, opt, str, union } from "@earendil-works/pi-schema";
+} from "@lingshu/durable";
+import { nul, obj, opt, str, union } from "@lingshu/schema";
 import type { Context, DirectoryListing } from "@p2/app/v1";
 import { type Location, locationText, parseLocation, sameLocation } from "@p2/app/v1";
 import { defineP2Tool, isTopLevel, type P2Tool } from "@p2/app/v1/worker";

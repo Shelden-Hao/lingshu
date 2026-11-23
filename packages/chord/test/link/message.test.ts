@@ -205,7 +205,7 @@ const EVERY_KIND: Message[] = [
 		fingerprint: "0123456789abcdef",
 		params: "{}",
 		address: server,
-		trace: { "pi-memory-span": "1", "pi-memory-trace": "s:1" },
+		trace: { "lingshu-memory-span": "1", "lingshu-memory-trace": "s:1" },
 	},
 	{
 		kind: "hold",

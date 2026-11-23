@@ -115,7 +115,7 @@ table{max-width:100%}
   <div class="cover-stats"><div class="stat"><b>0</b><span>new task statuses</span></div><div class="stat"><b>1</b><span>new delivery operation, signal()</span></div><div class="stat"><b>0</b><span>changes to the SQLite schema</span></div><div class="stat"><b>4</b><span>reasons parked work wakes: time, expired, signal, tasks</span></div></div>
   <div class="cover-note"><p>Draft for review, not built. Follows <code>spec.md</code> in the same directory (cited as §n), which records the owner&#39;s
 decisions of 2026-11-09, the review by gpt-6-astra, gpt-6.1-sol and claude-opus-5-5, and extends
-<code>packages/durable/docs/spec.md</code> (cited as spec §n). Schemas use <code>@earendil-works/pi-schema</code>. How plugins compose
+<code>packages/durable/docs/spec.md</code> (cited as spec §n). Schemas use <code>@lingshu/schema</code>. How plugins compose
 hooks into policies (approvals, quotas, ordering) is the host&#39;s design, not Durable&#39;s; the last chapter says where
 that line runs.</p>
 </div>
@@ -197,7 +197,7 @@ all. Its whole life is one function:</p>
   <span class="tk-f">execute</span>(args: <span class="tk-t">ToolArgs</span>&lt;TParameters&gt;, api: <span class="tk-t">ToolExecutionApi</span>&lt;TDetails&gt;, context: <span class="tk-t">Context</span>): <span class="tk-t">Promise</span>&lt;<span class="tk-t">ToolExecutionResult</span>&lt;TDetails&gt;&gt;;
 };</code></pre>
 <p>So <code>run_ci</code> has to await the webhook inside <code>execute()</code>:</p>
-<pre><code><span class="tk-k">import</span> { obj, str } <span class="tk-k">from</span> <span class="tk-s">"@earendil-works/pi-schema"</span>;
+<pre><code><span class="tk-k">import</span> { obj, str } <span class="tk-k">from</span> <span class="tk-s">"@lingshu/schema"</span>;
 
 <span class="tk-c">// The CI service's client, and a host helper that resolves when the webhook for a build arrives.</span>
 <span class="tk-k">declare</span> <span class="tk-k">const</span> ci: { <span class="tk-f">trigger</span>(input: { ref: string }, context: <span class="tk-t">Context</span>): <span class="tk-t">Promise</span>&lt;{ id: string }&gt; };
@@ -240,7 +240,7 @@ that itself waits for a person. Each is a promise in memory.</p>
 }
 
 <span class="tk-k">type</span> <span class="tk-t">SignalKey</span>&lt;T&gt; = { <span class="tk-k">readonly</span> signal: string; <span class="tk-k">readonly</span> key: string; <span class="tk-k">readonly</span> <span class="tk-s">"~value"</span>?: T };</code></pre>
-<pre><code><span class="tk-k">import</span> { obj, oneOf, str } <span class="tk-k">from</span> <span class="tk-s">"@earendil-works/pi-schema"</span>;
+<pre><code><span class="tk-k">import</span> { obj, oneOf, str } <span class="tk-k">from</span> <span class="tk-s">"@lingshu/schema"</span>;
 
 <span class="tk-k">const</span> <span class="tk-t">CiResult</span> = <span class="tk-f">defineSignal</span>({
   name: <span class="tk-s">"app.ci-result"</span>,
@@ -336,7 +336,7 @@ older version if needed. It reads the live task record the scheduler keeps in me
   <span class="tk-c">/** The key's state: its value, expired at the deadline, or undefined while nothing came. */</span>
   <span class="tk-f">readSignal</span>&lt;T&gt;(token: <span class="tk-t">SignalToken</span>&lt;T&gt;, key: string, context: <span class="tk-t">Context</span>): <span class="tk-t">Promise</span>&lt;<span class="tk-t">SignalState</span>&lt;T&gt; | <span class="tk-k">undefined</span>&gt;;
 }</code></pre>
-<pre><code><span class="tk-k">import</span> { obj, str } <span class="tk-k">from</span> <span class="tk-s">"@earendil-works/pi-schema"</span>;
+<pre><code><span class="tk-k">import</span> { obj, str } <span class="tk-k">from</span> <span class="tk-s">"@lingshu/schema"</span>;
 
 <span class="tk-k">const</span> HOUR = <span class="tk-n">60</span> * <span class="tk-n">60</span> * <span class="tk-n">1000</span>;
 <span class="tk-k">const</span> <span class="tk-t">Answer</span> = <span class="tk-f">defineSignal</span>({ name: <span class="tk-s">"app.answer"</span>, version: <span class="tk-n">1</span>, schema: <span class="tk-f">obj</span>({ text: <span class="tk-f">str</span>() }) });
@@ -444,7 +444,7 @@ tool task commits it:</p>
 <p>The words are the task&#39;s: <code>sleep</code> and <code>wait</code> mirror the parked states, <code>checkpoint</code> is what the tool keeps, <code>wake</code> is
 why it runs. When the call wakes, the same <code>execute()</code> runs again with the same arguments and <code>api.wake</code> set.</p>
 <h3 id="run-ci-parked">run_ci, parked</h3>
-<pre><code><span class="tk-k">import</span> { obj, oneOf, str } <span class="tk-k">from</span> <span class="tk-s">"@earendil-works/pi-schema"</span>;
+<pre><code><span class="tk-k">import</span> { obj, oneOf, str } <span class="tk-k">from</span> <span class="tk-s">"@lingshu/schema"</span>;
 
 <span class="tk-k">const</span> HOUR = <span class="tk-n">60</span> * <span class="tk-n">60</span> * <span class="tk-n">1000</span>;
 <span class="tk-k">const</span> <span class="tk-t">CiResult</span> = <span class="tk-f">defineSignal</span>({ name: <span class="tk-s">"app.ci-result"</span>, version: <span class="tk-n">1</span>, schema: <span class="tk-f">obj</span>({ status: <span class="tk-f">oneOf</span>([<span class="tk-s">"passed"</span>, <span class="tk-s">"failed"</span>]), logUrl: <span class="tk-f">str</span>() }) });
@@ -550,7 +550,7 @@ commit that creates it, so every later run with the same key gets the same child
 another task kind under a used key throw. Default keys are positions in a run, which mean different calls after a
 wake, so after a wake every <code>executeTool()</code> needs an explicit key and an unkeyed <code>createTask()</code> throws.</p>
 <p>A <code>wait</code> with <code>policy: &quot;any&quot;</code> wakes on the first child that ends; the wake lists the children that are terminal:</p>
-<pre><code><span class="tk-k">import</span> { obj, str } <span class="tk-k">from</span> <span class="tk-s">"@earendil-works/pi-schema"</span>;
+<pre><code><span class="tk-k">import</span> { obj, str } <span class="tk-k">from</span> <span class="tk-s">"@lingshu/schema"</span>;
 
 <span class="tk-k">const</span> <span class="tk-t">ResearchParameters</span> = <span class="tk-f">obj</span>({ x: <span class="tk-f">str</span>(), y: <span class="tk-f">str</span>() });
 
@@ -658,7 +658,7 @@ parks the tool task at its <code>call</code> checkpoint. On every wake before in
 top: resolve, validate, every <code>beforeTool</code> in order, validate again. A gate that waited reads its key with
 <code>readSignal()</code>, a value, expired, or nothing yet, and passes, blocks, or sleeps on a new key. The call runs only when a
 whole pass ends without a block or a sleep; once intent is committed, <code>beforeTool</code> never runs again.</p>
-<pre><code><span class="tk-k">import</span> { bool, obj } <span class="tk-k">from</span> <span class="tk-s">"@earendil-works/pi-schema"</span>;
+<pre><code><span class="tk-k">import</span> { bool, obj } <span class="tk-k">from</span> <span class="tk-s">"@lingshu/schema"</span>;
 
 <span class="tk-k">const</span> DAY = <span class="tk-n">24</span> * <span class="tk-n">60</span> * <span class="tk-n">60</span> * <span class="tk-n">1000</span>;
 <span class="tk-k">const</span> <span class="tk-t">Approval</span> = <span class="tk-f">defineSignal</span>({ name: <span class="tk-s">"approvals.decision"</span>, version: <span class="tk-n">1</span>, schema: <span class="tk-f">obj</span>({ allow: <span class="tk-f">bool</span>() }) });

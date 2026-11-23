@@ -12,8 +12,8 @@ export default defineConfig({
 		silent: "passed-only",
 	},
 	resolve: {
-		alias: [{ find: /^@earendil-works\/pi-telemetry$/, replacement: telemetrySrcIndex }],
-		// Workspace packages without a build (pi-schema) resolve to their source.
+		alias: [{ find: /^@lingshu\/telemetry$/, replacement: telemetrySrcIndex }],
+		// Workspace packages without a build (lingshu-schema) resolve to their source.
 		conditions: ["source"],
 	},
 	ssr: { resolve: { conditions: ["source"] } },

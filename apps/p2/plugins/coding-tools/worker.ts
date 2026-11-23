@@ -1,5 +1,5 @@
-import { defineExtension, section } from "@earendil-works/pi-durable";
-import { createCodingTools } from "@earendil-works/pi-durable/tools";
+import { defineExtension, section } from "@lingshu/durable";
+import { createCodingTools } from "@lingshu/durable/tools";
 import { contribute, defineFacet } from "@p2/app/v1";
 import { Extensions, HarnessEnvironments, HarnessNative, locateConversation, workerOf } from "@p2/app/v1/worker";
 

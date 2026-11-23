@@ -6,6 +6,7 @@
 // Run from packages/durable:
 //   node --conditions=source --experimental-strip-types test/examples/37-harness-registry.ts
 
+import { createModels } from "@lingshu/ai";
 import {
 	arr,
 	createHost,
@@ -18,10 +19,9 @@ import {
 	type RegistryTable,
 	sqliteBackend,
 	str,
-} from "@earendil-works/chord";
-import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
-import { openNodeSqliteDatabase } from "@earendil-works/chord/sqlite/node";
-import { createModels } from "@earendil-works/pi-ai";
+} from "@lingshu/chord";
+import { BACKGROUND_CONTEXT } from "@lingshu/chord/context";
+import { openNodeSqliteDatabase } from "@lingshu/chord/sqlite/node";
 import {
 	createRegistry,
 	defineExtension,

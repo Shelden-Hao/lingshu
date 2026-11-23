@@ -5,11 +5,11 @@
 // Run from packages/durable:
 //   node --conditions=source --experimental-strip-types test/examples/47-fit-images.ts
 import { deflateSync } from "node:zlib";
-import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
-import type { ImageContent, ToolResultMessage, UserMessage } from "@earendil-works/pi-ai";
-import { createModels } from "@earendil-works/pi-ai/models";
-import { fauxAssistantMessage, fauxProvider, fauxText, fauxToolCall } from "@earendil-works/pi-ai/providers/faux";
-import { obj } from "@earendil-works/pi-schema";
+import type { ImageContent, ToolResultMessage, UserMessage } from "@lingshu/ai";
+import { createModels } from "@lingshu/ai/models";
+import { fauxAssistantMessage, fauxProvider, fauxText, fauxToolCall } from "@lingshu/ai/providers/faux";
+import { BACKGROUND_CONTEXT } from "@lingshu/chord/context";
+import { obj } from "@lingshu/schema";
 import { createFitImagesExtension, fitImage } from "../../src/images/fit.ts";
 import { createNodePhotonImages } from "../../src/images/node.ts";
 import { createRegistry, defineExtension, defineTool, Harness, MemoryStorage, UserEntry } from "../../src/index.ts";

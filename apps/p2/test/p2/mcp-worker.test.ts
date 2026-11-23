@@ -1,7 +1,7 @@
 // MCP tools in a session worker, end to end with the fake provider: the worker leases the owner's servers at the
-// session's location with the project `.pi/mcp.json` it read there, the `codemode` section lists each server's namespace
+// session's location with the project `.lingshu/mcp.json` it read there, the `codemode` section lists each server's namespace
 // with its summary, `describeNamespace()` describes it, a code mode script's call returns the server's whole
-// `CallToolResult`, uncut past the harness's output bound (the model is not offered the tools, as in pi), a relocation moves the lease, a subagent's own location is leased while it
+// `CallToolResult`, uncut past the harness's output bound (the model is not offered the tools, as in lingshu), a relocation moves the lease, a subagent's own location is leased while it
 // is not archived (its project's servers stay out of the main conversation), and with code mode off `tool_search` loads
 // the tools for the model and the `mcp_servers` section lists the servers.
 import assert from "node:assert/strict";
@@ -10,8 +10,8 @@ import { join } from "node:path";
 import { test } from "node:test";
 import { setTimeout as sleep } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
-import type { ToolResultMessage } from "@earendil-works/pi-ai";
-import type { ConversationView } from "@earendil-works/pi-durable";
+import type { ToolResultMessage } from "@lingshu/ai";
+import type { ConversationView } from "@lingshu/durable";
 import { BACKGROUND_CONTEXT } from "@p2/app/v1";
 import { Chat } from "../../plugins/chat/contract.ts";
 import { Mcp } from "../../plugins/mcp/contract.ts";
@@ -59,9 +59,9 @@ test(
 			}),
 		);
 		// The project at the session's cwd adds a server there and refuses an HTTP one.
-		mkdirSync(join(fixture.workspace, ".pi"));
+		mkdirSync(join(fixture.workspace, ".lingshu"));
 		writeFileSync(
-			join(fixture.workspace, ".pi", "mcp.json"),
+			join(fixture.workspace, ".lingshu", "mcp.json"),
 			JSON.stringify({
 				mcpServers: {
 					lint: { command: process.execPath, args: [FIXTURE] },
@@ -90,7 +90,7 @@ test(
 		);
 		const instance = started[0];
 		const [refused] = await until(mcp.errors, (errors) => errors.length > 0);
-		assert.match(refused!, /\.pi\/mcp\.json: server "remote": HTTP servers are for the owner's mcp\.json/);
+		assert.match(refused!, /\.lingshu\/mcp\.json: server "remote": HTTP servers are for the owner's mcp\.json/);
 		let serial = 0;
 		const call = async (prompt: string) => {
 			const count = results(await until(chat.view, Boolean)).length;
@@ -98,11 +98,11 @@ test(
 			return results(
 				await until(
 					chat.view,
-					(view) => results(view).length > count && !(view?.docs["pi.live"] as { run?: unknown })?.run,
+					(view) => results(view).length > count && !(view?.docs["lingshu.live"] as { run?: unknown })?.run,
 				),
 			).at(-1)!;
 		};
-		// As in pi, the tools are for code mode scripts: the model is not offered them, and `tool_search` is not installed.
+		// As in lingshu, the tools are for code mode scripts: the model is not offered them, and `tool_search` is not installed.
 		const echo = async (said: string) => {
 			const result = await call(
 				`codemode return (await tools.mcp__files__echo({ text: ${JSON.stringify(said)} })).content[0].text;`,
@@ -111,7 +111,7 @@ test(
 			return scriptOutput(result);
 		};
 		assert.equal(await echo("hello"), "echo: hello");
-		// Past Durable's 50KB output bound and pi's 20KB MCP limit, the script still gets every character.
+		// Past Durable's 50KB output bound and lingshu's 20KB MCP limit, the script still gets every character.
 		const large = await call(
 			'codemode const r = await tools.mcp__files__echo({ text: "x".repeat(100000) }); return r.content[0].text.length;',
 		);
@@ -144,9 +144,9 @@ test(
 		// archived. Its project's server runs only there: the main conversation does not see it (its prompt does not
 		// change), and a script there cannot call it.
 		const own = join(moved, "own");
-		mkdirSync(join(own, ".pi"), { recursive: true });
+		mkdirSync(join(own, ".lingshu"), { recursive: true });
 		writeFileSync(
-			join(own, ".pi", "mcp.json"),
+			join(own, ".lingshu", "mcp.json"),
 			JSON.stringify({ mcpServers: { lint: { command: process.execPath, args: [FIXTURE] } } }),
 		);
 		await call(
@@ -166,7 +166,7 @@ test(
 		assert.match(text(unreachable), /tools\.mcp__lint__echo does not exist\./);
 		await call(`subagent ${JSON.stringify({ action: "archive", name: "own" })}`);
 		await until(mcp.instances, (instances) => instances.length === 1 && instances[0]!.location?.cwd === moved);
-		// Code mode off: as pi falls back, `tool_search` loads the tools and the model calls them. The worker's settings
+		// Code mode off: as lingshu falls back, `tool_search` loads the tools and the model calls them. The worker's settings
 		// observer is asynchronous: turns go until one runs with `tool_search` installed.
 		writeFileSync(join(fixture.dataDir, "settings.json"), JSON.stringify({ codemode: false }));
 		let found: ToolResultMessage | undefined;
@@ -180,7 +180,7 @@ test(
 		assert.equal(echoed.isError, false, text(echoed));
 		assert.equal(text(echoed), "echo: hello");
 		assert.deepEqual(echoed.details, { server: "files", tool: "echo" });
-		// Without code mode, the model learns of the servers from the `mcp_servers` section, as in pi.
+		// Without code mode, the model learns of the servers from the `mcp_servers` section, as in lingshu.
 		const fallback = sections(await until(chat.view, Boolean));
 		assert.equal(fallback.codemode, undefined);
 		assert.match(fallback.mcp_servers ?? "", /^- mcp__files \(tool_search\): Files of the fixture\.$/m);

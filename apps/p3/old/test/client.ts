@@ -2,9 +2,9 @@
 // on the same machine signs in: for the end-to-end tests and the benchmarks.
 
 import { readFile } from "node:fs/promises";
-import { createHost, type Host, webSocketLink } from "@earendil-works/chord";
-import type { Context } from "@earendil-works/chord/context";
-import type { P3Principal } from "@earendil-works/p3/v1";
+import { createHost, type Host, webSocketLink } from "@lingshu/chord";
+import type { Context } from "@lingshu/chord/context";
+import type { P3Principal } from "@lingshu/p3/v1";
 
 /** What a client needs of a running p3, in this process or launched: its owner link (for the port) and token file. */
 export type Reachable = { ownerLink(): string; readonly ownerTokenFile: string };

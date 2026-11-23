@@ -1,4 +1,4 @@
-// Adapted from earendil-works/pi (MIT); see third-party/pi.LICENSE.
+// Adapted from earendil-works/lingshu (MIT); see third-party/lingshu.LICENSE.
 /** Immutable, credential-blind models.json snapshot. */
 
 import { readFile } from "node:fs/promises";
@@ -16,7 +16,7 @@ import {
 	union,
 	unknown,
 	type ValidationError,
-} from "@earendil-works/pi-schema";
+} from "@lingshu/schema";
 import { literal, record } from "@p2/app/v1";
 import { normalizePath, stripBom, stripJsonComments } from "@p2/app/v1/node";
 

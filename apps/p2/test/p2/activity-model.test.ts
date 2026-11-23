@@ -3,8 +3,8 @@
 // agent works; unchanged turns keep their items.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import type { AssistantMessage, ToolCall } from "@earendil-works/pi-ai";
-import { fauxAssistantMessage } from "@earendil-works/pi-ai/providers/faux";
+import type { AssistantMessage, ToolCall } from "@lingshu/ai";
+import { fauxAssistantMessage } from "@lingshu/ai/providers/faux";
 import {
 	argumentOf,
 	chatItems as chatItemsWith,

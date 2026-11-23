@@ -18,13 +18,13 @@ import {
 	memoryLinkPair,
 	openStore,
 	sqliteBackend,
-} from "@earendil-works/chord";
-import type { Context } from "@earendil-works/chord/context";
-import { createHttp, type HttpError } from "@earendil-works/chord/http";
-import { openNodeSqliteDatabase } from "@earendil-works/chord/sqlite/node";
-import { type P3Principal, Server, Session } from "@earendil-works/p3/v1";
-import type { ServerRuntime } from "@earendil-works/p3/v1/server";
-import type { WorkerRuntime } from "@earendil-works/p3/v1/worker";
+} from "@lingshu/chord";
+import type { Context } from "@lingshu/chord/context";
+import { createHttp, type HttpError } from "@lingshu/chord/http";
+import { openNodeSqliteDatabase } from "@lingshu/chord/sqlite/node";
+import { type P3Principal, Server, Session } from "@lingshu/p3/v1";
+import type { ServerRuntime } from "@lingshu/p3/v1/server";
+import type { WorkerRuntime } from "@lingshu/p3/v1/worker";
 import runnerWorker from "../plugins/runner/worker.ts";
 import sessionsServer from "../plugins/sessions/server.ts";
 import sessionsWorker from "../plugins/sessions/worker.ts";
@@ -42,14 +42,14 @@ type Plugin = { readonly name: string; readonly facet: Facet<P3Principal> };
 
 /** The server's plugins, by name. */
 const SERVER_PLUGINS: readonly Plugin[] = [
-	{ name: "@earendil-works/p3-sessions", facet: sessionsServer },
-	{ name: "@earendil-works/p3-sign-in", facet: signInServer },
+	{ name: "@lingshu/p3-sessions", facet: sessionsServer },
+	{ name: "@lingshu/p3-sign-in", facet: signInServer },
 ];
 
 /** A worker's plugins, by name. */
 const WORKER_PLUGINS: readonly Plugin[] = [
-	{ name: "@earendil-works/p3-runner", facet: runnerWorker },
-	{ name: "@earendil-works/p3-sessions", facet: sessionsWorker },
+	{ name: "@lingshu/p3-runner", facet: runnerWorker },
+	{ name: "@lingshu/p3-sessions", facet: sessionsWorker },
 	{ name: "p3-test-probe", facet: probeWorker },
 ];
 

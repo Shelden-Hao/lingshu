@@ -720,7 +720,7 @@ textarea.input {
 /* The transcript is a virtual list (use-chat-scroll.ts): `.rows` holds a spacer for the rows above, the rows near the
    viewport, and a spacer for the rows below. Each row carries its spacing to the row before it as padding, so its
    measured height is everything it adds; a row is a flex column like the list it replaces (its margins stay inside).
-   The rhythm (.pi/skills/p2-ui.md): a turn starts --s5 below what came before; its parts (thinking, words, wheels, the
+   The rhythm (.lingshu/skills/p2-ui.md): a turn starts --s5 below what came before; its parts (thinking, words, wheels, the
    answer, results) follow --s2 apart. One-line rows (a thought, a wheel, an incoming message's header) are --row tall,
    so one turning into another never changes the height. */
 .rows {

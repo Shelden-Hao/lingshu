@@ -635,7 +635,7 @@ worker refuses once the provider left the list or the auth expired.</p>
 	<span class="tk-c">// a routine pushes { resource, models, auth, expires } for each, again before the earliest expiry</span>
 });</code></pre>
 <p><strong>MCP servers run on the server.</strong> One resource per server, its transport in its configuration: HTTP (no location),
-<code>server-stdio</code> (the p3 machine; admin by baseline), or <code>checkout</code> (an enabled <code>.pi/mcp.json</code> entry, bound to that env,
+<code>server-stdio</code> (the p3 machine; admin by baseline), or <code>checkout</code> (an enabled <code>.lingshu/mcp.json</code> entry, bound to that env,
 directory and the entry&#39;s digest, run there). The worker gets one extension per server on the list; every tool calls
 <code>SessionMcp.call</code> with its conversation, so the server admits against the list now and checks that a checkout server
 runs only where that conversation works. Processes stay per session by default, as in p2 (decision 4).</p>

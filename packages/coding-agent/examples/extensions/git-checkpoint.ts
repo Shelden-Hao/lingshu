@@ -5,28 +5,28 @@
  * When forking, offers to restore code to that point in history.
  */
 
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import type { ExtensionAPI } from "@lingshu/coding-agent";
 
-export default function (pi: ExtensionAPI) {
+export default function (lingshu: ExtensionAPI) {
 	const checkpoints = new Map<string, string>();
 	let currentEntryId: string | undefined;
 
 	// Track the current entry ID when user messages are saved
-	pi.on("tool_result", async (_event, ctx) => {
+	lingshu.on("tool_result", async (_event, ctx) => {
 		const leaf = ctx.sessionManager.getLeafEntry();
 		if (leaf) currentEntryId = leaf.id;
 	});
 
-	pi.on("turn_start", async () => {
+	lingshu.on("turn_start", async () => {
 		// Create a git stash entry before LLM makes changes
-		const { stdout } = await pi.exec("git", ["stash", "create"]);
+		const { stdout } = await lingshu.exec("git", ["stash", "create"]);
 		const ref = stdout.trim();
 		if (ref && currentEntryId) {
 			checkpoints.set(currentEntryId, ref);
 		}
 	});
 
-	pi.on("session_before_fork", async (event, ctx) => {
+	lingshu.on("session_before_fork", async (event, ctx) => {
 		const ref = checkpoints.get(event.entryId);
 		if (!ref) return;
 
@@ -41,12 +41,12 @@ export default function (pi: ExtensionAPI) {
 		]);
 
 		if (choice?.startsWith("Yes")) {
-			await pi.exec("git", ["stash", "apply", ref]);
+			await lingshu.exec("git", ["stash", "apply", ref]);
 			ctx.ui.notify("Code restored to checkpoint", "info");
 		}
 	});
 
-	pi.on("agent_settled", async () => {
+	lingshu.on("agent_settled", async () => {
 		// Clear checkpoints after the full agent run completes
 		checkpoints.clear();
 	});

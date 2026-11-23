@@ -19,11 +19,11 @@ import {
 	type PluginFacet,
 	type Store,
 	sqliteBackend,
-} from "@earendil-works/chord";
-import type { Context } from "@earendil-works/chord/context";
-import { openNodeSqliteDatabase } from "@earendil-works/chord/sqlite/node";
-import { type P3Principal, Server, Session } from "@earendil-works/p3/v1";
-import { InMemoryTelemetryContext } from "@earendil-works/pi-telemetry";
+} from "@lingshu/chord";
+import type { Context } from "@lingshu/chord/context";
+import { openNodeSqliteDatabase } from "@lingshu/chord/sqlite/node";
+import { type P3Principal, Server, Session } from "@lingshu/p3/v1";
+import { InMemoryTelemetryContext } from "@lingshu/telemetry";
 import sessionsServer from "../plugins/sessions/server.ts";
 import sessionsWorker from "../plugins/sessions/worker.ts";
 import { API, NAME, PRINCIPALS } from "../src/app.ts";
@@ -34,7 +34,7 @@ import { mayReachSession, sessionExists } from "../src/session-route.ts";
 const READY = 5000;
 
 /** The sessions plugin's name. */
-const SESSIONS = "@earendil-works/p3-sessions";
+const SESSIONS = "@lingshu/p3-sessions";
 
 /** A worker's plugins. */
 const WORKER_PLUGINS: readonly PluginFacet<P3Principal>[] = [{ name: SESSIONS, facet: sessionsWorker }];

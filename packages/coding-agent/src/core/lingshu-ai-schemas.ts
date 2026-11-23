@@ -1,12 +1,12 @@
 /**
- * pi-ai's configuration schemas (built with pi-schema) as TypeBox schemas, for the coding agent's own TypeBox-built
+ * lingshu-ai's configuration schemas (built with lingshu-schema) as TypeBox schemas, for the coding agent's own TypeBox-built
  * configuration schemas (models.json, settings.json): the same JSON, typed for TypeBox's `Static`.
  */
 
 import {
 	type ProviderCompat,
 	ProviderCompatSchema as ProviderCompatJsonSchema,
-} from "@earendil-works/pi-ai/providers/compat-schema";
+} from "@lingshu/ai/providers/compat-schema";
 import {
 	type ModelCost,
 	ModelCostSchema as ModelCostJsonSchema,
@@ -20,7 +20,7 @@ import {
 	ModelThinkingLevelSchema as ModelThinkingLevelJsonSchema,
 	type ThinkingLevelMap,
 	ThinkingLevelMapSchema as ThinkingLevelMapJsonSchema,
-} from "@earendil-works/pi-ai/providers/model-schema";
+} from "@lingshu/ai/providers/model-schema";
 import { Type } from "typebox";
 
 export const ProviderCompatSchema = Type.Unsafe<ProviderCompat>(ProviderCompatJsonSchema);

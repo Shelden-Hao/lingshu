@@ -334,7 +334,7 @@ host.<span class="tk-f">serve</span>(<span class="tk-t">ModelsInSession</span>, 
 	},
 	key: [<span class="tk-s">"id"</span>],
 });
-<span class="tk-k">const</span> <span class="tk-t">Checkouts</span> = <span class="tk-f">defineTable</span>(<span class="tk-s">"p3.mcp.checkouts"</span>, {          <span class="tk-c">// a checkout's .pi/mcp.json on an env: enabled per checkout</span>
+<span class="tk-k">const</span> <span class="tk-t">Checkouts</span> = <span class="tk-f">defineTable</span>(<span class="tk-s">"p3.mcp.checkouts"</span>, {          <span class="tk-c">// a checkout's .lingshu/mcp.json on an env: enabled per checkout</span>
 	version: <span class="tk-n">1</span>,
 	columns: { env: <span class="tk-f">str</span>(), dir: <span class="tk-f">str</span>(), server: <span class="tk-f">str</span>(), enabled: <span class="tk-f">bool</span>(), config: <span class="tk-f">json</span>(<span class="tk-k">unknown</span>(), { version: <span class="tk-n">1</span> }) },
 	key: [<span class="tk-s">"env"</span>, <span class="tk-s">"dir"</span>, <span class="tk-s">"server"</span>],

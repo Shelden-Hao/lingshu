@@ -1,5 +1,5 @@
-import type { CreateModelsOptions } from "@earendil-works/pi-ai/models";
-import { builtinModels } from "@earendil-works/pi-ai/providers/all";
+import type { CreateModelsOptions } from "@lingshu/ai/models";
+import { builtinModels } from "@lingshu/ai/providers/all";
 import { createFakeModels } from "./fake.ts";
 
 /** A host's models: the built-in providers, or in fake mode (demos, tests, docs) the scripted faux provider (fake.ts). */

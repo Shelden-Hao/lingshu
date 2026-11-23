@@ -1,6 +1,6 @@
 import { homedir } from "node:os";
 import * as path from "node:path";
-import { type AutocompleteProvider, CombinedAutocompleteProvider } from "@earendil-works/pi-tui";
+import { type AutocompleteProvider, CombinedAutocompleteProvider } from "@lingshu/tui";
 import { beforeAll, describe, expect, test, vi } from "vitest";
 import { type Component, Container, type Focusable, type OverlayHandle, type TUI } from "../../tui/src/tui.ts";
 import { TuiMainScreen } from "../../tui/src/tui-main-screen.ts";
@@ -169,7 +169,7 @@ describe("InteractiveMode.setToolsExpanded", () => {
 	});
 });
 
-// Regression tests for https://github.com/earendil-works/pi/issues/11875
+// Regression tests for https://github.com/earendil-works/lingshu/issues/11875
 describe("InteractiveMode pending user bash output", () => {
 	function createPendingBashComponent() {
 		return { render: () => [], invalidate: () => {}, setExpanded: vi.fn() };
@@ -467,7 +467,7 @@ describe("InteractiveMode.showExtensionCustom", () => {
 	);
 
 	// Regression: reset hid only the topmost overlay, so lower extension overlays stayed and kept input.
-	test("resetExtensionUI removes every extension overlay but keeps pi's own overlays", async () => {
+	test("resetExtensionUI removes every extension overlay but keeps lingshu's own overlays", async () => {
 		const terminal = new VirtualTerminal(80, 24);
 		const ui: TUI = new TuiMainScreen(terminal);
 		const editorContainer = new Container();
@@ -508,7 +508,7 @@ describe("InteractiveMode.showExtensionCustom", () => {
 		ui.setFocus(editor);
 		ui.start();
 		try {
-			// A pi-internal overlay (for example the header easter egg) opened below the extension overlays.
+			// A lingshu-internal overlay (for example the header easter egg) opened below the extension overlays.
 			ui.showOverlay(internal);
 			void showOverlay(lower);
 			void showOverlay(hidden, (handle) => handle.setHidden(true));
@@ -867,21 +867,21 @@ describe("InteractiveMode.showLoadedResources", () => {
 	function createExtensionFixtures(): ExtensionFixture[] {
 		return [
 			{
-				path: "/tmp/project/.pi/extensions/answer.ts",
-				sourceInfo: createSourceInfo("/tmp/project/.pi/extensions/answer.ts", {
+				path: "/tmp/project/.lingshu/extensions/answer.ts",
+				sourceInfo: createSourceInfo("/tmp/project/.lingshu/extensions/answer.ts", {
 					source: "local",
 					scope: "project",
 					origin: "top-level",
-					baseDir: "/tmp/project/.pi/extensions",
+					baseDir: "/tmp/project/.lingshu/extensions",
 				}),
 			},
 			{
-				path: "/tmp/project/.pi/extensions/local-index/index.ts",
-				sourceInfo: createSourceInfo("/tmp/project/.pi/extensions/local-index/index.ts", {
+				path: "/tmp/project/.lingshu/extensions/local-index/index.ts",
+				sourceInfo: createSourceInfo("/tmp/project/.lingshu/extensions/local-index/index.ts", {
 					source: "local",
 					scope: "project",
 					origin: "top-level",
-					baseDir: "/tmp/project/.pi/extensions",
+					baseDir: "/tmp/project/.lingshu/extensions",
 				}),
 			},
 			{
@@ -894,44 +894,50 @@ describe("InteractiveMode.showLoadedResources", () => {
 				}),
 			},
 			{
-				path: "/tmp/project/.pi/npm/node_modules/pi-markdown-preview/extensions/index.ts",
-				sourceInfo: createSourceInfo("/tmp/project/.pi/npm/node_modules/pi-markdown-preview/extensions/index.ts", {
-					source: "npm:pi-markdown-preview",
-					scope: "project",
-					origin: "package",
-					baseDir: "/tmp/project/.pi/npm/node_modules/pi-markdown-preview",
-				}),
-			},
-			{
-				path: "/tmp/project/.pi/npm/node_modules/@scope/pi-scoped/extensions/index.ts",
-				sourceInfo: createSourceInfo("/tmp/project/.pi/npm/node_modules/@scope/pi-scoped/extensions/index.ts", {
-					source: "npm:@scope/pi-scoped",
-					scope: "project",
-					origin: "package",
-					baseDir: "/tmp/project/.pi/npm/node_modules/@scope/pi-scoped",
-				}),
-			},
-			{
-				path: "/tmp/project/.pi/git/github.com/HazAT/pi-interactive-subagents/extensions/index.ts",
+				path: "/tmp/project/.lingshu/npm/node_modules/lingshu-markdown-preview/extensions/index.ts",
 				sourceInfo: createSourceInfo(
-					"/tmp/project/.pi/git/github.com/HazAT/pi-interactive-subagents/extensions/index.ts",
+					"/tmp/project/.lingshu/npm/node_modules/lingshu-markdown-preview/extensions/index.ts",
 					{
-						source: "git:github.com/HazAT/pi-interactive-subagents",
+						source: "npm:lingshu-markdown-preview",
 						scope: "project",
 						origin: "package",
-						baseDir: "/tmp/project/.pi/git/github.com/HazAT/pi-interactive-subagents",
+						baseDir: "/tmp/project/.lingshu/npm/node_modules/lingshu-markdown-preview",
 					},
 				),
 			},
 			{
-				path: "/tmp/project/.pi/git/github.com/HazAT/pi-interactive-subagents/extensions/subagents/index.ts",
+				path: "/tmp/project/.lingshu/npm/node_modules/@scope/lingshu-scoped/extensions/index.ts",
 				sourceInfo: createSourceInfo(
-					"/tmp/project/.pi/git/github.com/HazAT/pi-interactive-subagents/extensions/subagents/index.ts",
+					"/tmp/project/.lingshu/npm/node_modules/@scope/lingshu-scoped/extensions/index.ts",
 					{
-						source: "git:github.com/HazAT/pi-interactive-subagents",
+						source: "npm:@scope/lingshu-scoped",
 						scope: "project",
 						origin: "package",
-						baseDir: "/tmp/project/.pi/git/github.com/HazAT/pi-interactive-subagents",
+						baseDir: "/tmp/project/.lingshu/npm/node_modules/@scope/lingshu-scoped",
+					},
+				),
+			},
+			{
+				path: "/tmp/project/.lingshu/git/github.com/HazAT/lingshu-interactive-subagents/extensions/index.ts",
+				sourceInfo: createSourceInfo(
+					"/tmp/project/.lingshu/git/github.com/HazAT/lingshu-interactive-subagents/extensions/index.ts",
+					{
+						source: "git:github.com/HazAT/lingshu-interactive-subagents",
+						scope: "project",
+						origin: "package",
+						baseDir: "/tmp/project/.lingshu/git/github.com/HazAT/lingshu-interactive-subagents",
+					},
+				),
+			},
+			{
+				path: "/tmp/project/.lingshu/git/github.com/HazAT/lingshu-interactive-subagents/extensions/subagents/index.ts",
+				sourceInfo: createSourceInfo(
+					"/tmp/project/.lingshu/git/github.com/HazAT/lingshu-interactive-subagents/extensions/subagents/index.ts",
+					{
+						source: "git:github.com/HazAT/lingshu-interactive-subagents",
+						scope: "project",
+						origin: "package",
+						baseDir: "/tmp/project/.lingshu/git/github.com/HazAT/lingshu-interactive-subagents",
 					},
 				),
 			},
@@ -1027,7 +1033,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 
 		expect(normalizeRenderedOutput(fakeThis.loadedResourcesContainer)).toMatchInlineSnapshot(`
 "[Extensions]
-  @scope/pi-scoped, answer.ts, cli-extension.ts, HazAT/pi-interactive-subagents, HazAT/pi-interactive-subagents:subagents, local-index, pi-markdown-preview, user-index"`);
+  @scope/lingshu-scoped, answer.ts, cli-extension.ts, HazAT/lingshu-interactive-subagents, HazAT/lingshu-interactive-subagents:subagents, local-index, lingshu-markdown-preview, user-index"`);
 	});
 
 	test("adds more parent folders until local extension labels are unique", () => {
@@ -1274,13 +1280,16 @@ describe("InteractiveMode.showLoadedResources", () => {
 	test("package extensions still strip index.ts correctly (regression guard)", () => {
 		const extensions: ExtensionFixture[] = [
 			{
-				path: "/tmp/project/.pi/npm/node_modules/pi-markdown-preview/extensions/index.ts",
-				sourceInfo: createSourceInfo("/tmp/project/.pi/npm/node_modules/pi-markdown-preview/extensions/index.ts", {
-					source: "npm:pi-markdown-preview",
-					scope: "project",
-					origin: "package",
-					baseDir: "/tmp/project/.pi/npm/node_modules/pi-markdown-preview",
-				}),
+				path: "/tmp/project/.lingshu/npm/node_modules/lingshu-markdown-preview/extensions/index.ts",
+				sourceInfo: createSourceInfo(
+					"/tmp/project/.lingshu/npm/node_modules/lingshu-markdown-preview/extensions/index.ts",
+					{
+						source: "npm:lingshu-markdown-preview",
+						scope: "project",
+						origin: "package",
+						baseDir: "/tmp/project/.lingshu/npm/node_modules/lingshu-markdown-preview",
+					},
+				),
 			},
 		];
 
@@ -1296,27 +1305,27 @@ describe("InteractiveMode.showLoadedResources", () => {
 
 		expect(normalizeRenderedOutput(fakeThis.loadedResourcesContainer)).toMatchInlineSnapshot(`
 "[Extensions]
-  pi-markdown-preview"`);
+  lingshu-markdown-preview"`);
 	});
 
 	test("labels npm sibling extensions relative to the declaring package", () => {
 		const extensions: ExtensionFixture[] = [
 			{
-				path: "/tmp/project/.pi/npm/node_modules/primary-package/index.ts",
-				sourceInfo: createSourceInfo("/tmp/project/.pi/npm/node_modules/primary-package/index.ts", {
+				path: "/tmp/project/.lingshu/npm/node_modules/primary-package/index.ts",
+				sourceInfo: createSourceInfo("/tmp/project/.lingshu/npm/node_modules/primary-package/index.ts", {
 					source: "npm:primary-package",
 					scope: "project",
 					origin: "package",
-					baseDir: "/tmp/project/.pi/npm/node_modules/primary-package",
+					baseDir: "/tmp/project/.lingshu/npm/node_modules/primary-package",
 				}),
 			},
 			{
-				path: "/tmp/project/.pi/npm/node_modules/sibling-package/index.ts",
-				sourceInfo: createSourceInfo("/tmp/project/.pi/npm/node_modules/sibling-package/index.ts", {
+				path: "/tmp/project/.lingshu/npm/node_modules/sibling-package/index.ts",
+				sourceInfo: createSourceInfo("/tmp/project/.lingshu/npm/node_modules/sibling-package/index.ts", {
 					source: "npm:primary-package",
 					scope: "project",
 					origin: "package",
-					baseDir: "/tmp/project/.pi/npm/node_modules/primary-package",
+					baseDir: "/tmp/project/.lingshu/npm/node_modules/primary-package",
 				}),
 			},
 		];
@@ -1337,9 +1346,9 @@ describe("InteractiveMode.showLoadedResources", () => {
 	});
 
 	test("labels Windows npm sibling extensions relative to the declaring package", () => {
-		const primaryPath = "C:\\Users\\me\\.pi\\agent\\npm\\node_modules\\primary-package\\index.ts";
-		const siblingPath = "C:\\Users\\me\\.pi\\agent\\npm\\node_modules\\sibling-package\\index.ts";
-		const baseDir = "C:\\Users\\me\\.pi\\agent\\npm\\node_modules\\primary-package";
+		const primaryPath = "C:\\Users\\me\\.lingshu\\agent\\npm\\node_modules\\primary-package\\index.ts";
+		const siblingPath = "C:\\Users\\me\\.lingshu\\agent\\npm\\node_modules\\sibling-package\\index.ts";
+		const baseDir = "C:\\Users\\me\\.lingshu\\agent\\npm\\node_modules\\primary-package";
 		const extensions: ExtensionFixture[] = [
 			{
 				path: primaryPath,
@@ -1391,14 +1400,14 @@ describe("InteractiveMode.showLoadedResources", () => {
 		expect(normalizeRenderedOutput(fakeThis.loadedResourcesContainer)).toMatchInlineSnapshot(`
 "[Extensions]
   project
-    /tmp/project/.pi/extensions/answer.ts
-    /tmp/project/.pi/extensions/local-index
-    git:github.com/HazAT/pi-interactive-subagents
+    /tmp/project/.lingshu/extensions/answer.ts
+    /tmp/project/.lingshu/extensions/local-index
+    git:github.com/HazAT/lingshu-interactive-subagents
       extensions
       extensions/subagents
-    npm:@scope/pi-scoped
+    npm:@scope/lingshu-scoped
       extensions
-    npm:pi-markdown-preview
+    npm:lingshu-markdown-preview
       extensions
   user
     /tmp/agent/extensions/user-index
@@ -1408,11 +1417,14 @@ describe("InteractiveMode.showLoadedResources", () => {
 
 	test("shows context paths relative to cwd while preserving full external paths", () => {
 		const home = homedir();
-		const cwd = path.join(home, "Development", "pi-mono");
+		const cwd = path.join(home, "Development", "lingshu-mono");
 		const fakeThis = createShowLoadedResourcesThis({
 			quietStartup: false,
 			cwd,
-			contextFiles: [{ path: path.join(home, ".pi", "agent", "AGENTS.md") }, { path: path.join(cwd, "AGENTS.md") }],
+			contextFiles: [
+				{ path: path.join(home, ".lingshu", "agent", "AGENTS.md") },
+				{ path: path.join(cwd, "AGENTS.md") },
+			],
 		});
 
 		(InteractiveMode as any).prototype.showLoadedResources.call(fakeThis, {
@@ -1421,7 +1433,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 
 		const output = renderAll(fakeThis.loadedResourcesContainer).replace(/\\/g, "/");
 		expect(output).toContain("[Context]");
-		expect(output).toContain("~/.pi/agent/AGENTS.md, AGENTS.md");
+		expect(output).toContain("~/.lingshu/agent/AGENTS.md, AGENTS.md");
 		expect(output).not.toContain(`${cwd.replace(/\\/g, "/")}/AGENTS.md`);
 	});
 
@@ -1430,8 +1442,8 @@ describe("InteractiveMode.showLoadedResources", () => {
 		const fakeThis = createShowLoadedResourcesThis({
 			quietStartup: false,
 			cwd,
-			systemPromptSource: { path: path.join(cwd, ".pi", "SYSTEM.md") },
-			appendSystemPromptSources: [{ path: path.join(cwd, ".pi", "APPEND_SYSTEM.md") }],
+			systemPromptSource: { path: path.join(cwd, ".lingshu", "SYSTEM.md") },
+			appendSystemPromptSources: [{ path: path.join(cwd, ".lingshu", "APPEND_SYSTEM.md") }],
 			contextFiles: [{ path: path.join(cwd, "AGENTS.md") }],
 		});
 
@@ -1441,17 +1453,20 @@ describe("InteractiveMode.showLoadedResources", () => {
 
 		const output = renderAll(fakeThis.loadedResourcesContainer).replace(/\\/g, "/");
 		expect(output).toContain("[Context]");
-		expect(output).toContain(".pi/SYSTEM.md, .pi/APPEND_SYSTEM.md, AGENTS.md");
+		expect(output).toContain(".lingshu/SYSTEM.md, .lingshu/APPEND_SYSTEM.md, AGENTS.md");
 	});
 
 	test("shows full context paths when expanded", () => {
 		const home = homedir();
-		const cwd = path.join(home, "Development", "pi-mono");
+		const cwd = path.join(home, "Development", "lingshu-mono");
 		const fakeThis = createShowLoadedResourcesThis({
 			quietStartup: false,
 			toolOutputExpanded: true,
 			cwd,
-			contextFiles: [{ path: path.join(home, ".pi", "agent", "AGENTS.md") }, { path: path.join(cwd, "AGENTS.md") }],
+			contextFiles: [
+				{ path: path.join(home, ".lingshu", "agent", "AGENTS.md") },
+				{ path: path.join(cwd, "AGENTS.md") },
+			],
 		});
 
 		(InteractiveMode as any).prototype.showLoadedResources.call(fakeThis, {
@@ -1460,9 +1475,9 @@ describe("InteractiveMode.showLoadedResources", () => {
 
 		const output = renderAll(fakeThis.loadedResourcesContainer).replace(/\\/g, "/");
 		expect(output).toContain("[Context]");
-		expect(output).toContain("~/.pi/agent/AGENTS.md");
-		expect(output).toContain("~/Development/pi-mono/AGENTS.md");
-		expect(output).not.toContain("~/.pi/agent/AGENTS.md, AGENTS.md");
+		expect(output).toContain("~/.lingshu/agent/AGENTS.md");
+		expect(output).toContain("~/Development/lingshu-mono/AGENTS.md");
+		expect(output).not.toContain("~/.lingshu/agent/AGENTS.md, AGENTS.md");
 	});
 
 	test("does not show verbose listing on quiet startup during reload", () => {

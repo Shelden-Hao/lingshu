@@ -1,13 +1,13 @@
 // Locals, registries and natives a session worker host provides to plugins (Chord v2), and the worker's core facet.
 import { existsSync } from "node:fs";
-import { defineRegistry, local, type Native, type RegistryValue, type Store } from "@earendil-works/chord";
-import { copyFiles } from "@earendil-works/chord/app/files";
-import type { Context } from "@earendil-works/chord/context";
-import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
-import type { JsonValue } from "@earendil-works/chord/json";
-import type { Watchable, WatchCall, WatchHandle } from "@earendil-works/chord/watch";
-import type { Api, AssistantMessage, Message, Model } from "@earendil-works/pi-ai";
-import type { Models, ModelsSimpleStreamOptions } from "@earendil-works/pi-ai/models";
+import { defineRegistry, local, type Native, type RegistryValue, type Store } from "@lingshu/chord";
+import { copyFiles } from "@lingshu/chord/app/files";
+import type { Context } from "@lingshu/chord/context";
+import { BACKGROUND_CONTEXT } from "@lingshu/chord/context";
+import type { JsonValue } from "@lingshu/chord/json";
+import type { Watchable, WatchCall, WatchHandle } from "@lingshu/chord/watch";
+import type { Api, AssistantMessage, Message, Model } from "@lingshu/ai";
+import type { Models, ModelsSimpleStreamOptions } from "@lingshu/ai/models";
 import {
 	type ConversationId,
 	configure,
@@ -17,11 +17,11 @@ import {
 	type HarnessOptions,
 	type HarnessSettings,
 	ROOT_CONVERSATION_ID,
-} from "@earendil-works/pi-durable";
-import type { ExecutionEnv } from "@earendil-works/pi-durable/env";
-import { NodeExecutionEnv } from "@earendil-works/pi-durable/env/node";
-import type { ImageProcessor } from "@earendil-works/pi-durable/tools";
-import { Connection, LocalExecutionEnv, localDaemon, RemoteExecutionEnv } from "@earendil-works/pi-env";
+} from "@lingshu/durable";
+import type { ExecutionEnv } from "@lingshu/durable/env";
+import { NodeExecutionEnv } from "@lingshu/durable/env/node";
+import type { ImageProcessor } from "@lingshu/durable/tools";
+import { Connection, LocalExecutionEnv, localDaemon, RemoteExecutionEnv } from "@lingshu/env";
 import {
 	type Ctx,
 	defineFacet,
@@ -415,7 +415,7 @@ export function workerCore(
 	store: Store,
 	root: WorkerParts["root"],
 	images: ImageProcessor,
-	/** The worker host's telemetry adapter, the Harness's too (its `pi.durable.*` and pi-ai's spans); none in tests. */
+	/** The worker host's telemetry adapter, the Harness's too (its `lingshu.durable.*` and lingshu-ai's spans); none in tests. */
 	telemetry: HarnessOptions["telemetry"],
 ): Facet {
 	return defineFacet((host, self) => {
@@ -481,7 +481,7 @@ export function workerCore(
 }
 
 /**
- * This machine: `LocalExecutionEnv` where pi-env ships a daemon for it, so the file index lists through it
+ * This machine: `LocalExecutionEnv` where lingshu-env ships a daemon for it, so the file index lists through it
  * (`listFiles`), else `NodeExecutionEnv`. The daemon starts at the first listing; `close` stops it.
  */
 function localMachine(): Machine {
@@ -783,7 +783,7 @@ function openHarness(
 				await harness.close(ctx).catch(() => {});
 				throw error;
 			}
-			// As Pi Mobile: a root model no longer in the configuration fails the start visibly (the session's worker
+			// As Lingshu Mobile: a root model no longer in the configuration fails the start visibly (the session's worker
 			// error, with Retry), not on the first turn.
 			if (!agent.model || !models.getModel(agent.model.provider, agent.model.modelId)) {
 				await harness.close(ctx).catch(() => {});
@@ -832,7 +832,7 @@ function remembering(models: Models, requests: WeakMap<AssistantMessage, ModelRe
 	return (model, context, options) => {
 		const stream = models.streamSimple(model, context, options);
 		// Registered before the caller awaits result(): the entry exists when Durable's afterResponse hooks run.
-		// result() never rejects; pi-ai encodes failures as `stopReason: "error"`.
+		// result() never rejects; lingshu-ai encodes failures as `stopReason: "error"`.
 		void stream.result().then((message) => {
 			const { signal: _signal, telemetry: _telemetry, onPayload: _onPayload, ...kept } = options ?? {};
 			requests.set(message, { model, messages: context.messages, options: kept });

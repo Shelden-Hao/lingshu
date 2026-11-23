@@ -1,7 +1,7 @@
 // The notes plugin's server facet: one route, the same whichever server runs it.
 
-import { defineFacet } from "@earendil-works/chord";
-import { Http } from "@earendil-works/chord/http";
+import { defineFacet } from "@lingshu/chord";
+import { Http } from "@lingshu/chord/http";
 
 export default defineFacet((_host, self) =>
 	self.contribute(Http, {

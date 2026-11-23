@@ -1,6 +1,6 @@
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
-import { InMemoryCredentialStore } from "@earendil-works/pi-ai";
+import { InMemoryCredentialStore } from "@lingshu/ai";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
 	getModelCatalogProviderKey,
@@ -79,7 +79,7 @@ function startCatalogServer(requests: string[]): Promise<Server> {
 					.writeHead(200, {
 						"content-type": "application/json",
 						"last-modified": lastModified,
-						"x-pi-model-catalog-revision": catalog.revision,
+						"x-lingshu-model-catalog-revision": catalog.revision,
 					})
 					.end(JSON.stringify(body));
 			}

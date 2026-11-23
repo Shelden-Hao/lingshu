@@ -8,8 +8,8 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
-import { openTelemetryStore } from "@earendil-works/chord/telemetry-sqlite/node";
-import { renderTrace } from "@earendil-works/pi-telemetry/render";
+import { openTelemetryStore } from "@lingshu/chord/telemetry-sqlite/node";
+import { renderTrace } from "@lingshu/telemetry/render";
 import { telemetryStore } from "../src/runtime/host-dirs.ts";
 
 const { values } = parseArgs({
@@ -23,7 +23,7 @@ const { values } = parseArgs({
 	},
 });
 
-const dataDir = values.data ?? process.env.P2_DATA_DIR ?? join(homedir(), ".pi", "p2");
+const dataDir = values.data ?? process.env.P2_DATA_DIR ?? join(homedir(), ".lingshu", "p2");
 const attributes = Object.fromEntries(
 	(values.attr ?? []).map((pair) => {
 		const at = pair.indexOf("=");

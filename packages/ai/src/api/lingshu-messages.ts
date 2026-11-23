@@ -1,12 +1,12 @@
 /**
- * pi-messages API implementation.
+ * lingshu-messages API implementation.
  *
- * Streams pi's own message protocol directly to a backend: the request is a
+ * Streams lingshu's own message protocol directly to a backend: the request is a
  * single POST of `{ model, context, options }` to `<baseUrl>/messages`, the
  * response is an SSE stream of serialized assistant-message events plus a
  * terminal `done`/`error` event. This is the wire protocol spoken by the
  * Radius gateway, but any backend implementing it can be used, e.g. via a
- * models.json custom provider with `"api": "pi-messages"`.
+ * models.json custom provider with `"api": "lingshu-messages"`.
  */
 
 import type {
@@ -52,7 +52,7 @@ export type PiMessagesRewriteImpact = {
 	systemPromptChanged: boolean;
 };
 
-/** Serialized assistant-message event as sent by a pi-messages backend. */
+/** Serialized assistant-message event as sent by a lingshu-messages backend. */
 export type PiMessagesEvent =
 	| { type: "start" }
 	| { type: "text_start"; contentIndex: number }
@@ -139,7 +139,7 @@ function formatPiMessagesResponseError(
 }
 
 function createPiMessagesResponseError(
-	model: Model<"pi-messages">,
+	model: Model<"lingshu-messages">,
 	url: URL,
 	response: Response,
 	body: string,
@@ -181,7 +181,7 @@ function appendRewriteDiagnostic(message: AssistantMessage, rewrite: PiMessagesR
 	});
 }
 
-function createEventConverter(model: Model<"pi-messages">) {
+function createEventConverter(model: Model<"lingshu-messages">) {
 	const partial: AssistantMessage = {
 		role: "assistant",
 		content: [],
@@ -201,7 +201,7 @@ function createEventConverter(model: Model<"pi-messages">) {
 			const index: unknown = event.contentIndex;
 			const limit = event.type.endsWith("_start") ? partial.content.length : partial.content.length - 1;
 			if (typeof index !== "number" || !Number.isInteger(index) || index < 0 || index > limit) {
-				throw new Error(`Invalid contentIndex ${JSON.stringify(index)} in pi-messages ${event.type} event`);
+				throw new Error(`Invalid contentIndex ${JSON.stringify(index)} in lingshu-messages ${event.type} event`);
 			}
 		}
 		switch (event.type) {
@@ -338,7 +338,7 @@ function parsePiMessagesEvent(raw: string): PiMessagesEvent | undefined {
 	return data && data !== "[DONE]" ? (JSON.parse(data) as PiMessagesEvent) : undefined;
 }
 
-function createErrorEvent(model: Model<"pi-messages">, error: unknown, aborted: boolean): AssistantMessageEvent {
+function createErrorEvent(model: Model<"lingshu-messages">, error: unknown, aborted: boolean): AssistantMessageEvent {
 	const reason = aborted ? "aborted" : "error";
 	const assistantMessage: AssistantMessage = {
 		role: "assistant",
@@ -367,11 +367,11 @@ function resolveCacheRetention(cacheRetention?: CacheRetention, env?: ProviderEn
 		return cacheRetention;
 	}
 	// Backend defaults apply when unset; only the legacy env opt-in is mapped.
-	return getProviderEnvValue("PI_CACHE_RETENTION", env) === "long" ? "long" : undefined;
+	return getProviderEnvValue("LINGSHU_CACHE_RETENTION", env) === "long" ? "long" : undefined;
 }
 
-export const stream: StreamFunction<"pi-messages", PiMessagesOptions> = (
-	model: Model<"pi-messages">,
+export const stream: StreamFunction<"lingshu-messages", PiMessagesOptions> = (
+	model: Model<"lingshu-messages">,
 	context: TranscriptContext,
 	options?: PiMessagesOptions,
 ): AssistantMessageEventStream => {
@@ -450,8 +450,8 @@ export const stream: StreamFunction<"pi-messages", PiMessagesOptions> = (
 	return eventStream;
 };
 
-export const streamSimple: StreamFunction<"pi-messages", SimpleStreamOptions> = (
-	model: Model<"pi-messages">,
+export const streamSimple: StreamFunction<"lingshu-messages", SimpleStreamOptions> = (
+	model: Model<"lingshu-messages">,
 	context: TranscriptContext,
 	options?: SimpleStreamOptions,
 ): AssistantMessageEventStream => {

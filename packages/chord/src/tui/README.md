@@ -1,8 +1,8 @@
 # tui (sandbox side)
 
 The terminal client's code inside the sandbox (slice 11 §4, decisions "Slice 11, P8" and "P9"):
-`@earendil-works/chord/tui`. The launcher is `@earendil-works/chord/tui/launcher` (`src/node/tui`), the server side
-`@earendil-works/chord/surfaces` (`tuiSurface`).
+`@lingshu/chord/tui`. The launcher is `@lingshu/chord/tui/launcher` (`src/node/tui`), the server side
+`@lingshu/chord/surfaces` (`tuiSurface`).
 
 ```ts
 // the app's terminal entry (its base bundle)

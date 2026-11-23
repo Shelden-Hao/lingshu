@@ -1,5 +1,5 @@
-import type { CredentialInfo } from "@earendil-works/pi-ai";
-import { replaceControlCharacters } from "@earendil-works/pi-tui";
+import type { CredentialInfo } from "@lingshu/ai";
+import { replaceControlCharacters } from "@lingshu/tui";
 import { APP_NAME } from "../config.ts";
 import { CredentialSynchronizationError, type ModelRuntime } from "../core/model-runtime.ts";
 import { findMatchingProviders } from "../core/provider-matching.ts";
@@ -15,7 +15,7 @@ export interface AuthLogoutOptions {
 const AUTH_LOGOUT_USAGE = `${APP_NAME} auth logout <provider>`;
 
 /**
- * Run `pi auth logout <provider>`: remove the credential `pi auth login` or /login stored, and return the exit code.
+ * Run `lingshu auth logout <provider>`: remove the credential `lingshu auth login` or /login stored, and return the exit code.
  * Environment variables and models.json config stay, as with /logout.
  */
 export async function runAuthLogout(args: string[], options: AuthLogoutOptions): Promise<number> {

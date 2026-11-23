@@ -307,7 +307,7 @@ provider; after a provider&#39;s <code>finish</code> it links the identity to th
 <ul>
 <li><strong>Built in:</strong> <code>radius</code> (while the Pi is connected to Radius: Radius signs the person in, with Google or GitHub at
 Radius, and forwards the verified email, as p2&#39;s guests by email work today) and <code>device</code> (a cookie in this
-browser; a token file in this terminal, <code>~/.pi/clients/&lt;pi&gt;.json</code>, mode 0600, sent as a bearer header).</li>
+browser; a token file in this terminal, <code>~/.lingshu/clients/&lt;pi&gt;.json</code>, mode 0600, sent as a bearer header).</li>
 <li><strong>OAuth directly at Google or GitHub</strong> would need every Pi registered as an OAuth client at its own address (and
 Google refuses private LAN addresses): impractical; it happens at Radius once for everyone.</li>
 <li><strong>More devices:</strong> sign in through the same provider, or pair: on a signed-in device &quot;Add device&quot; shows a code or QR
@@ -464,7 +464,7 @@ host.<span class="tk-f">serve</span>(<span class="tk-t">CodingTools</span>, (_pa
 <td><code>mcp.project</code></td>
 <td>mcp</td>
 <td>switch</td>
-<td><code>.pi/mcp.json</code> servers placed at all</td>
+<td><code>.lingshu/mcp.json</code> servers placed at all</td>
 </tr>
 <tr>
 <td><code>prompt.instructions</code></td>

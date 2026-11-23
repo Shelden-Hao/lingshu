@@ -1,7 +1,7 @@
-import { type Context, withoutAbortSignal } from "@earendil-works/chord/context";
-import { applyImmutable, type NonEmptyPath, type Op, type Path } from "@earendil-works/chord/delta";
-import type { JsonValue } from "@earendil-works/chord/json";
-import { Watch, type WatchCall, type WatchEnd, type WatchHandle } from "@earendil-works/chord/watch";
+import { type Context, withoutAbortSignal } from "@lingshu/chord/context";
+import { applyImmutable, type NonEmptyPath, type Op, type Path } from "@lingshu/chord/delta";
+import type { JsonValue } from "@lingshu/chord/json";
+import { Watch, type WatchCall, type WatchEnd, type WatchHandle } from "@lingshu/chord/watch";
 import { idFromNumber } from "../ids.ts";
 import {
 	closeEndOf,

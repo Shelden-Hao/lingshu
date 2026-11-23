@@ -8,9 +8,9 @@
 // docs/p2-notes.md "TUI through Radius".
 import { chmodSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import type { OAuthCredential } from "@earendil-works/pi-ai";
-import { radiusProvider } from "@earendil-works/pi-ai/providers/radius";
-import { DEFAULT_RADIUS_GATEWAY, normalizeRadiusGatewayUrl } from "@earendil-works/pi-ai/providers/radius-config";
+import type { OAuthCredential } from "@lingshu/ai";
+import { radiusProvider } from "@lingshu/ai/providers/radius";
+import { DEFAULT_RADIUS_GATEWAY, normalizeRadiusGatewayUrl } from "@lingshu/ai/providers/radius-config";
 import { WebSocket } from "ws";
 import { configDirectory } from "./tui-config.ts";
 import type { TuiRequestInit, TuiSocket, TuiSocketEvents, TuiTransport } from "./tui-transport.ts";
@@ -41,7 +41,7 @@ export async function radiusClient(
 	const path = join(directory, "radius.json");
 	let login = readLogin(path);
 	if (!login) {
-		const gateway = normalizeRadiusGatewayUrl(process.env.PI_RADIUS_GATEWAY ?? DEFAULT_RADIUS_GATEWAY);
+		const gateway = normalizeRadiusGatewayUrl(process.env.LINGSHU_RADIUS_GATEWAY ?? DEFAULT_RADIUS_GATEWAY);
 		print(`Signing in to Radius at ${gateway}`);
 		const credential = await radiusOAuth(gateway).login({
 			signal,
@@ -155,7 +155,7 @@ export function radiusTransport(client: RadiusClient, serverId: string): RadiusT
 	};
 }
 
-const CLIENT_SUBPROTOCOL = "pi-server.client.v2";
+const CLIENT_SUBPROTOCOL = "lingshu-server.client.v2";
 /** Radius's limit for one message. */
 const MAX_MESSAGE_BYTES = 16 * 1024 * 1024;
 const BODY_CHUNK_BYTES = 256 * 1024;

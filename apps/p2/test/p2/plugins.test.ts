@@ -104,7 +104,7 @@ describe("plugin listing and selection", () => {
 		await until(chat.view, (value) =>
 			Boolean(
 				value?.entries.some(
-					(entry) => entry.kind === "pi.assistant" && JSON.stringify(entry.model).includes("Echo: subset"),
+					(entry) => entry.kind === "lingshu.assistant" && JSON.stringify(entry.model).includes("Echo: subset"),
 				),
 			),
 		);
@@ -117,7 +117,7 @@ describe("plugin listing and selection", () => {
 			Boolean(
 				value?.entries.some(
 					(entry) =>
-						entry.kind === "pi.assistant" && JSON.stringify(entry.model).includes("Echo: after subset reload"),
+						entry.kind === "lingshu.assistant" && JSON.stringify(entry.model).includes("Echo: after subset reload"),
 				),
 			),
 		);

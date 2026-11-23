@@ -1,4 +1,4 @@
-// The `p3` command. `p3 server` runs a Pi's server in the foreground (closed by SIGINT, SIGTERM or the owner's stop);
+// The `p3` command. `p3 server` runs a Lingshu's server in the foreground (closed by SIGINT, SIGTERM or the owner's stop);
 // plain `p3` starts it in the background under its supervisor unless it runs, and prints an owner link; `p3 stop`
 // stops it; `p3 restart` stops, then starts it; `p3 status` says whether it runs; `p3 list` lists the Pis. Whether a
 // server runs: its data directory's lock is held and `running.json` names its pid and port. The owner link and the stop
@@ -10,31 +10,31 @@ import { spawn } from "node:child_process";
 import { readFile, realpath } from "node:fs/promises";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
-import { BACKGROUND_CONTEXT as context, withAbortSignal } from "@earendil-works/chord/context";
-import { processLock } from "@earendil-works/chord/workers/child";
+import { BACKGROUND_CONTEXT as context, withAbortSignal } from "@lingshu/chord/context";
+import { processLock } from "@lingshu/chord/workers/child";
 import { defaultDataDir, openDataDir } from "./files.ts";
 import { COMMAND, PLUGINS, SUPERVISOR, version, WORKER } from "./install.ts";
-import { DEFAULT_PORT, dataDirOf, isPiName, keepPort, keptPort, namedPis, readConfig } from "./pi.ts";
+import { DEFAULT_PORT, dataDirOf, isPiName, keepPort, keptPort, namedPis, readConfig } from "./lingshu.ts";
 import { type ServerRecord, serverFile, serverLock, supervisorFile, supervisorLock } from "./records.ts";
 import { type RunningServer, startServer } from "./server.ts";
 
-const USAGE = `Usage: p3 [command] [--pi <name> | --dir <path>] [--port <n>]
+const USAGE = `Usage: p3 [command] [--lingshu <name> | --dir <path>] [--port <n>]
 
-A Pi is its data directory: ~/.pi/p3 (the default Pi), ~/.pi/p3/pis/<name> (--pi) or any directory (--dir).
+A Lingshu is its data directory: ~/.lingshu/p3 (the default Lingshu), ~/.lingshu/p3/pis/<name> (--lingshu) or any directory (--dir).
 
 Commands:
-  (none)     Start the Pi's server in the background unless it runs; print its port and an owner link (also: start)
-  server     Run the Pi's server in the foreground
-  status     Say whether the Pi's server runs: its port, pid, data directory, version and start time
-  stop       Stop the Pi's server; returns once it is gone
+  (none)     Start the Lingshu's server in the background unless it runs; print its port and an owner link (also: start)
+  server     Run the Lingshu's server in the foreground
+  status     Say whether the Lingshu's server runs: its port, pid, data directory, version and start time
+  stop       Stop the Lingshu's server; returns once it is gone
   restart    Stop, then start in the background
   list       The Pis on this machine and their state
 
 Options:
-  --pi <name>   A named Pi (lower case letters, digits, - and _)
-  --dir <path>  A Pi in any directory
-  --port <n>    The port for this start, on 127.0.0.1 (0: a free one). Without it a Pi listens on its own port:
-                ${DEFAULT_PORT} for the default Pi, else a free one taken at its first start and kept
+  --lingshu <name>   A named Lingshu (lower case letters, digits, - and _)
+  --dir <path>  A Lingshu in any directory
+  --port <n>    The port for this start, on 127.0.0.1 (0: a free one). Without it a Lingshu listens on its own port:
+                ${DEFAULT_PORT} for the default Lingshu, else a free one taken at its first start and kept
   --version     Print p3's version
   --help        Print this help`;
 
@@ -45,7 +45,7 @@ const START_MS = 30_000;
 const STOP_MS = 10_000;
 
 /** The command line's flags. */
-type Flags = { readonly pi?: string; readonly dir?: string; readonly port?: string };
+type Flags = { readonly lingshu?: string; readonly dir?: string; readonly port?: string };
 
 const { values, positionals } = commandLine();
 if (values.help === true) console.log(USAGE);
@@ -57,7 +57,7 @@ function commandLine() {
 	try {
 		return parseArgs({
 			options: {
-				pi: { type: "string" },
+				lingshu: { type: "string" },
 				dir: { type: "string" },
 				port: { type: "string" },
 				version: { type: "boolean" },
@@ -70,14 +70,14 @@ function commandLine() {
 	}
 }
 
-/** Runs `command` (plain `p3` is `start`) on the Pi `flags` names; a failure is one line and exit 1. */
+/** Runs `command` (plain `p3` is `start`) on the Lingshu `flags` names; a failure is one line and exit 1. */
 async function run([command = "start", ...rest]: readonly string[], flags: Flags): Promise<void> {
 	// A trust boundary: the command line.
 	const starts = command === "start" || command === "server" || command === "restart";
-	if (rest.length > 0 || (flags.pi !== undefined && flags.dir !== undefined)) usage();
-	if (flags.pi !== undefined && !isPiName(flags.pi)) usage();
+	if (rest.length > 0 || (flags.lingshu !== undefined && flags.dir !== undefined)) usage();
+	if (flags.lingshu !== undefined && !isPiName(flags.lingshu)) usage();
 	if (flags.port !== undefined && !(starts && /^\d{1,5}$/.test(flags.port) && Number(flags.port) <= 65535)) usage();
-	if (command === "list" && (flags.pi !== undefined || flags.dir !== undefined)) usage();
+	if (command === "list" && (flags.lingshu !== undefined || flags.dir !== undefined)) usage();
 	const dataDir = dataDirOf(flags);
 	const port = flags.port === undefined ? undefined : Number(flags.port);
 	try {
@@ -204,20 +204,20 @@ async function status(path: string): Promise<void> {
 	console.log(["running", ...rows.map(([name, value]) => `  ${String(name).padEnd(16)}${value}`)].join("\n"));
 }
 
-/** Lists the default Pi (once it started) and the named ones, each with its state, port and data directory. */
+/** Lists the default Lingshu (once it started) and the named ones, each with its state, port and data directory. */
 async function list(): Promise<void> {
 	const rows: string[][] = [];
-	for (const pi of [{ name: "(default)", dataDir: defaultDataDir() }, ...(await namedPis())]) {
-		const dataDir = await realpath(pi.dataDir).catch(() => undefined);
-		// A Pi is there once it started: it has its config then.
+	for (const lingshu of [{ name: "(default)", dataDir: defaultDataDir() }, ...(await namedPis())]) {
+		const dataDir = await realpath(lingshu.dataDir).catch(() => undefined);
+		// A Lingshu is there once it started: it has its config then.
 		const config = dataDir === undefined ? undefined : await readConfig(dataDir);
 		if (dataDir === undefined || config === undefined) continue;
 		const record = await running(dataDir);
 		const state =
 			record !== undefined ? "running" : (await supervisorPid(dataDir)) !== undefined ? "starting" : "stopped";
-		rows.push([pi.name, state, String(record?.port ?? config.port ?? "-"), dataDir]);
+		rows.push([lingshu.name, state, String(record?.port ?? config.port ?? "-"), dataDir]);
 	}
-	if (rows.length === 0) console.log("no Pi yet: `p3` starts the default one");
+	if (rows.length === 0) console.log("no Lingshu yet: `p3` starts the default one");
 	const width = (column: number): number => Math.max(...rows.map((row) => row[column]!.length));
 	for (const [name, state, port, dir] of rows) {
 		console.log(`${name!.padEnd(width(0))}  ${state!.padEnd(width(1))}  ${port!.padEnd(width(2))}  ${dir}`);

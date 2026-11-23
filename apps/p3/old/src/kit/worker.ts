@@ -4,11 +4,11 @@
 
 import { flushCompileCache } from "node:module";
 import { join } from "node:path";
-import { type Address, createHost, type Host, openStore, type Store, sqliteBackend } from "@earendil-works/chord";
-import type { Context } from "@earendil-works/chord/context";
-import { openNodeSqliteDatabase } from "@earendil-works/chord/sqlite/node";
-import { workerMain } from "@earendil-works/chord/workers/child";
-import type { Session } from "@earendil-works/p3/v1";
+import { type Address, createHost, type Host, openStore, type Store, sqliteBackend } from "@lingshu/chord";
+import type { Context } from "@lingshu/chord/context";
+import { openNodeSqliteDatabase } from "@lingshu/chord/sqlite/node";
+import { workerMain } from "@lingshu/chord/workers/child";
+import type { Session } from "@lingshu/p3/v1";
 import { API, PRINCIPALS } from "../app.ts";
 import type { P3Principal } from "../principals.ts";
 import { workerInfoFacet } from "./info.ts";

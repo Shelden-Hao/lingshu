@@ -1,8 +1,8 @@
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { getModel } from "@earendil-works/pi-ai/compat";
-import type { TUI } from "@earendil-works/pi-tui";
+import { getModel } from "@lingshu/ai/compat";
+import type { TUI } from "@lingshu/tui";
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { ToolDefinition } from "../src/core/extensions/types.ts";
 import { DefaultResourceLoader } from "../src/core/resource-loader.ts";
@@ -23,7 +23,10 @@ describe("tool renderer examples", () => {
 	});
 
 	beforeEach(() => {
-		tempDir = join(tmpdir(), `pi-tool-renderer-example-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+		tempDir = join(
+			tmpdir(),
+			`lingshu-tool-renderer-example-test-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+		);
 		agentDir = join(tempDir, "agent");
 		mkdirSync(agentDir, { recursive: true });
 	});
@@ -80,7 +83,7 @@ describe("tool renderer examples", () => {
 			tools: ["read", "bash", "write", "edit", "find", "grep", "ls"],
 		},
 	])("keeps the system prompt unchanged for the $name example", async ({ extensionPath, tools }) => {
-		// Regression test for https://github.com/earendil-works/pi/issues/10072
+		// Regression test for https://github.com/earendil-works/lingshu/issues/10072
 		const baseline = await getSessionState(undefined, tools);
 		const withRenderer = await getSessionState(extensionPath, tools);
 
@@ -88,7 +91,7 @@ describe("tool renderer examples", () => {
 	});
 
 	it("keeps minimal mode's edit tool in the default shell", async () => {
-		// Regression test for https://github.com/earendil-works/pi/issues/10072
+		// Regression test for https://github.com/earendil-works/lingshu/issues/10072
 		const minimalMode = await getSessionState(join(examplesDir, "minimal-mode.ts"), ["edit"]);
 		const editToolDefinition = minimalMode.editToolDefinition;
 		if (!editToolDefinition) throw new Error("minimal mode did not register the edit tool");

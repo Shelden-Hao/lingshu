@@ -1,6 +1,6 @@
-import type { Context } from "@earendil-works/chord/context";
-import { applyImmutableBatches, type Op } from "@earendil-works/chord/delta";
-import type { JsonValue } from "@earendil-works/chord/json";
+import type { Context } from "@lingshu/chord/context";
+import { applyImmutableBatches, type Op } from "@lingshu/chord/delta";
+import type { JsonValue } from "@lingshu/chord/json";
 import { StorageRequestError } from "../errors.ts";
 import { idFromNumber, seqFromNumber } from "../ids.ts";
 import type {

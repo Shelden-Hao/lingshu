@@ -1,8 +1,8 @@
 // The worker's base pieces that a test topology shares with the real worker: the base's facets (the registries it
 // serves).
 
-import { defineFacet, type Facet } from "@earendil-works/chord";
-import { WorkerBusy, WorkerRuntime } from "@earendil-works/p3/v1/worker";
+import { defineFacet, type Facet } from "@lingshu/chord";
+import { WorkerBusy, WorkerRuntime } from "@lingshu/p3/v1/worker";
 import type { P3Principal } from "./principals.ts";
 
 /** The base's facets on a worker: `WorkerRuntime` (the process values) and `WorkerBusy` (the sum of the counts). */

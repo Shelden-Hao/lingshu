@@ -1,4 +1,4 @@
-// A masked one-line input for secret login prompts (p2-tui-port.md section 1.8, a p2 improvement over pi's plain
+// A masked one-line input for secret login prompts (p2-tui-port.md section 1.8, a p2 improvement over lingshu's plain
 // Input): characters show as dots, the value is never rendered, echoed after submit, kept in history or snapshotted,
 // and it is wiped from the component as soon as it is handed over.
 import {
@@ -7,7 +7,7 @@ import {
 	decodeKittyPrintable,
 	type Focusable,
 	truncateToWidth,
-} from "@earendil-works/pi-tui";
+} from "@lingshu/tui";
 import type { SelectorContext } from "./selectors.ts";
 
 const PASTE_START = "\x1b[200~";

@@ -10,13 +10,13 @@ import {
 	local,
 	method,
 	type Store,
-} from "@earendil-works/chord";
-import type { Context } from "@earendil-works/chord/context";
-import type { JsonValue } from "@earendil-works/chord/json";
-import type { CredentialStore, ModelsStore } from "@earendil-works/pi-ai";
-import type { MutableModels } from "@earendil-works/pi-ai/models";
-import { arr, bool, nul, num, obj, opt, type Static, str, union } from "@earendil-works/pi-schema";
-import type { TelemetryStore } from "@earendil-works/pi-telemetry";
+} from "@lingshu/chord";
+import type { Context } from "@lingshu/chord/context";
+import type { JsonValue } from "@lingshu/chord/json";
+import type { CredentialStore, ModelsStore } from "@lingshu/ai";
+import type { MutableModels } from "@lingshu/ai/models";
+import { arr, bool, nul, num, obj, opt, type Static, str, union } from "@lingshu/schema";
+import type { TelemetryStore } from "@lingshu/telemetry";
 import { Access } from "./access.ts";
 import {
 	type Ctx,

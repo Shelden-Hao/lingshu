@@ -1,79 +1,79 @@
 // Type-checks the example extensions against the modules extensions see at run time (core/extensions/virtual-modules.ts):
-// "@earendil-works/pi-ai" is the extension view, which adds TypeBox's Type, Static and TSchema to the compat entry (the
-// view imports "@earendil-works/pi-ai/compat", so that path stays the package's own).
+// "@lingshu/ai" is the extension view, which adds TypeBox's Type, Static and TSchema to the compat entry (the
+// view imports "@lingshu/ai/compat", so that path stays the package's own).
 // The other paths repeat the root tsconfig.json; keep them in sync.
 // Also the test that imports the subagent example: it type-checks only against the extension view.
 {
 	"extends": "../../../tsconfig.json",
 	"compilerOptions": {
 		"paths": {
-			"@earendil-works/chord": [
+			"@lingshu/chord": [
 				"../../../packages/chord/src/index.ts"
 			],
-			"@earendil-works/chord/context": [
+			"@lingshu/chord/context": [
 				"../../../packages/chord/src/context/index.ts"
 			],
-			"@earendil-works/chord/delta": [
+			"@lingshu/chord/delta": [
 				"../../../packages/chord/src/delta/index.ts"
 			],
-			"@earendil-works/chord/json": [
+			"@lingshu/chord/json": [
 				"../../../packages/chord/src/json.ts"
 			],
-			"@earendil-works/chord/watch": [
+			"@lingshu/chord/watch": [
 				"../../../packages/chord/src/watch.ts"
 			],
-			"@earendil-works/chord/output": [
+			"@lingshu/chord/output": [
 				"../../../packages/chord/src/output.ts"
 			],
-			"@earendil-works/chord/sqlite": [
+			"@lingshu/chord/sqlite": [
 				"../../../packages/chord/src/sqlite/index.ts"
 			],
-			"@earendil-works/chord/sqlite/node": [
+			"@lingshu/chord/sqlite/node": [
 				"../../../packages/chord/src/sqlite/node.ts"
 			],
-			"@earendil-works/chord/sqlite/cloudflare": [
+			"@lingshu/chord/sqlite/cloudflare": [
 				"../../../packages/chord/src/sqlite/cloudflare.ts"
 			],
-			"@earendil-works/chord/telemetry-sqlite": [
+			"@lingshu/chord/telemetry-sqlite": [
 				"../../../packages/chord/src/telemetry-sqlite/index.ts"
 			],
-			"@earendil-works/chord/http": [
+			"@lingshu/chord/http": [
 				"../../../packages/chord/src/node/http/index.ts"
 			],
-			"@earendil-works/chord/workers": [
+			"@lingshu/chord/workers": [
 				"../../../packages/chord/src/node/workers/index.ts"
 			],
-			"@earendil-works/chord/workers/child": [
+			"@lingshu/chord/workers/child": [
 				"../../../packages/chord/src/node/workers/child.ts"
 			],
-			"@earendil-works/chord/plugins": [
+			"@lingshu/chord/plugins": [
 				"../../../packages/chord/src/node/plugins/index.ts"
 			],
-			"@earendil-works/chord/plugins/runtime": [
+			"@lingshu/chord/plugins/runtime": [
 				"../../../packages/chord/src/node/plugins/runtime.ts"
 			],
-			"@earendil-works/chord/app": [
+			"@lingshu/chord/app": [
 				"../../../packages/chord/src/node/app/index.ts"
 			],
-			"@earendil-works/chord/app/files": [
+			"@lingshu/chord/app/files": [
 				"../../../packages/chord/src/node/app/files-entry.ts"
 			],
-			"@earendil-works/chord/web": [
+			"@lingshu/chord/web": [
 				"../../../packages/chord/src/web/index.ts"
 			],
-			"@earendil-works/chord/surfaces": [
+			"@lingshu/chord/surfaces": [
 				"../../../packages/chord/src/node/surfaces/index.ts"
 			],
-			"@earendil-works/chord/react": [
+			"@lingshu/chord/react": [
 				"../../../packages/chord/src/react/index.ts"
 			],
-			"@earendil-works/chord/tui": [
+			"@lingshu/chord/tui": [
 				"../../../packages/chord/src/tui/index.ts"
 			],
-			"@earendil-works/chord/tui/launcher": [
+			"@lingshu/chord/tui/launcher": [
 				"../../../packages/chord/src/node/tui/index.ts"
 			],
-			"@earendil-works/chord/sync": [
+			"@lingshu/chord/sync": [
 				"../../../packages/chord/src/sync/index.ts"
 			],
 			"@test/contracts/*": [
@@ -94,104 +94,104 @@
 			"@example/shared/*": [
 				"../../chord/test/examples/38-watch-and-rollout/plugins/contracts/*.ts"
 			],
-			"@earendil-works/pi-telemetry": [
+			"@lingshu/telemetry": [
 				"../../../packages/telemetry/src/index.ts"
 			],
-			"@earendil-works/pi-telemetry/testing": [
+			"@lingshu/telemetry/testing": [
 				"../../../packages/telemetry/src/testing/index.ts"
 			],
-			"@earendil-works/pi-telemetry/render": [
+			"@lingshu/telemetry/render": [
 				"../../../packages/telemetry/src/render.ts"
 			],
-			"@earendil-works/pi-codemode": [
+			"@lingshu/codemode": [
 				"../../../packages/codemode/src/index.ts"
 			],
-			"@earendil-works/pi-codemode/cloudflare": [
+			"@lingshu/codemode/cloudflare": [
 				"../../../packages/codemode/src/cloudflare.ts"
 			],
-			"@earendil-works/pi-codemode/declarations": [
+			"@lingshu/codemode/declarations": [
 				"../../../packages/codemode/src/declarations.ts"
 			],
-			"@earendil-works/pi-codemode/portable": [
+			"@lingshu/codemode/portable": [
 				"../../../packages/codemode/src/portable.ts"
 			],
-			"@earendil-works/pi-codemode/source": [
+			"@lingshu/codemode/source": [
 				"../../../packages/codemode/src/source.ts"
 			],
-			"@earendil-works/pi-codemode/worker": [
+			"@lingshu/codemode/worker": [
 				"../../../packages/codemode/src/runtime/worker.ts"
 			],
-			"@earendil-works/pi-schema": [
+			"@lingshu/schema": [
 				"../../../packages/schema/src/index.ts"
 			],
-			"@earendil-works/pi-schema/formats": [
+			"@lingshu/schema/formats": [
 				"../../../packages/schema/src/formats/index.ts"
 			],
-			"@earendil-works/pi-mcp": [
+			"@lingshu/mcp": [
 				"../../../packages/mcp/src/index.ts"
 			],
-			"@earendil-works/pi-mcp/oauth": [
+			"@lingshu/mcp/oauth": [
 				"../../../packages/mcp/src/oauth/index.ts"
 			],
-			"@earendil-works/pi-mcp/testing": [
+			"@lingshu/mcp/testing": [
 				"../../../packages/mcp/src/testing/index.ts"
 			],
-			"@earendil-works/pi-ai": [
-				"../../../packages/coding-agent/src/core/extensions/pi-ai-extension-view.ts"
+			"@lingshu/ai": [
+				"../../../packages/coding-agent/src/core/extensions/lingshu-ai-extension-view.ts"
 			],
-			"@earendil-works/pi-ai/oauth": [
+			"@lingshu/ai/oauth": [
 				"../../../packages/ai/src/oauth.ts"
 			],
-			"@earendil-works/pi-ai/*": [
+			"@lingshu/ai/*": [
 				"../../../packages/ai/src/*.ts",
 				"../../../packages/ai/src/providers/*.ts"
 			],
-			"@earendil-works/pi-ai/dist/*": [
+			"@lingshu/ai/dist/*": [
 				"../../../packages/ai/src/*"
 			],
-			"@earendil-works/pi-durable": [
+			"@lingshu/durable": [
 				"../../../packages/durable/src/index.ts"
 			],
-			"@earendil-works/pi-durable/testing": [
+			"@lingshu/durable/testing": [
 				"../../../packages/durable/src/testing/index.ts"
 			],
-			"@earendil-works/pi-durable/*": [
+			"@lingshu/durable/*": [
 				"../../../packages/durable/src/*.ts",
 				"../../../packages/durable/src/*/index.ts",
 				"../../../packages/durable/src/*"
 			],
-			"@earendil-works/pi-env": [
+			"@lingshu/env": [
 				"../../../packages/env/src/index.ts"
 			],
-			"@earendil-works/pi-agent-core": [
+			"@lingshu/agent-core": [
 				"../../../packages/agent/src/index.ts"
 			],
-			"@earendil-works/pi-coding-agent": [
+			"@lingshu/coding-agent": [
 				"../../../packages/coding-agent/src/index.ts"
 			],
-			"@earendil-works/pi-coding-agent/hooks": [
+			"@lingshu/coding-agent/hooks": [
 				"../../../packages/coding-agent/src/core/hooks/index.ts"
 			],
-			"@earendil-works/pi-coding-agent/*": [
+			"@lingshu/coding-agent/*": [
 				"../../../packages/coding-agent/src/*"
 			],
 			"typebox": [
 				"../../../node_modules/typebox"
 			],
-			"@earendil-works/pi-tui": [
+			"@lingshu/tui": [
 				"../../../packages/tui/src/index.ts"
 			],
-			"@earendil-works/pi-tui/*": [
+			"@lingshu/tui/*": [
 				"../../../packages/tui/src/*"
 			],
-			"@earendil-works/pi-agent-old": [
+			"@lingshu/agent-old": [
 				"../../../packages/agent-old/src/index.ts"
 			],
-			"@earendil-works/pi-agent-old/*": [
+			"@lingshu/agent-old/*": [
 				"../../../packages/agent-old/src/*"
 			],
-			"@mariozechner/pi-ai": [
-				"../../../packages/coding-agent/src/core/extensions/pi-ai-extension-view.ts"
+			"@mariozechner/lingshu-ai": [
+				"../../../packages/coding-agent/src/core/extensions/lingshu-ai-extension-view.ts"
 			]
 		}
 	},

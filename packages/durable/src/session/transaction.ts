@@ -1,4 +1,4 @@
-import { BACKGROUND_CONTEXT, type Context } from "@earendil-works/chord/context";
+import { BACKGROUND_CONTEXT, type Context } from "@lingshu/chord/context";
 import {
 	type Change,
 	type Draft,
@@ -7,9 +7,9 @@ import {
 	type Prepared,
 	type Tracker,
 	track,
-} from "@earendil-works/chord/delta";
-import { copyJson, type JsonValue } from "@earendil-works/chord/json";
-import type { TelemetryCarrier } from "@earendil-works/pi-telemetry";
+} from "@lingshu/chord/delta";
+import { copyJson, type JsonValue } from "@lingshu/chord/json";
+import type { TelemetryCarrier } from "@lingshu/telemetry";
 import {
 	type AnyDocDefinition,
 	type AnyDocToken,

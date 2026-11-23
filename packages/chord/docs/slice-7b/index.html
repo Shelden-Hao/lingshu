@@ -195,8 +195,8 @@ named by their directory).</p>
   <span class="tk-s">"version"</span>: <span class="tk-s">"1.4.0"</span>,
   <span class="tk-s">"type"</span>: <span class="tk-s">"module"</span>,
   <span class="tk-s">"peerDependencies"</span>: {
-    <span class="tk-s">"@earendil-works/chord"</span>: <span class="tk-s">"^2"</span>,
-    <span class="tk-s">"@earendil-works/pi-durable"</span>: <span class="tk-s">"^1"</span>,
+    <span class="tk-s">"@lingshu/chord"</span>: <span class="tk-s">"^2"</span>,
+    <span class="tk-s">"@lingshu/durable"</span>: <span class="tk-s">"^1"</span>,
     <span class="tk-s">"react"</span>: <span class="tk-s">"^19"</span>
   },
   <span class="tk-s">"dependencies"</span>: {
@@ -219,7 +219,7 @@ automatic React runtime, a fixed setting of the loader. A plugin may keep a <cod
 <p>A facet only declares (chapter III of the model): it serves object types, serves or contributes to registries, and
 returns nothing.</p>
 <pre><code><span class="tk-c">// plugins/notes/contract.ts</span>
-<span class="tk-k">import</span> { defineRegistry, local, remote, str, obj, arr, method } <span class="tk-k">from</span> <span class="tk-s">"@earendil-works/chord"</span>;
+<span class="tk-k">import</span> { defineRegistry, local, remote, str, obj, arr, method } <span class="tk-k">from</span> <span class="tk-s">"@lingshu/chord"</span>;
 <span class="tk-k">import</span> { <span class="tk-t">Session</span> } <span class="tk-k">from</span> <span class="tk-s">"@app/core"</span>;                        <span class="tk-c">// the app's host kinds, a host package</span>
 <span class="tk-k">export</span> <span class="tk-k">const</span> <span class="tk-t">NoteStore</span> = <span class="tk-f">local</span>(<span class="tk-s">"notes.store"</span>, { version: <span class="tk-n">1</span>, params: {}, members: { <span class="tk-c">/* … */</span> } });
 <span class="tk-k">export</span> <span class="tk-k">const</span> <span class="tk-t">Notes</span> = <span class="tk-f">remote</span>(<span class="tk-s">"notes"</span>, {
@@ -273,7 +273,7 @@ returns nothing.</p>
 <td>external: <code>require</code>d from the plugin&#39;s own <code>node_modules</code> at evaluation</td>
 </tr>
 <tr>
-<td>a host package (<code>@earendil-works/chord</code>, <code>react</code>, <code>@app/core</code>, …)</td>
+<td>a host package (<code>@lingshu/chord</code>, <code>react</code>, <code>@app/core</code>, …)</td>
 <td><strong>external</strong>: a parameter of the script, the host&#39;s instance at load time</td>
 </tr>
 <tr>
@@ -294,16 +294,16 @@ second copy of Chord, and an old version is garbage-collected once nothing holds
 <pre><code><span class="tk-c">// what the bundler emits for plugins/notes/worker.ts (simplified)</span>
 (<span class="tk-k">function</span> (require, __files) {
   <span class="tk-k">const</span> { defineFacet } = <span class="tk-f">require</span>(<span class="tk-s">"@app/core"</span>);             <span class="tk-c">// the host's instance</span>
-  <span class="tk-k">const</span> { local, remote, str } = <span class="tk-f">require</span>(<span class="tk-s">"@earendil-works/chord"</span>);
+  <span class="tk-k">const</span> { local, remote, str } = <span class="tk-f">require</span>(<span class="tk-s">"@lingshu/chord"</span>);
   <span class="tk-k">const</span> { marked } = <span class="tk-c">/* marked's code, inlined */</span>;
   <span class="tk-c">/* contract.ts, store.ts, inlined */</span>
   <span class="tk-k">return</span> <span class="tk-f">defineFacet</span>((host) =&gt; { <span class="tk-c">/* … */</span> });
 })</code></pre>
-<pre><code><span class="tk-c">// the loader (proposed @earendil-works/chord/loader), Node side</span>
-<span class="tk-k">import</span> { buildFacet, evaluateFacet } <span class="tk-k">from</span> <span class="tk-s">"@earendil-works/chord/loader"</span>;
+<pre><code><span class="tk-c">// the loader (proposed @lingshu/chord/loader), Node side</span>
+<span class="tk-k">import</span> { buildFacet, evaluateFacet } <span class="tk-k">from</span> <span class="tk-s">"@lingshu/chord/loader"</span>;
 
 <span class="tk-k">const</span> HOST_PACKAGES = {                                     <span class="tk-c">// the app's base bundle exports these</span>
-  <span class="tk-s">"@earendil-works/chord"</span>: chord, <span class="tk-s">"@earendil-works/pi-durable"</span>: durable,
+  <span class="tk-s">"@lingshu/chord"</span>: chord, <span class="tk-s">"@lingshu/durable"</span>: durable,
   <span class="tk-s">"@app/core"</span>: core, react, <span class="tk-s">"react/jsx-runtime"</span>: jsxRuntime,
 };
 <span class="tk-k">const</span> script = <span class="tk-k">await</span> <span class="tk-f">buildFacet</span>({ plugin: <span class="tk-s">"/data/plugins/notes"</span>, facet: <span class="tk-s">"worker.ts"</span>, hostPackages: <span class="tk-t">Object</span>.<span class="tk-f">keys</span>(HOST_PACKAGES), platform: <span class="tk-s">"node"</span> });
@@ -337,7 +337,7 @@ bundled script has no meaningful <code>import.meta.url</code> (today&#39;s <code
 <code>new URL(&quot;../../vendor/…&quot;, import.meta.url)</code>). The loader passes the plugin&#39;s directory, and a helper resolves a path
 inside it, refusing <code>..</code> out of it:</p>
 <pre><code><span class="tk-c">// plugins/notes/worker.ts</span>
-<span class="tk-k">import</span> { pluginFile } <span class="tk-k">from</span> <span class="tk-s">"@earendil-works/chord/loader"</span>;   <span class="tk-c">// reads the directory the loader passed</span>
+<span class="tk-k">import</span> { pluginFile } <span class="tk-k">from</span> <span class="tk-s">"@lingshu/chord/loader"</span>;   <span class="tk-c">// reads the directory the loader passed</span>
 <span class="tk-k">const</span> template = <span class="tk-k">await</span> <span class="tk-f">readFile</span>(<span class="tk-f">pluginFile</span>(<span class="tk-s">"assets/template.md"</span>), <span class="tk-s">"utf8"</span>);</code></pre>
 <p><strong>3. Offered for download over HTTP.</strong> A plugin contributes a route to the app&#39;s HTTP registry; the handler opens the
 file through the same helper and streams it, with the plugin&#39;s own authorization:</p>
@@ -359,7 +359,7 @@ own plugin&#39;s directory; nothing gives it another plugin&#39;s files.</p>
 </section>
 
 <section class="chapter" id="http"><header class="opener"><div class="numeral">IV</div><h2>HTTP</h2><p class="lede">What Chord provides, what p2 has, and what p3 needs.</p></header>
-<p class="dropcap"><strong>Chord v2 has no HTTP server today.</strong> Design §23 designs one (<code>@earendil-works/chord/http</code>) and defers it until
+<p class="dropcap"><strong>Chord v2 has no HTTP server today.</strong> Design §23 designs one (<code>@lingshu/chord/http</code>) and defers it until
 &quot;the kernel fixes and a first real proof&quot; are done. p2&#39;s HTTP is its own, about 30 lines of helpers plus the server host:</p>
 <pre><code><span class="tk-c">// apps/p2/src/runtime/server.ts (p2 at the time, on Chord v1)</span>
 <span class="tk-k">export</span> <span class="tk-k">const</span> <span class="tk-t">Routes</span> = <span class="tk-f">defineRegistry</span>&lt;<span class="tk-t">RouteHandler</span>&gt;(<span class="tk-s">"p2.routes"</span>, { conflict: <span class="tk-s">"error"</span> });        <span class="tk-c">// "METHOD /path" → handler</span>
@@ -443,13 +443,13 @@ the reload control. Almost none of it is p2-specific. The proposal: Chord ships 
 subpath an app imports only if it wants it, none of them in Chord&#39;s kernel.</p>
 <h3 id="what-it-would-look-like">What it would look like</h3>
 <pre><code><span class="tk-c">// server.ts: a whole app with plugins, a web and a TUI surface</span>
-<span class="tk-k">import</span> { createHost } <span class="tk-k">from</span> <span class="tk-s">"@earendil-works/chord"</span>;
-<span class="tk-k">import</span> { discoverPlugins, pluginLoader } <span class="tk-k">from</span> <span class="tk-s">"@earendil-works/chord/loader"</span>;
-<span class="tk-k">import</span> { httpServer } <span class="tk-k">from</span> <span class="tk-s">"@earendil-works/chord/http"</span>;
-<span class="tk-k">import</span> { workerRoute } <span class="tk-k">from</span> <span class="tk-s">"@earendil-works/chord/workers"</span>;
-<span class="tk-k">import</span> { webSurface } <span class="tk-k">from</span> <span class="tk-s">"@earendil-works/chord/web"</span>;
-<span class="tk-k">import</span> { tuiSurface } <span class="tk-k">from</span> <span class="tk-s">"@earendil-works/chord/tui"</span>;
-<span class="tk-k">import</span> { devReload } <span class="tk-k">from</span> <span class="tk-s">"@earendil-works/chord/dev"</span>;
+<span class="tk-k">import</span> { createHost } <span class="tk-k">from</span> <span class="tk-s">"@lingshu/chord"</span>;
+<span class="tk-k">import</span> { discoverPlugins, pluginLoader } <span class="tk-k">from</span> <span class="tk-s">"@lingshu/chord/loader"</span>;
+<span class="tk-k">import</span> { httpServer } <span class="tk-k">from</span> <span class="tk-s">"@lingshu/chord/http"</span>;
+<span class="tk-k">import</span> { workerRoute } <span class="tk-k">from</span> <span class="tk-s">"@lingshu/chord/workers"</span>;
+<span class="tk-k">import</span> { webSurface } <span class="tk-k">from</span> <span class="tk-s">"@lingshu/chord/web"</span>;
+<span class="tk-k">import</span> { tuiSurface } <span class="tk-k">from</span> <span class="tk-s">"@lingshu/chord/tui"</span>;
+<span class="tk-k">import</span> { devReload } <span class="tk-k">from</span> <span class="tk-s">"@lingshu/chord/dev"</span>;
 <span class="tk-k">import</span> { <span class="tk-t">Server</span>, <span class="tk-t">Session</span>, core } <span class="tk-k">from</span> <span class="tk-s">"./core.ts"</span>;              <span class="tk-c">// the app's base code: host kinds, principals, core facet</span>
 
 <span class="tk-k">const</span> plugins = <span class="tk-k">await</span> <span class="tk-f">discoverPlugins</span>([<span class="tk-s">"./plugins"</span>, <span class="tk-f">join</span>(dataDir, <span class="tk-s">"plugins"</span>)]);
@@ -464,7 +464,7 @@ http.<span class="tk-f">surface</span>(<span class="tk-f">webSurface</span>({ lo
 http.<span class="tk-f">surface</span>(<span class="tk-f">tuiSurface</span>({ loader, plugins }));                                        <span class="tk-c">// the TUI launcher's bundle and socket</span>
 <span class="tk-f">devReload</span>({ server, loader, plugins, watch: <span class="tk-k">true</span> });                                 <span class="tk-c">// a changed plugin reloads everywhere</span></code></pre>
 <pre><code><span class="tk-c">// worker.ts</span>
-<span class="tk-k">import</span> { workerMain } <span class="tk-k">from</span> <span class="tk-s">"@earendil-works/chord/workers"</span>;
+<span class="tk-k">import</span> { workerMain } <span class="tk-k">from</span> <span class="tk-s">"@lingshu/chord/workers"</span>;
 <span class="tk-k">await</span> <span class="tk-f">workerMain</span>(<span class="tk-k">async</span> ({ address, init, parent }) =&gt; {
   <span class="tk-k">const</span> worker = <span class="tk-f">createHost</span>&lt;P&gt;({ address, principal: { kind: <span class="tk-s">"worker"</span>, session: init.id }, onError });
   worker.<span class="tk-f">connect</span>(parent, { principal: { kind: <span class="tk-s">"server"</span> }, trusted: <span class="tk-k">true</span> }, ctx);
@@ -526,7 +526,7 @@ component, pi-tui of the TUI component; an app without them never imports them.<
 <p>The principal type and authentication; the host kinds (<code>Server</code>, <code>Session</code>) and what a worker&#39;s start message holds;
 the core facet and core objects (catalog, harness); the web shell&#39;s layout and the TUI&#39;s look; which registries plugins
 contribute to beyond <code>Http</code>. That is roughly what p3&#39;s base code should be: a few hundred lines, not ten thousand.</p>
-<div class="note review"><b class="tag">Open 6: the app kit</b><p>(a) Chord ships these six components as optional subpaths of <code>@earendil-works/chord</code>, built in this order: <code>loader</code>
+<div class="note review"><b class="tag">Open 6: the app kit</b><p>(a) Chord ships these six components as optional subpaths of <code>@lingshu/chord</code>, built in this order: <code>loader</code>
 and <code>dev</code> with 7b (reload needs them), <code>http</code> and <code>workers</code> next (p3 needs them first), <code>web</code> and <code>tui</code> after (lifted
 from p2&#39;s code, which works today). (b) Chord ships only <code>loader</code>; the rest is p3&#39;s base code. Recommended: (a), as the
 owner asked; each component gets its own slice spec and review, after 7b and before slice 9 or alongside p3&#39;s base.</p>

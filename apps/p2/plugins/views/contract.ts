@@ -16,7 +16,7 @@ import {
 	str,
 	union,
 	unknown,
-} from "@earendil-works/pi-schema";
+} from "@lingshu/schema";
 import {
 	type AcceptsTable,
 	type Ctx,

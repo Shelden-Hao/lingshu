@@ -12,8 +12,8 @@ import { type ChildProcess, spawn } from "node:child_process";
 import { openSync, writeSync } from "node:fs";
 import { rm } from "node:fs/promises";
 import { join } from "node:path";
-import { BACKGROUND_CONTEXT as context, withAbortSignal } from "@earendil-works/chord/context";
-import { processLock } from "@earendil-works/chord/workers/child";
+import { BACKGROUND_CONTEXT as context, withAbortSignal } from "@lingshu/chord/context";
+import { processLock } from "@lingshu/chord/workers/child";
 import { privateDirectory, writePrivate } from "./files.ts";
 import { supervisorFile, supervisorLock } from "./records.ts";
 

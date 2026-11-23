@@ -2,9 +2,9 @@
 
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { createHost } from "@earendil-works/chord";
-import { BACKGROUND_CONTEXT as context } from "@earendil-works/chord/context";
-import { type P3Principal, Session } from "@earendil-works/p3/v1";
+import { createHost } from "@lingshu/chord";
+import { BACKGROUND_CONTEXT as context } from "@lingshu/chord/context";
+import { type P3Principal, Session } from "@lingshu/p3/v1";
 import { AppInfo, appInfoFacet, WorkerInfo, workerInfoFacet } from "../../src/kit/info.ts";
 
 describe("start data", () => {

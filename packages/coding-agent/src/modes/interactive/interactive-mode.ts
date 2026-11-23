@@ -7,8 +7,8 @@ import * as crypto from "node:crypto";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import type { AgentMessage, ThinkingLevel } from "@earendil-works/pi-agent-core";
-import type { AuthEvent, AuthPrompt } from "@earendil-works/pi-ai";
+import type { AgentMessage, ThinkingLevel } from "@lingshu/agent-core";
+import type { AuthEvent, AuthPrompt } from "@lingshu/ai";
 import {
 	type AssistantMessage,
 	type ImageContent,
@@ -16,7 +16,7 @@ import {
 	type Message,
 	type Model,
 	type Usage,
-} from "@earendil-works/pi-ai/compat";
+} from "@lingshu/ai/compat";
 import type {
 	AutocompleteItem,
 	AutocompleteProvider,
@@ -28,8 +28,8 @@ import type {
 	OverlayOptions,
 	SlashCommand,
 	TuiMainScreenRenderState,
-} from "@earendil-works/pi-tui";
-import * as TuiLayouts from "@earendil-works/pi-tui";
+} from "@lingshu/tui";
+import * as TuiLayouts from "@lingshu/tui";
 import {
 	CombinedAutocompleteProvider,
 	type Component,
@@ -52,7 +52,7 @@ import {
 	type TuiMouseEvent,
 	type TuiMouseEventResult,
 	visibleWidth,
-} from "@earendil-works/pi-tui";
+} from "@lingshu/tui";
 import chalk from "chalk";
 import { spawn } from "child_process";
 import {
@@ -136,8 +136,8 @@ import { extensionForImageMimeType, readClipboardImage } from "../../utils/clipb
 import { flushStdout } from "../../utils/flush-stdout.ts";
 import { parseGitUrl } from "../../utils/git.ts";
 import { ensurePngTranscoder } from "../../utils/image-convert.ts";
+import { getPiUserAgent } from "../../utils/lingshu-user-agent.ts";
 import { getCwdRelativePath, shortenHomePath } from "../../utils/paths.ts";
-import { getPiUserAgent } from "../../utils/pi-user-agent.ts";
 import { killTrackedDetachedChildren } from "../../utils/shell.ts";
 import { loadAllHighlightLanguages } from "../../utils/syntax-highlight.ts";
 import { stripBom } from "../../utils/text.ts";
@@ -149,13 +149,14 @@ import { ArminComponent } from "./components/armin.ts";
 import { AssistantMessageComponent } from "./components/assistant-message.ts";
 import { BashExecutionComponent } from "./components/bash-execution.ts";
 import { BranchSummaryMessageComponent } from "./components/branch-summary-message.ts";
+import { brandHeaderLines, supportsBrandLogo } from "./components/brand-logo.ts";
 import { CompactionSummaryMessageComponent } from "./components/compaction-summary-message.ts";
 import { CustomEditor } from "./components/custom-editor.ts";
 import { CustomEntryComponent } from "./components/custom-entry.ts";
 import { CustomMessageComponent } from "./components/custom-message.ts";
 import { DynamicBorder } from "./components/dynamic-border.ts";
 import { EarendilAnnouncementComponent } from "./components/earendil-announcement.ts";
-import { playArmin3d, playPiLogo3d } from "./components/easter-egg-3d.lazy.ts";
+import { playArmin3d, playBrandLogo3d } from "./components/easter-egg-3d.lazy.ts";
 import { ExtensionEditorComponent } from "./components/extension-editor.ts";
 import { ExtensionInputComponent } from "./components/extension-input.ts";
 import { ExtensionSelectorComponent } from "./components/extension-selector.ts";
@@ -171,7 +172,6 @@ import {
 	formatAuthSelectorProviderType,
 	OAuthSelectorComponent,
 } from "./components/oauth-selector.ts";
-import { piLogoLines, piWordmark, supportsPiLogo } from "./components/pi-logo.ts";
 import { createLoginMenuSelector } from "./components/radius-login-selector.ts";
 import { ScopedModelsSelectorComponent } from "./components/scoped-models-selector.ts";
 import { SessionSelectorComponent } from "./components/session-selector.ts";
@@ -381,7 +381,7 @@ type LoginProviderCompletionOption = {
 	subscription?: boolean;
 };
 
-const RADIUS_LOGIN_INTRO = "Radius is a service crafted for Pi by the builders of Pi, Earendil Works";
+const RADIUS_LOGIN_INTRO = "Radius is a service crafted for Lingshu by the builders of Lingshu, Earendil Works";
 
 const AUTH_TYPE_ORDER = { oauth: 0, api_key: 1 } satisfies Record<AuthSelectorProvider["authType"], number>;
 
@@ -443,7 +443,7 @@ export interface InteractiveModeOptions {
 	startupDiagnostics?: AgentSessionRuntimeDiagnostic[];
 	/** Warning message if session model couldn't be restored */
 	modelFallbackMessage?: string;
-	/** Cwd to trust after reload if it gained a .pi directory during this implicitly trusted session. */
+	/** Cwd to trust after reload if it gained a .lingshu directory during this implicitly trusted session. */
 	autoTrustOnReloadCwd?: string;
 	/** Initial message to send on startup (can include @file content) */
 	initialMessage?: string;
@@ -637,7 +637,7 @@ export class InteractiveMode {
 	private nextBlockingOverlayId = 0;
 	/**
 	 * Open extension overlays (custom with overlay: true) and the function that removes each, in opening
-	 * order. Reset removes only these, not pi's own overlays.
+	 * order. Reset removes only these, not lingshu's own overlays.
 	 */
 	private readonly extensionOverlays = new Map<OverlayHandle, () => void>();
 	private extensionTerminalInputSubscriptions = new Set<{
@@ -1103,15 +1103,12 @@ export class InteractiveMode {
 		// Add header with keybindings from config (unless silenced)
 		if (this.shouldShowStartupHeader()) {
 			const showDetails = this.shouldShowStartupDetails();
-			// Built on demand so the header follows theme changes. The logo's first line carries the version,
-			// its second line the first line of key hints. Terminals that cannot render the logo get a
-			// "Pi vX" line instead, with the key hints below it.
-			const showLogo = supportsPiLogo();
-			const withLogo = (hints: string) => {
-				if (!showLogo) return `${piWordmark()} ${theme.fg("dim", `v${this.version}`)}\n${hints}`;
-				const [top, bottom] = piLogoLines();
-				return `${top} ${theme.fg("dim", `v${this.version}`)}\n${bottom} ${hints}`;
-			};
+			// Built on demand so the header follows theme changes and brand overrides. The logo's first
+			// line carries the version, its second line the first line of key hints.
+			// The logo click plays the 3D easter egg, so the header only wires it up when the brand
+			// actually renders block-art logo lines.
+			const showLogo = supportsBrandLogo();
+			const withLogo = (hints: string) => brandHeaderLines(this.version, hints);
 
 			// Build startup instructions using keybinding hint helpers
 			const hint = (keybinding: AppKeybinding, description: string) => keyHint(keybinding, description);
@@ -1155,7 +1152,10 @@ export class InteractiveMode {
 					`Press ${keyText("app.tools.expand")} to show full startup help${showDetails ? " and loaded resources" : ""}.`,
 				);
 			const onboarding = () =>
-				theme.fg("dim", `Pi can explain its own features and look up its docs. Ask it how to use or extend Pi.`);
+				theme.fg(
+					"dim",
+					`Lingshu can explain its own features and look up its docs. Ask it how to use or extend Lingshu.`,
+				);
 			const header = new BuiltInHeader(
 				() => `${withLogo(compactInstructions())}\n${compactOnboarding()}\n\n${onboarding()}`,
 				() => `${withLogo(expandedInstructions())}\n\n${onboarding()}`,
@@ -1163,7 +1163,7 @@ export class InteractiveMode {
 				1,
 				0,
 			);
-			if (showLogo) header.onLogoClick = (column, row) => playPiLogo3d(this.renderer, column, row);
+			if (showLogo) header.onLogoClick = (column, row) => playBrandLogo3d(this.renderer, column, row);
 			this.builtInHeader = header;
 
 			// Setup UI layout
@@ -1242,7 +1242,7 @@ export class InteractiveMode {
 	async run(): Promise<void> {
 		await this.init();
 
-		if (!process.env.PI_OFFLINE) {
+		if (!process.env.LINGSHU_OFFLINE) {
 			const controller = new AbortController();
 			const timeout = setTimeout(() => controller.abort(), 15_000);
 			void refreshModelCatalogs(this.session.modelRuntime, controller.signal)
@@ -1267,7 +1267,7 @@ export class InteractiveMode {
 			})
 			.finally(() => {
 				// On Windows, npm can overwrite the shared console title while checking
-				// extension package versions. Restore Pi's title after the startup check.
+				// extension package versions. Restore Lingshu's title after the startup check.
 				if (process.platform === "win32" && this.isInitialized) {
 					this.updateTerminalTitle();
 				}
@@ -1349,7 +1349,7 @@ export class InteractiveMode {
 	}
 
 	private async checkForPackageUpdates(): Promise<string[]> {
-		if (process.env.PI_OFFLINE) {
+		if (process.env.LINGSHU_OFFLINE) {
 			return [];
 		}
 
@@ -1407,7 +1407,7 @@ export class InteractiveMode {
 		}
 
 		if (extendedKeysFormat === "xterm") {
-			return "tmux extended-keys-format is xterm. Pi works best with csi-u. Add `set -g extended-keys-format csi-u` to ~/.tmux.conf and restart tmux.";
+			return "tmux extended-keys-format is xterm. Lingshu works best with csi-u. Add `set -g extended-keys-format csi-u` to ~/.tmux.conf and restart tmux.";
 		}
 
 		return undefined;
@@ -1489,7 +1489,7 @@ export class InteractiveMode {
 			if (newEntries.length > 0) {
 				this.settingsManager.setExtensionChangelogVersion(key, pkg.version);
 				const name = pkg.name || sourceInfo.source;
-				// Prefix each "## [x.y.z]" heading with the package name so entries render like Pi's own.
+				// Prefix each "## [x.y.z]" heading with the package name so entries render like Lingshu's own.
 				const markdown = newEntries
 					.map((entry) => entry.content.replace(/^##\s+/, `## ${name} `))
 					.join("\n\n")
@@ -1517,7 +1517,7 @@ export class InteractiveMode {
 	}
 
 	private reportInstallTelemetry(version: string): void {
-		if (process.env.PI_OFFLINE) {
+		if (process.env.LINGSHU_OFFLINE) {
 			return;
 		}
 
@@ -2348,7 +2348,9 @@ export class InteractiveMode {
 	}
 
 	private crashReportInstructions(): string {
-		const resume = this.session.sessionFile ? `run \`${APP_NAME} -r\` to resume the session, then` : "start pi and";
+		const resume = this.session.sessionFile
+			? `run \`${APP_NAME} -r\` to resume the session, then`
+			: "start lingshu and";
 		return `To report this crash: ${resume} run /bug. The crash details are attached automatically.`;
 	}
 
@@ -3363,7 +3365,7 @@ export class InteractiveMode {
 			if (image) {
 				const tmpDir = os.tmpdir();
 				const ext = extensionForImageMimeType(image.mimeType) ?? "png";
-				const fileName = `pi-clipboard-${crypto.randomUUID()}.${ext}`;
+				const fileName = `lingshu-clipboard-${crypto.randomUUID()}.${ext}`;
 				const filePath = path.join(tmpDir, fileName);
 				fs.writeFileSync(filePath, Buffer.from(image.bytes));
 
@@ -4471,7 +4473,7 @@ export class InteractiveMode {
 				() =>
 					theme.fg(
 						"warning",
-						`This project is not trusted. Project ${CONFIG_DIR_NAME} resources and packages are ignored. Use /trust to save a trust decision, then restart pi.`,
+						`This project is not trusted. Project ${CONFIG_DIR_NAME} resources and packages are ignored. Use /trust to save a trust decision, then restart lingshu.`,
 					),
 				1,
 				0,
@@ -4593,7 +4595,7 @@ export class InteractiveMode {
 	 * paste / Kitty / modifyOtherKeys sequences.
 	 */
 	private uncaughtCrash(error: Error): never {
-		// A dead terminal is not a pi crash. Do not try to restore it or record it.
+		// A dead terminal is not a lingshu crash. Do not try to restore it or record it.
 		if (isDeadTerminalError(error)) {
 			this.emergencyTerminalExit();
 		}
@@ -4662,7 +4664,7 @@ export class InteractiveMode {
 
 		// Restore the terminal before the process dies on any uncaught throw.
 		// Without this, an unhandled exception from extension code (or anywhere
-		// in pi) leaves the terminal in raw mode with no cursor.
+		// in lingshu) leaves the terminal in raw mode with no cursor.
 		const uncaughtExceptionHandler = (error: Error) => this.uncaughtCrash(error);
 		process.prependListener("uncaughtException", uncaughtExceptionHandler);
 		this.signalCleanupHandlers.push(() => process.off("uncaughtException", uncaughtExceptionHandler));

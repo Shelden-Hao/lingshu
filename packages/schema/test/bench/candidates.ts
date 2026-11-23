@@ -41,7 +41,7 @@ export interface Candidate {
 export const noEval = process.execArgv.includes("--disallow-code-generation-from-strings");
 
 const piSchema: Candidate = {
-	name: "pi-schema",
+	name: "lingshu-schema",
 	prepare(schema, options) {
 		const validator = compile(schema, options);
 		return { check: validator.check, validator };

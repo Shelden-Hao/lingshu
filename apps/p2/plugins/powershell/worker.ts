@@ -1,4 +1,4 @@
-// PowerShell where an agent works on Windows, as Pi Mobile offers it (offerPowerShell), per agent: Durable's
+// PowerShell where an agent works on Windows, as Lingshu Mobile offers it (offerPowerShell), per agent: Durable's
 // `powershell` tool, deferred, is offered to each conversation whose location's machine runs Windows (this device on a
 // Windows host, a remote environment once it reports Windows) and that has the shell tool `bash`. The main agent and
 // each subagent are decided independently, from where each works now, and again after every move.
@@ -9,8 +9,8 @@ import {
 	type ConversationId,
 	defineExtension,
 	ROOT_CONVERSATION_ID,
-} from "@earendil-works/pi-durable";
-import { createPowerShellTool } from "@earendil-works/pi-durable/tools";
+} from "@lingshu/durable";
+import { createPowerShellTool } from "@lingshu/durable/tools";
 import { defineFacet, type Location, signalOf } from "@p2/app/v1";
 import { CommitSignal, Extensions, harnessOf, workerOf } from "@p2/app/v1/worker";
 import { Subagents } from "../subagents/contract.worker.ts";

@@ -3,14 +3,14 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { JsonValue } from "@earendil-works/chord/json";
 import {
 	type AssistantMessage,
 	fauxAssistantMessage,
 	fauxText,
 	fauxToolCall,
 	type ToolResultMessage,
-} from "@earendil-works/pi-ai";
+} from "@lingshu/ai";
+import type { JsonValue } from "@lingshu/chord/json";
 import {
 	defineExtension,
 	defineSignal,
@@ -27,8 +27,8 @@ import {
 	ToolResultEntry,
 	type WakeReason,
 	wrapTool,
-} from "@earendil-works/pi-durable";
-import { obj, str } from "@earendil-works/pi-schema";
+} from "@lingshu/durable";
+import { obj, str } from "@lingshu/schema";
 import { afterEach, describe, expect, it } from "vitest";
 import type { ExecutionEnv } from "../src/env/index.ts";
 import { openNodeSqliteStorage } from "../src/storage/sqlite/node.ts";
@@ -47,7 +47,7 @@ afterEach(async () => {
 });
 
 async function sqlitePath(): Promise<string> {
-	const directory = await mkdtemp(join(tmpdir(), "pi-durable-parks-"));
+	const directory = await mkdtemp(join(tmpdir(), "lingshu-durable-parks-"));
 	directories.add(directory);
 	return join(directory, "session.sqlite");
 }

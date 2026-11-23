@@ -51,8 +51,8 @@ import {
 	resolvePath,
 } from "../utils/paths.ts";
 import { stripBom } from "../utils/text.ts";
+import { type PiManifest, readPiManifest } from "./lingshu-manifest.ts";
 import { isStdoutTakenOver } from "./output-guard.ts";
-import { type PiManifest, readPiManifest } from "./pi-manifest.ts";
 import type { PackageSource, SettingsManager } from "./settings-manager.ts";
 import { BUILTIN_PATH_PREFIX, getResourcePathKey } from "./source-info.ts";
 
@@ -66,7 +66,7 @@ const GIT_PROMPT_FAILURE =
 	/terminal prompts disabled|could not read (Username|Password)|Permission denied \(publickey|Host key verification failed|passphrase/i;
 
 const GIT_CREDENTIALS_HINT =
-	"git cannot ask for a password or passphrase while pi runs. Set up a git credential helper or an ssh agent, or install the package once from the shell with `pi install <source>`.";
+	"git cannot ask for a password or passphrase while lingshu runs. Set up a git credential helper or an ssh agent, or install the package once from the shell with `lingshu install <source>`.";
 
 /** Make git and ssh fail instead of prompting on the terminal, which a captured command cannot answer. */
 function getNonInteractiveGitEnv(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
@@ -80,9 +80,9 @@ function getNonInteractiveGitEnv(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
 const UPDATE_CHECK_CONCURRENCY = 4;
 const GIT_UPDATE_CONCURRENCY = 4;
 
-/** Whether PI_OFFLINE is set; package installs and updates then skip all network access. */
+/** Whether LINGSHU_OFFLINE is set; package installs and updates then skip all network access. */
 export function isOfflineModeEnabled(): boolean {
-	const value = process.env.PI_OFFLINE;
+	const value = process.env.LINGSHU_OFFLINE;
 	if (!value) return false;
 	return value === "1" || value.toLowerCase() === "true" || value.toLowerCase() === "yes";
 }
@@ -178,7 +178,7 @@ export interface PackageManager {
 /**
  * Where git and npm output goes while packages are installed, updated or refreshed.
  *
- * - `inherit`: the terminal, live (`pi install`, `pi update`).
+ * - `inherit`: the terminal, live (`lingshu install`, `lingshu update`).
  * - `capture`: nothing is written to the terminal and git and ssh never prompt, for hosts that draw on it
  *   (the interactive TUI). A failure carries the end of the output.
  */
@@ -436,7 +436,7 @@ function collectFiles(
 	return files;
 }
 
-type SkillDiscoveryMode = "pi" | "agents";
+type SkillDiscoveryMode = "lingshu" | "agents";
 
 function collectSkillEntries(
 	dir: string,
@@ -499,7 +499,7 @@ function collectSkillEntries(
 				isFile &&
 				entry.name.endsWith(".md") &&
 				!ig.ignores(relPath) &&
-				((mode === "pi" && dir === root) || (mode === "agents" && dir !== root));
+				((mode === "lingshu" && dir === root) || (mode === "agents" && dir !== root));
 			if (shouldIncludeMarkdownFile) {
 				entries.push(fullPath);
 				continue;
@@ -720,7 +720,7 @@ function collectAutoExtensionEntries(dir: string): string[] {
  */
 function collectResourceFiles(dir: string, resourceType: ResourceType): string[] {
 	if (resourceType === "skills") {
-		return collectSkillEntries(dir, "pi");
+		return collectSkillEntries(dir, "lingshu");
 	}
 	if (resourceType === "extensions") {
 		return collectAutoExtensionEntries(dir);
@@ -728,8 +728,8 @@ function collectResourceFiles(dir: string, resourceType: ResourceType): string[]
 	return collectFiles(dir, FILE_PATTERNS[resourceType]);
 }
 
-// A `pi` object counts as an explicit resource manifest only when it lists resources. Packages whose
-// `pi` object holds only metadata (changelogPath, gallery image/video) still use directory auto-discovery.
+// A `lingshu` object counts as an explicit resource manifest only when it lists resources. Packages whose
+// `lingshu` object holds only metadata (changelogPath, gallery image/video) still use directory auto-discovery.
 function hasManifestResourceFields(manifest: PiManifest): boolean {
 	return RESOURCE_TYPES.some((resourceType) => manifest[resourceType] !== undefined);
 }
@@ -1513,8 +1513,8 @@ export class DefaultPackageManager implements PackageManager {
 					!parsed.pinned &&
 					(await this.npmHasAvailableUpdate(parsed, installedPath))
 				) {
-					// Temporary (-e) sources have no `pi update` path, so refresh unpinned ones on load like
-					// temporary git sources. Like `pi update`, install `name@latest` for unversioned specs because a bare
+					// Temporary (-e) sources have no `lingshu update` path, so refresh unpinned ones on load like
+					// temporary git sources. Like `lingshu update`, install `name@latest` for unversioned specs because a bare
 					// `npm install name` keeps the range already saved in the temporary package.json.
 					const spec = parsed.version ? parsed.spec : `${parsed.name}@latest`;
 					try {
@@ -2054,10 +2054,10 @@ export class DefaultPackageManager implements PackageManager {
 		// npm writes broken nested package-lock.json paths when --prefix goes through a symlink.
 		const installRoot = existsSync(root) ? realpathSync(root) : root;
 		const packageManagerName = this.getPackageManagerName();
-		// Extension packages run inside pi and resolve pi APIs through loader aliases/virtual modules.
+		// Extension packages run inside lingshu and resolve lingshu APIs through loader aliases/virtual modules.
 		// Disable peer dependency resolution for managed installs (npm's --legacy-peer-deps, and
 		// equivalent bun/pnpm settings) so package managers do not install or solve host-provided
-		// @earendil-works/pi-* peers. Stale auto-installed pi peers can otherwise block updates.
+		// @lingshu/* peers. Stale auto-installed lingshu peers can otherwise block updates.
 		if (packageManagerName === "bun") {
 			return ["install", ...specs, "--cwd", installRoot, "--omit=peer"];
 		}
@@ -2072,7 +2072,7 @@ export class DefaultPackageManager implements PackageManager {
 				"--config.strict-dep-builds=false",
 			];
 		}
-		// npm audit fix would run without --legacy-peer-deps and install pi peers, so skip audit advice.
+		// npm audit fix would run without --legacy-peer-deps and install lingshu peers, so skip audit advice.
 		return ["install", ...specs, "--prefix", installRoot, "--legacy-peer-deps", "--no-audit", "--no-fund"];
 	}
 
@@ -2182,12 +2182,12 @@ export class DefaultPackageManager implements PackageManager {
 	}
 
 	private getGitUpdateMarkerPath(targetDir: string): string {
-		return join(dirname(targetDir), `.${basename(targetDir)}.pi-update-incomplete`);
+		return join(dirname(targetDir), `.${basename(targetDir)}.lingshu-update-incomplete`);
 	}
 
 	private async cleanAndInstallGitDependencies(targetDir: string, markerPath: string): Promise<void> {
 		// Clean untracked files (extensions should be pristine). On Windows, files loaded by
-		// another process (e.g. a native module of this extension in another pi session) cannot
+		// another process (e.g. a native module of this extension in another lingshu session) cannot
 		// be deleted, so git clean fails. Still install dependencies for the new commit, but keep
 		// the marker so the next update retries the clean.
 		let cleaned = true;
@@ -2200,7 +2200,7 @@ export class DefaultPackageManager implements PackageManager {
 				type: "progress",
 				action: "update",
 				source: targetDir,
-				message: `Could not remove all untracked files in ${targetDir} (${reason}). Files may be in use by another pi session; close it and run the update again.`,
+				message: `Could not remove all untracked files in ${targetDir} (${reason}). Files may be in use by another lingshu session; close it and run the update again.`,
 			});
 		}
 
@@ -2302,7 +2302,7 @@ export class DefaultPackageManager implements PackageManager {
 		this.ensureGitIgnore(installRoot);
 		const packageJsonPath = join(installRoot, "package.json");
 		if (!existsSync(packageJsonPath)) {
-			const pkgJson = { name: "pi-extensions", private: true };
+			const pkgJson = { name: "lingshu-extensions", private: true };
 			writeFileSync(packageJsonPath, JSON.stringify(pkgJson, null, 2), "utf-8");
 		}
 	}
@@ -2718,7 +2718,7 @@ export class DefaultPackageManager implements PackageManager {
 		};
 
 		if (projectTrusted) {
-			// Project extensions from .pi/
+			// Project extensions from .lingshu/
 			addResources(
 				"extensions",
 				collectAutoExtensionEntries(projectDirs.extensions),
@@ -2727,10 +2727,10 @@ export class DefaultPackageManager implements PackageManager {
 				projectBaseDir,
 			);
 
-			// Project skills from .pi/
+			// Project skills from .lingshu/
 			addResources(
 				"skills",
-				collectAutoSkillEntries(projectDirs.skills, "pi"),
+				collectAutoSkillEntries(projectDirs.skills, "lingshu"),
 				projectMetadata,
 				projectOverrides.skills,
 				projectBaseDir,
@@ -2770,7 +2770,7 @@ export class DefaultPackageManager implements PackageManager {
 			);
 		}
 
-		// User extensions from ~/.pi/agent/
+		// User extensions from ~/.lingshu/agent/
 		addResources(
 			"extensions",
 			collectAutoExtensionEntries(userDirs.extensions),
@@ -2779,10 +2779,10 @@ export class DefaultPackageManager implements PackageManager {
 			globalBaseDir,
 		);
 
-		// User skills from ~/.pi/agent/
+		// User skills from ~/.lingshu/agent/
 		addResources(
 			"skills",
-			collectAutoSkillEntries(userDirs.skills, "pi"),
+			collectAutoSkillEntries(userDirs.skills, "lingshu"),
 			userMetadata,
 			userOverrides.skills,
 			globalBaseDir,

@@ -1,6 +1,6 @@
-import { validateSqliteSchemaPrefix } from "@earendil-works/chord/sqlite";
+import { validateSqliteSchemaPrefix } from "@lingshu/chord/sqlite";
 
-export { validateSqliteSchemaPrefix } from "@earendil-works/chord/sqlite";
+export { validateSqliteSchemaPrefix } from "@lingshu/chord/sqlite";
 
 /**
  * Immutable identifier history for migrations and runtime queries. Never change or remove an existing value; a

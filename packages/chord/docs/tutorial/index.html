@@ -149,7 +149,7 @@ anyone being thrown out.</p>
 <p>That is four kinds of program (a server, a process per list, a page, a terminal client) and three kinds of change (new
 data, a new person, new code) in one small app. Wiring that by hand means a web server, a socket protocol, a way to
 start and stop processes, sessions, a bundler for the page and a reload story for each. Chord does the wiring, and its
-<strong>app kit</strong> (<code>@earendil-works/chord/app</code>) makes the decisions an app would otherwise make itself: where data lives,
+<strong>app kit</strong> (<code>@lingshu/chord/app</code>) makes the decisions an app would otherwise make itself: where data lives,
 how people sign in, how plugins are found and rolled out.</p>
 <p>This tutorial builds that app. Each chapter adds one thing, shows the code, shows what happens when it runs, and
 states the rule behind it. The app is one directory, <code>test/examples/61-tutorial/</code>; run every step at once from
@@ -1303,7 +1303,7 @@ stores telemetry in one place, follows a click from the browser to the worker, a
 for, reads the store from a script, and ends with the viewer.</p>
 <h3 id="one-store-on-the-server">One store, on the server</h3>
 <p>The app keeps its telemetry in one SQLite file in the data directory, through Chord&#39;s store
-(<code>@earendil-works/chord/telemetry-sqlite</code>), and the server is the only process that writes it. The app&#39;s base code opens
+(<code>@lingshu/chord/telemetry-sqlite</code>), and the server is the only process that writes it. The app&#39;s base code opens
 it for the server:</p>
 <!-- quote: src/telemetry.ts -->
 <pre><code><span class="tk-c">/** The telemetry store's file in the data directory `dataDir`. */</span>
@@ -1467,7 +1467,7 @@ attributes are for the owner&#39;s eyes: the store, like the viewer below, is th
 traces, newest first, filtered by their first span&#39;s name, attributes, errors or a time window, paged by a cursor),
 <code>getTrace(id)</code> and <code>findMetrics</code> (a metric&#39;s rows, one per series and 10 seconds, with count, sum, min and max).
 <code>trace.ts</code> is a script for a data directory, the app running or not. It opens the file with Chord&#39;s read-only store,
-<code>openTelemetryStore</code> (<code>@earendil-works/chord/telemetry-sqlite/node</code>), which implements only the read interface and
+<code>openTelemetryStore</code> (<code>@lingshu/chord/telemetry-sqlite/node</code>), which implements only the read interface and
 opens SQLite read-only: it never writes the file the server writes, never creates or migrates it, and refuses a file
 without a store or with a store of another version.</p>
 <!-- quote: trace.ts -->

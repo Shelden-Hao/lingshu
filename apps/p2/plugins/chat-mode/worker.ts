@@ -1,4 +1,4 @@
-// Chat mode (worker): the per-conversation switch and the agent's name (what people mention, `@pi` by default), kept
+// Chat mode (worker): the per-conversation switch and the agent's name (what people mention, `@lingshu` by default), kept
 // in a Durable document; the router that turns messages into chat entries or mentions; and the view each browser
 // holds.
 
@@ -10,8 +10,8 @@ import {
 	type EntryRecord,
 	InboxDoc,
 	type InboxState,
-} from "@earendil-works/pi-durable";
-import { num, obj } from "@earendil-works/pi-schema";
+} from "@lingshu/durable";
+import { num, obj } from "@lingshu/schema";
 import {
 	type Context,
 	type Ctx,

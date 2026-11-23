@@ -1,6 +1,6 @@
 // The notes plugin's server facet: serves `Index` with the same label.
 
-import { constant, defineFacet } from "@earendil-works/chord";
+import { constant, defineFacet } from "@lingshu/chord";
 import { Index } from "../contracts/contract.ts";
 import { label } from "./label.ts";
 

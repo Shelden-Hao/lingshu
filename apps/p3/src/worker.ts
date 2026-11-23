@@ -8,12 +8,12 @@
 
 import { flushCompileCache } from "node:module";
 import { join } from "node:path";
-import { type ChordStore, createHost, type IpcPort, ipcLink, openStore, sqliteBackend } from "@earendil-works/chord";
-import { BACKGROUND_CONTEXT as context } from "@earendil-works/chord/context";
-import { createPluginRuntime, type PluginScript } from "@earendil-works/chord/plugins/runtime";
-import { openNodeSqliteDatabase } from "@earendil-works/chord/sqlite/node";
-import { Session } from "@earendil-works/p3/v1";
-import type { WorkerRuntime } from "@earendil-works/p3/v1/worker";
+import { type ChordStore, createHost, type IpcPort, ipcLink, openStore, sqliteBackend } from "@lingshu/chord";
+import { BACKGROUND_CONTEXT as context } from "@lingshu/chord/context";
+import { createPluginRuntime, type PluginScript } from "@lingshu/chord/plugins/runtime";
+import { openNodeSqliteDatabase } from "@lingshu/chord/sqlite/node";
+import { Session } from "@lingshu/p3/v1";
+import type { WorkerRuntime } from "@lingshu/p3/v1/worker";
 import { type FromWorker, type ToWorker, workerControl, workerMessage } from "./api/v1/control.ts";
 import { SERVER, workerPrincipal } from "./app.ts";
 import { privateDirectory, privateStore } from "./files.ts";

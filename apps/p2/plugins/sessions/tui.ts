@@ -1,12 +1,12 @@
-// The sessions screen: pi's `/resume` session selector (coding-agent interactive/components/session-selector.ts) on
+// The sessions screen: lingshu's `/resume` session selector (coding-agent interactive/components/session-selector.ts) on
 // p2's data, with the adaptations of p2-tui-port.md section 1.17:
 // - one line per session (activity marker, title, env:cwd in the "all" scope, age); Tab switches the current env:cwd /
 //   all sessions; the marker is the web drawer's dot: working, a failed worker, else an unread answer (owner); the
 //   chat showing a session's main conversation reads it through its latest answer, as the web does;
 // - local fuzzy filtering over title, env:cwd and ID; message hits come from `Search` (owner), in a separate
-//   "Messages" group of literal matches; pi's phrases and `re:` are unsupported (the hint says so);
+//   "Messages" group of literal matches; lingshu's phrases and `re:` are unsupported (the hint says so);
 // - sorts: threaded (sessions with their subagent conversations nested, `Subagents`), recent, relevance;
-// - pi's named filter is a pinned filter; delete means archive (confirmed), restored from the archived scope (Ctrl+A);
+// - lingshu's named filter is a pinned filter; delete means archive (confirmed), restored from the archived scope (Ctrl+A);
 // - rename and pin (owner). Selecting a subagent opens its conversation: the (session, conversation) identity.
 // `+ New session` asks for a working directory, Tab choosing the environment; `/new [env:]path` creates one directly;
 // `/cd [env:]path` relocates the viewed session (the web's Relocate); `/name`, `/session` live here and in the status
@@ -23,7 +23,7 @@ import {
 	Input,
 	truncateToWidth,
 	visibleWidth,
-} from "@earendil-works/pi-tui";
+} from "@lingshu/tui";
 import type { Held, HeldIn } from "@p2/app/v1";
 import { BACKGROUND_CONTEXT, contribute, defineFacet, followRegistry, liveIn } from "@p2/app/v1";
 import type { TuiContext } from "@p2/app/v1/tui";
@@ -72,7 +72,7 @@ type Row =
 	| { kind: "heading"; text: string; error?: boolean }
 	| { kind: "message"; hit: SessionHit };
 
-/** pi's `formatSessionDate`. */
+/** lingshu's `formatSessionDate`. */
 function age(timestamp: number): string {
 	const minutes = Math.floor((Date.now() - timestamp) / 60000);
 	if (minutes < 1) return "now";
@@ -387,7 +387,7 @@ export class SessionsSurface implements TuiSurface {
 		return this.owner && !this.archived && this.projects.length > 0 && !this.search.getValue().trim();
 	}
 
-	/** Recomputes the rows shown (pi's `filterSessions`). */
+	/** Recomputes the rows shown (lingshu's `filterSessions`). */
 	private rebuild(): void {
 		const query = this.search.getValue().trim();
 		const candidates = this.rows.filter((session) => this.inScope(session));
@@ -563,7 +563,7 @@ export class SessionsSurface implements TuiSurface {
 
 	/**
 	 * `/new [env:]path`: a session there (no prefix: this device, as the footer writes it; a relative path is below the
-	 * home directory), or without an argument in the viewed session's env:cwd; opened at once (pi's `/new`).
+	 * home directory), or without an argument in the viewed session's env:cwd; opened at once (lingshu's `/new`).
 	 */
 	async createIn(argument: string | undefined): Promise<void> {
 		const current = this.current;
@@ -601,7 +601,7 @@ export class SessionsSurface implements TuiSurface {
 		this.runtime.changed();
 	}
 
-	// ── pi's selector actions (registered as commands below, so the dispatcher routes their keys here) ──
+	// ── lingshu's selector actions (registered as commands below, so the dispatcher routes their keys here) ──
 
 	toggleSort(): void {
 		this.sort = SORTS[(SORTS.indexOf(this.sort) + 1) % SORTS.length]!;
@@ -643,7 +643,7 @@ export class SessionsSurface implements TuiSurface {
 			pinned ? "Pinned" : "Unpinned",
 		);
 	}
-	/** Delete = archive (pi asks to confirm); in the archived scope it restores. */
+	/** Delete = archive (lingshu asks to confirm); in the archived scope it restores. */
 	archive(): void {
 		const row = this.selected();
 		if (!this.owner || row?.kind !== "session") return;
@@ -1104,7 +1104,7 @@ async function changeDirectory(ctx: TuiContext, argument: string): Promise<void>
 	);
 }
 
-/** The selector's own keys: more specific than app.exit/app.clear so Ctrl+D archives here, as pi's Ctrl+D deletes. */
+/** The selector's own keys: more specific than app.exit/app.clear so Ctrl+D archives here, as lingshu's Ctrl+D deletes. */
 const SELECTOR = "sessions && selector && !overlay && !creating";
 const selectorCommand = (title: string, run: (surface: SessionsSurface) => void, keys?: string): TuiCommand => ({
 	title,
@@ -1119,7 +1119,7 @@ const selectorCommand = (title: string, run: (surface: SessionsSurface) => void,
 });
 
 const SESSION_COMMANDS: Record<string, TuiCommand> = {
-	// pi's app.session.* are unbound by default; p2.sessions keeps Ctrl+R in the chat context (section 1.11).
+	// lingshu's app.session.* are unbound by default; p2.sessions keeps Ctrl+R in the chat context (section 1.11).
 	"p2.sessions": {
 		title: "Sessions",
 		category: "Session",
@@ -1149,7 +1149,7 @@ const SESSION_COMMANDS: Record<string, TuiCommand> = {
 			ctx.navigate("sessions");
 			const surface = surfaceOf(ctx);
 			if (!surface) return;
-			// pi's `/new` starts over in the same directory; without a session to follow, ask for one.
+			// lingshu's `/new` starts over in the same directory; without a session to follow, ask for one.
 			if (args?.trim() || ctx.identity.session) await surface.createIn(args?.trim());
 			else surface.command("new");
 		},

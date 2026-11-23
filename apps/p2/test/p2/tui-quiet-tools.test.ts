@@ -2,9 +2,9 @@
 // `/settings` row (`plugins.quiet-tools.toolCalls`) switches back to the tools' own cards.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import type { AssistantMessage, ToolResultMessage } from "@earendil-works/pi-ai";
-import { type EntryId, type EntryRecord, ROOT_CONVERSATION_ID } from "@earendil-works/pi-durable";
-import { stripTerminalSequences } from "@earendil-works/pi-tui";
+import type { AssistantMessage, ToolResultMessage } from "@lingshu/ai";
+import { type EntryId, type EntryRecord, ROOT_CONVERSATION_ID } from "@lingshu/durable";
+import { stripTerminalSequences } from "@lingshu/tui";
 import { quietTools } from "../../plugins/quiet-tools/tui.ts";
 import { validatePrefsPatch } from "../../src/hosts/tui-prefs-save.ts";
 import type { TuiSettings } from "../../src/runtime/tui-preferences.ts";
@@ -45,7 +45,7 @@ const answer: AssistantMessage = {
 };
 const result = (id: number, toolCallId: string, toolName: string, text: string, isError = false) =>
 	entry(id, {
-		kind: "pi.tool-result",
+		kind: "lingshu.tool-result",
 		model: [
 			{
 				role: "toolResult",
@@ -59,8 +59,8 @@ const result = (id: number, toolCallId: string, toolName: string, text: string, 
 		],
 	});
 const entries = [
-	entry(1, { kind: "pi.user", model: [{ role: "user", content: "go", timestamp: 1 }] }),
-	entry(2, { kind: "pi.assistant", model: [answer] }),
+	entry(1, { kind: "lingshu.user", model: [{ role: "user", content: "go", timestamp: 1 }] }),
+	entry(2, { kind: "lingshu.assistant", model: [answer] }),
 	result(3, "t1", "bash", "lots\nof\noutput"),
 	result(4, "t2", "read", "file text"),
 	result(5, "t3", "edit", "edit failed: no match", true),

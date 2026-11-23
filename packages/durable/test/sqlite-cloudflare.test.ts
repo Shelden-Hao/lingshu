@@ -1,6 +1,6 @@
 import { DatabaseSync } from "node:sqlite";
-import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
-import { registerStorageConformance } from "@earendil-works/pi-durable/testing";
+import { BACKGROUND_CONTEXT } from "@lingshu/chord/context";
+import { registerStorageConformance } from "@lingshu/durable/testing";
 import { describe, expect, it } from "vitest";
 import { durableObjectStorage } from "../../chord/test/sqlite/helpers.ts";
 import { idFromNumber } from "../src/ids.ts";
@@ -20,7 +20,7 @@ describe("Durable Object SQLite adapter", () => {
 		expect(sqlite.prepare("SELECT name FROM sqlite_master WHERE name = 'pi_durable_schema'").get()).toBeUndefined();
 	});
 
-	it("prefixes pi's tables and indexes without changing host tables", async () => {
+	it("prefixes lingshu's tables and indexes without changing host tables", async () => {
 		const sqlite = new DatabaseSync(":memory:");
 		const storage = durableObjectStorage(sqlite);
 		const database = new DurableObjectSqliteDatabase(storage);

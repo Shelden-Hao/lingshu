@@ -1,4 +1,4 @@
-import { obj, type Static, str } from "@earendil-works/pi-schema";
+import { obj, type Static, str } from "@lingshu/schema";
 import { getOrThrow } from "../env/index.ts";
 import { defineTool } from "../harness/define.ts";
 import type { ToolRegistration } from "../harness/types.ts";

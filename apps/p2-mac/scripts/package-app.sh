@@ -64,8 +64,8 @@ cp "$node_dir/LICENSE" "$resources/node/LICENSE"
 # The source resolver (apps/p2/src/source-resolver.ts) reads the root tsconfig's paths; packages resolve through it.
 cp "$src/package.json" "$src/tsconfig.json" "$src/tsconfig.base.json" "$resources/p2/"
 cp -R "$src/node_modules" "$resources/p2/node_modules"
-# The workspace packages p2 uses are the ones npm linked: node_modules/@earendil-works/x -> ../../packages/x.
-for link in "$src"/node_modules/@earendil-works/*; do
+# The workspace packages p2 uses are the ones npm linked: node_modules/@lingshu/x -> ../../packages/x.
+for link in "$src"/node_modules/@lingshu/*; do
 	[ -L "$link" ] || continue
 	package="$(readlink "$link")"
 	package="${package#../../}"

@@ -2,13 +2,13 @@
 // response's usage (from the entries its view's window appends), and each response's cost (from Durable's
 // `Conversation.context()`). A client holds only a window of the transcript (`Chat.view`), so it gets them from the
 // worker (`Chat.stats`, `ChatCosts`).
-import type { AssistantMessage, Message, Usage } from "@earendil-works/pi-ai";
+import type { AssistantMessage, Message, Usage } from "@lingshu/ai";
 import {
 	calculateContextTokens,
 	estimateContextTokens,
 	estimateMessageTokens,
-} from "@earendil-works/pi-ai/utils/estimate";
-import type { ContextView, ConversationView, EntryRecord } from "@earendil-works/pi-durable";
+} from "@lingshu/ai/utils/estimate";
+import type { ContextView, ConversationView, EntryRecord } from "@lingshu/durable";
 
 export type AssistantCost = {
 	entryId: string;
@@ -35,7 +35,7 @@ export type ActiveStats = {
 };
 
 /**
- * The active context's numbers, kept up to date from the entries appended to it: pi-ai's estimate (the latest
+ * The active context's numbers, kept up to date from the entries appended to it: lingshu-ai's estimate (the latest
  * response's reported usage, plus an estimate of what follows it) and the latest response's usage. A whole context
  * (`Conversation.context()`, a read of every active entry) is needed only when the active range changes in another way.
  */
@@ -86,7 +86,7 @@ export class ContextTally {
 		return true;
 	}
 
-	/** One message appended to the context, as pi-ai's estimate and Durable's context count it. */
+	/** One message appended to the context, as lingshu-ai's estimate and Durable's context count it. */
 	#take(message: Message): void {
 		if (message.role !== "assistant") {
 			this.#trailing += estimateMessageTokens(message);

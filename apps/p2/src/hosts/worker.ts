@@ -2,19 +2,19 @@
 // session's address on the session's Chord store (`<data>/sessions/<id>/store.sqlite`), connected to the server over
 // IPC, and loads the worker facets the server shipped beside the core facet, which owns the session's Durable Harness
 // (its records in that store), and the kit's `Files` over the session's files. While settings.json's `telemetry` is on
-// (`WorkerInit.telemetry`), it records telemetry in memory (its host's, Durable's and pi-ai's spans and metrics) and
+// (`WorkerInit.telemetry`), it records telemetry in memory (its host's, Durable's and lingshu-ai's spans and metrics) and
 // sends it to the server's store every second, as Chord's kit worker does; off, its host uses Chord's NOOP adapter.
 
 import { setTimeout as sleep } from "node:timers/promises";
-import { isChordError } from "@earendil-works/chord";
-import { filesFacet } from "@earendil-works/chord/app/files";
-import { nodeCompression } from "@earendil-works/chord/compression";
-import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
-import { sendWorkerTelemetry, TelemetryRecorder } from "@earendil-works/chord/telemetry-ingest";
-import { workerMain } from "@earendil-works/chord/workers/child";
-import { registerLazyBedrockProvider } from "@earendil-works/pi-ai/lazy-bedrock-provider";
-import { registerLazyOAuthFlows } from "@earendil-works/pi-ai/lazy-oauth";
-import { createNodePhotonImages } from "@earendil-works/pi-durable/images/node";
+import { isChordError } from "@lingshu/chord";
+import { filesFacet } from "@lingshu/chord/app/files";
+import { nodeCompression } from "@lingshu/chord/compression";
+import { BACKGROUND_CONTEXT } from "@lingshu/chord/context";
+import { sendWorkerTelemetry, TelemetryRecorder } from "@lingshu/chord/telemetry-ingest";
+import { workerMain } from "@lingshu/chord/workers/child";
+import { registerLazyBedrockProvider } from "@lingshu/ai/lazy-bedrock-provider";
+import { registerLazyOAuthFlows } from "@lingshu/ai/lazy-oauth";
+import { createNodePhotonImages } from "@lingshu/durable/images/node";
 import { backupConfigured } from "../runtime/backup.ts";
 import { createHost, hostErrorText } from "../runtime/chord.ts";
 import { configureFetch } from "../runtime/fetch.ts";
@@ -35,8 +35,8 @@ import { WORKER_PACKAGES } from "./host-packages.ts";
 
 // Before any provider request: see configureFetch (Node 26 HTTP/2 sessions can wedge an origin).
 configureFetch();
-// OAuth flows and Bedrock through literal dynamic imports: chunks of the worker base, loaded on first use. pi-ai's
-// default variable-specifier imports would load them from pi-ai's source files, outside the snapshot.
+// OAuth flows and Bedrock through literal dynamic imports: chunks of the worker base, loaded on first use. lingshu-ai's
+// default variable-specifier imports would load them from lingshu-ai's source files, outside the snapshot.
 registerLazyOAuthFlows();
 registerLazyBedrockProvider();
 

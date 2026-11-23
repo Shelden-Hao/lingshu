@@ -1,4 +1,4 @@
-// p2's plugins are laid out for Chord's plugin builder (`@earendil-works/chord/plugins`): every plugin directory is a
+// p2's plugins are laid out for Chord's plugin builder (`@lingshu/chord/plugins`): every plugin directory is a
 // package, and every facet builds on its own against p2's plugin API (`@p2/app/v1`), with no import of base code by
 // path, of Chord directly, of another plugin's non-contract files or of another kind's files.
 
@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { test } from "node:test";
-import { buildFacet, discoverPlugins } from "@earendil-works/chord/plugins";
+import { buildFacet, discoverPlugins } from "@lingshu/chord/plugins";
 import { BACKGROUND_CONTEXT } from "@p2/app/v1";
 import { WORKER_PACKAGES } from "../../src/hosts/host-packages.ts";
 import { SERVER_PACKAGES } from "../../src/hosts/plugins.ts";
@@ -20,29 +20,29 @@ const KINDS = ["server", "worker", "tui", "web"] as const;
  * them.
  */
 const SHARED = [
-	"@earendil-works/pi-ai",
-	"@earendil-works/pi-ai/api/anthropic-messages.lazy",
-	"@earendil-works/pi-ai/api/google-generative-ai.lazy",
-	"@earendil-works/pi-ai/api/openai-completions.lazy",
-	"@earendil-works/pi-ai/api/openai-responses.lazy",
-	"@earendil-works/pi-ai/models",
-	"@earendil-works/pi-ai/providers/all",
-	"@earendil-works/pi-ai/providers/faux",
-	"@earendil-works/pi-ai/providers/radius",
-	"@earendil-works/pi-ai/providers/radius-config",
-	"@earendil-works/pi-codemode",
-	"@earendil-works/pi-durable",
-	"@earendil-works/pi-durable/codemode",
-	"@earendil-works/pi-durable/env",
-	"@earendil-works/pi-durable/env/node",
-	"@earendil-works/pi-durable/tool-search",
-	"@earendil-works/pi-durable/tools",
-	"@earendil-works/pi-env",
-	"@earendil-works/pi-mcp",
-	"@earendil-works/pi-mcp/oauth",
-	"@earendil-works/pi-schema",
-	"@earendil-works/pi-schema/formats",
-	"@earendil-works/pi-tui",
+	"@lingshu/ai",
+	"@lingshu/ai/api/anthropic-messages.lazy",
+	"@lingshu/ai/api/google-generative-ai.lazy",
+	"@lingshu/ai/api/openai-completions.lazy",
+	"@lingshu/ai/api/openai-responses.lazy",
+	"@lingshu/ai/models",
+	"@lingshu/ai/providers/all",
+	"@lingshu/ai/providers/faux",
+	"@lingshu/ai/providers/radius",
+	"@lingshu/ai/providers/radius-config",
+	"@lingshu/codemode",
+	"@lingshu/durable",
+	"@lingshu/durable/codemode",
+	"@lingshu/durable/env",
+	"@lingshu/durable/env/node",
+	"@lingshu/durable/tool-search",
+	"@lingshu/durable/tools",
+	"@lingshu/env",
+	"@lingshu/mcp",
+	"@lingshu/mcp/oauth",
+	"@lingshu/schema",
+	"@lingshu/schema/formats",
+	"@lingshu/tui",
 	"ws",
 	"yaml",
 ];
@@ -110,7 +110,7 @@ test("p2's tsconfig maps every workspace package the repository's maps, and the 
 		);
 	const own = absolute(APP, paths(APP));
 	for (const [pattern, targets] of Object.entries(absolute(repository, paths(repository)))) {
-		if (pattern.startsWith("@earendil-works/") || pattern === "typebox")
+		if (pattern.startsWith("@lingshu/") || pattern === "typebox")
 			assert.deepEqual(own[pattern], targets, pattern);
 	}
 	assert.deepEqual(own["@p2/app/v1"], [join(APP, "src/api/v1/index.ts")]);

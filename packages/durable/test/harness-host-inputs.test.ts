@@ -6,7 +6,7 @@ import {
 	fauxToolCall,
 	type Models,
 	type SimpleStreamOptions,
-} from "@earendil-works/pi-ai";
+} from "@lingshu/ai";
 import {
 	type Conversation,
 	createRegistry,
@@ -17,8 +17,8 @@ import {
 	type HarnessSettings,
 	MemoryStorage,
 	type Registry,
-} from "@earendil-works/pi-durable";
-import { obj } from "@earendil-works/pi-schema";
+} from "@lingshu/durable";
+import { obj } from "@lingshu/schema";
 import { describe, expect, it } from "vitest";
 import { allEntries, textOf } from "./chat-support.ts";
 import { context } from "./session-support.ts";

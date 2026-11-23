@@ -1,6 +1,6 @@
-import type { ThinkingLevel } from "@earendil-works/pi-agent-core";
-import type { Model } from "@earendil-works/pi-ai";
-import type { ScrollViewScrollbar, TerminalCapabilities, WheelScrollLines } from "@earendil-works/pi-tui";
+import type { ThinkingLevel } from "@lingshu/agent-core";
+import type { Model } from "@lingshu/ai";
+import type { ScrollViewScrollbar, TerminalCapabilities, WheelScrollLines } from "@lingshu/tui";
 import { randomUUID } from "crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
@@ -1240,7 +1240,7 @@ export class SettingsManager {
 		if (this.settings.terminal?.clearOnShrink !== undefined) {
 			return this.settings.terminal.clearOnShrink;
 		}
-		if (process.env.PI_CLEAR_ON_SHRINK === "1") return true;
+		if (process.env.LINGSHU_CLEAR_ON_SHRINK === "1") return true;
 		return SETTINGS_DEFAULTS.terminal.clearOnShrink;
 	}
 
@@ -1389,7 +1389,7 @@ export class SettingsManager {
 	}
 
 	getShowHardwareCursor(): boolean {
-		return this.settings.showHardwareCursor ?? process.env.PI_HARDWARE_CURSOR === "1";
+		return this.settings.showHardwareCursor ?? process.env.LINGSHU_HARDWARE_CURSOR === "1";
 	}
 
 	setShowHardwareCursor(enabled: boolean): void {

@@ -1,7 +1,7 @@
 {
-	"name": "@earendil-works/pi-mcp",
+	"name": "@lingshu/mcp",
 	"version": "1.6.0",
-	"description": "Standalone Model Context Protocol client for pi and other applications",
+	"description": "Standalone Model Context Protocol client for lingshu and other applications",
 	"type": "module",
 	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",
@@ -44,7 +44,7 @@
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/earendil-works/pi.git",
+		"url": "git+https://github.com/earendil-works/lingshu.git",
 		"directory": "packages/mcp"
 	},
 	"engines": {

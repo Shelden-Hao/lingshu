@@ -7,19 +7,10 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import {
-	createHost,
-	defineFacet,
-	defineTable,
-	local,
-	method,
-	openStore,
-	sqliteBackend,
-	str,
-} from "@earendil-works/chord";
-import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
-import { openNodeSqliteDatabase } from "@earendil-works/chord/sqlite/node";
-import { createModels } from "@earendil-works/pi-ai";
+import { createModels } from "@lingshu/ai";
+import { createHost, defineFacet, defineTable, local, method, openStore, sqliteBackend, str } from "@lingshu/chord";
+import { BACKGROUND_CONTEXT } from "@lingshu/chord/context";
+import { openNodeSqliteDatabase } from "@lingshu/chord/sqlite/node";
 import { createRegistry, Harness, ROOT_CONVERSATION_ID } from "../../src/index.ts";
 import { StoreStorage } from "../../src/storage/store/index.ts";
 

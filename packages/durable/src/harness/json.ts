@@ -1,5 +1,5 @@
-import { appendText, type Draft } from "@earendil-works/chord/delta";
-import type { JsonValue } from "@earendil-works/chord/json";
+import { appendText, type Draft } from "@lingshu/chord/delta";
+import type { JsonValue } from "@lingshu/chord/json";
 
 /** How `assignJson()` writes one value instead of assigning it leaf by leaf. */
 export type AssignPlan =

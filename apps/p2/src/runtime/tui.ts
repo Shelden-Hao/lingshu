@@ -1,7 +1,7 @@
-import type { Contract, Held, ParamsOf } from "@earendil-works/chord";
-import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
-import { TuiScope as ChordTuiScope, type OptimisticAdd } from "@earendil-works/chord/tui";
-import type { NativeWatchable, Watchable } from "@earendil-works/chord/watch";
+import type { Contract, Held, ParamsOf } from "@lingshu/chord";
+import { BACKGROUND_CONTEXT } from "@lingshu/chord/context";
+import { TuiScope as ChordTuiScope, type OptimisticAdd } from "@lingshu/chord/tui";
+import type { NativeWatchable, Watchable } from "@lingshu/chord/watch";
 import {
 	type Component,
 	type Focusable,
@@ -12,7 +12,7 @@ import {
 	Text,
 	type TUI,
 	VStack,
-} from "@earendil-works/pi-tui";
+} from "@lingshu/tui";
 import { BuiltInFooter, BuiltInHeader, type Notice, StatusLines } from "../tui/components/chrome.ts";
 import { type PanelContent, PanelFrame } from "../tui/components/panel.ts";
 import type { TranscriptAnchor } from "../tui/components/transcript.ts";
@@ -62,7 +62,7 @@ export function tuiFacet(
 	});
 }
 
-export type { OptimisticAdd } from "@earendil-works/chord/tui";
+export type { OptimisticAdd } from "@lingshu/chord/tui";
 
 /** What `TuiScope.watch`'s bind follows: a member of the live reference (a state member, a derive). */
 export type TuiFollow = <T>(source: Watchable<T> | NativeWatchable<T>, fn: (value: T) => void) => void;
@@ -137,13 +137,13 @@ export class TuiRuntime implements Component, Focusable {
 	get focused(): boolean {
 		return this.isFocused;
 	}
-	/** The runtime is pi-tui's focused component; it forwards focus (cursor) to the active surface. */
+	/** The runtime is lingshu-tui's focused component; it forwards focus (cursor) to the active surface. */
 	set focused(value: boolean) {
 		this.isFocused = value;
 		const focus = this.surfaces?.get(this.screen)?.focus;
 		if (focus) focus.focused = value && !this.panelFocused;
 	}
-	/** While the panel has the focus, pi-tui's viewport keys come here (to scroll it) instead of the transcript. */
+	/** While the panel has the focus, lingshu-tui's viewport keys come here (to scroll it) instead of the transcript. */
 	get capturesViewportInput(): boolean {
 		return this.panelFocused;
 	}
@@ -264,7 +264,7 @@ export class TuiRuntime implements Component, Focusable {
 	get header(): Component {
 		return this.surfaces.get("header") ?? this.builtInHeader;
 	}
-	/** Adds a status line; an identical last line collapses into a count (pi's showStatus). */
+	/** Adds a status line; an identical last line collapses into a count (lingshu's showStatus). */
 	notify(message: string, kind: Notice["kind"] = "info"): void {
 		const text = lineText(message);
 		const last = this.notices.at(-1);
@@ -442,7 +442,7 @@ export class TuiRuntime implements Component, Focusable {
 		for (const term of this.surfaces.get(this.screen)?.contexts?.() ?? []) active.add(term);
 		return active;
 	}
-	/** Shows a pi-tui overlay whose focused input passes overlay-scoped commands first (section 6.2 stage 3). */
+	/** Shows a lingshu-tui overlay whose focused input passes overlay-scoped commands first (section 6.2 stage 3). */
 	overlay(
 		id: string,
 		component: Component & Partial<Focusable> & { dispose?(): void },
@@ -453,7 +453,7 @@ export class TuiRuntime implements Component, Focusable {
 				return component.focused ?? false;
 			},
 			set focused(value) {
-				// pi-tui's `Focusable` is a capability: only a component that has the field takes focus.
+				// lingshu-tui's `Focusable` is a capability: only a component that has the field takes focus.
 				if ("focused" in component) component.focused = value;
 			},
 			render: (width) => component.render(width),

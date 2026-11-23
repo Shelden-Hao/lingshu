@@ -1,13 +1,13 @@
 /**
- * Model catalog protocol shared by pi and pi.dev.
+ * Model catalog protocol shared by lingshu and pi.dev.
  *
  * This file is copied verbatim into two repositories. Change both copies in
  * the same pair of pull requests and keep them byte for byte identical:
  *
- *   earendil-works/pi      scripts/model-catalog-protocol.ts
+ *   earendil-works/lingshu      scripts/model-catalog-protocol.ts
  *   earendil-works/pi.dev  src/shared/models/protocol.ts
  *
- * pi uses it to publish catalog revisions and to test clients against the
+ * lingshu uses it to publish catalog revisions and to test clients against the
  * catalog selection pi.dev performs. pi.dev uses it to serve catalog requests.
  * Keep it free of imports and runtime specific APIs so it runs unchanged in
  * Node.js and Cloudflare Workers.
@@ -30,8 +30,8 @@ export const MODEL_CATALOG_PREFIX = `models/v${MODEL_CATALOG_SCHEMA_VERSION}`;
 export const MODEL_CATALOG_INDEX_KEY = `${MODEL_CATALOG_PREFIX}/index.json`;
 export const MODEL_CATALOG_REVISION_RE = /^sha256-[0-9a-f]{64}$/;
 
-const PI_VERSION_RE = /^v?(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?$/;
-const PI_USER_AGENT_RE = /^pi\/([^\s()]+)(?: \([^;()]+(?:;\s*[^;()]+(?:;\s*[^()]+)?)?\))?$/i;
+const LINGSHU_VERSION_RE = /^v?(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?$/;
+const LINGSHU_USER_AGENT_RE = /^lingshu\/([^\s()]+)(?: \([^;()]+(?:;\s*[^;()]+(?:;\s*[^()]+)?)?\))?$/i;
 const MODEL_TYPE_RE = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 
 type ParsedPiVersion = readonly [major: number, minor: number, patch: number, prerelease: string];
@@ -72,7 +72,7 @@ export function isValidModelCatalogPiVersion(version: string): boolean {
 	return parsePiVersion(version) !== undefined;
 }
 
-/** Compare two Pi versions with semver precedence. Throws for invalid versions. */
+/** Compare two Lingshu versions with semver precedence. Throws for invalid versions. */
 export function compareModelCatalogPiVersions(left: string, right: string): number {
 	return comparePiVersions(requirePiVersion(left), requirePiVersion(right));
 }
@@ -96,10 +96,10 @@ export function parseModelCatalogRepresentation(
 /**
  * Decide how to answer a catalog request from its URL and User-Agent.
  *
- * Released clients do not send `pi-version`, so clients that identify as Pi
+ * Released clients do not send `lingshu-version`, so clients that identify as Lingshu
  * are served the catalog for the version in their User-Agent. The response
  * therefore varies on the User-Agent, and the server must say so with `Vary`.
- * An explicit `pi-version` takes precedence. Requests without a Pi User-Agent
+ * An explicit `lingshu-version` takes precedence. Requests without a Lingshu User-Agent
  * receive the default catalog.
  */
 export function parseModelCatalogRequest(url: string | URL, userAgent: string | null | undefined): ModelCatalogRequest {
@@ -109,22 +109,22 @@ export function parseModelCatalogRequest(url: string | URL, userAgent: string | 
 		return { kind: "invalid", error: "Invalid model types." };
 	}
 
-	const piVersion = requestUrl.searchParams.get("pi-version");
+	const piVersion = requestUrl.searchParams.get("lingshu-version");
 	if (piVersion === null) {
-		const userAgentVersion = PI_USER_AGENT_RE.exec(userAgent ?? "")?.[1];
+		const userAgentVersion = LINGSHU_USER_AGENT_RE.exec(userAgent ?? "")?.[1];
 		if (userAgentVersion !== undefined && isValidModelCatalogPiVersion(userAgentVersion)) {
 			return { kind: "catalog", piVersion: userAgentVersion, representation };
 		}
 		return { kind: "catalog", piVersion: undefined, representation };
 	}
 	if (!isValidModelCatalogPiVersion(piVersion)) {
-		return { kind: "invalid", error: "Invalid Pi version." };
+		return { kind: "invalid", error: "Invalid Lingshu version." };
 	}
 	return { kind: "catalog", piVersion, representation };
 }
 
 /**
- * Select the catalog revision for a Pi version: the entry with the highest
+ * Select the catalog revision for a Lingshu version: the entry with the highest
  * minimum version that does not exceed it. Requests without a version receive
  * the default revision. Returns undefined when no entry is compatible.
  */
@@ -200,13 +200,13 @@ export function parseModelCatalogIndex(value: unknown): ModelCatalogIndex {
 function requirePiVersion(version: string): ParsedPiVersion {
 	const parsed = parsePiVersion(version);
 	if (!parsed) {
-		throw new Error(`Invalid Pi version: ${version}`);
+		throw new Error(`Invalid Lingshu version: ${version}`);
 	}
 	return parsed;
 }
 
 function parsePiVersion(version: string): ParsedPiVersion | undefined {
-	const match = PI_VERSION_RE.exec(version.trim());
+	const match = LINGSHU_VERSION_RE.exec(version.trim());
 	if (!match) {
 		return undefined;
 	}

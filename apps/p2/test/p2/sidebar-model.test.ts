@@ -52,11 +52,11 @@ function row(id: string, change: Partial<SidebarRow> = {}): SidebarRow {
 	};
 }
 
-const PI: Project = { name: "pi", places: [{ env: null, path: "/w/pi" }] };
+const PI: Project = { name: "lingshu", places: [{ env: null, path: "/w/lingshu" }] };
 const WEB: Project = { name: "web", places: [{ env: null, path: "/w/web" }] };
 const CONTEXT: RollupContext = {
 	projects: [PI, WEB],
-	memberships: { a: "pi", b: "pi", p: "pi", old: "pi" },
+	memberships: { a: "lingshu", b: "lingshu", p: "lingshu", old: "lingshu" },
 	folderName: (env, cwd, segments) => `${env ? `${env}:` : ""}${cwd.split("/").slice(-segments).join("/")}`,
 	sandboxes: new Set(["box"]),
 };
@@ -64,10 +64,10 @@ const VIEW: View = { windows: {}, collapsed: {}, now: NOW, open: undefined };
 
 const ROWS = [
 	row("free", { updatedAt: NOW - 2 * HOUR }),
-	row("a", { updatedAt: NOW - 3 * HOUR, cwd: "/w/pi" }),
-	row("b", { updatedAt: NOW - HOUR, cwd: "/w/pi" }),
-	row("p", { updatedAt: NOW - 5 * HOUR, pinned: true, cwd: "/w/pi" }),
-	row("old", { updatedAt: NOW - 10 * DAY, cwd: "/w/pi" }),
+	row("a", { updatedAt: NOW - 3 * HOUR, cwd: "/w/lingshu" }),
+	row("b", { updatedAt: NOW - HOUR, cwd: "/w/lingshu" }),
+	row("p", { updatedAt: NOW - 5 * HOUR, pinned: true, cwd: "/w/lingshu" }),
+	row("old", { updatedAt: NOW - 10 * DAY, cwd: "/w/lingshu" }),
 	row("stale", { updatedAt: NOW - 10 * DAY, cwd: "/elsewhere", env: "box" }),
 	row("gone", { archivedAt: NOW - DAY, updatedAt: NOW - 2 * DAY }),
 	row("gone2", { archivedAt: NOW, updatedAt: NOW - 20 * DAY }),
@@ -91,7 +91,7 @@ describe("sectionsOf", () => {
 				PROJECTS,
 				"groups",
 				[
-					[projectKey("pi"), ["p", "b", "a"]],
+					[projectKey("lingshu"), ["p", "b", "a"]],
 					[projectKey("web"), []],
 				],
 			],
@@ -113,17 +113,17 @@ describe("sectionsOf", () => {
 			row("inside", { cwd: "/w/web/src" }),
 			row("joined", { cwd: "/w/web" }),
 			row("outside", { cwd: "/w/x" }),
-			row("archived-project", { cwd: "/w/pi" }),
+			row("archived-project", { cwd: "/w/lingshu" }),
 		];
 		// "archived-project" names a project that is not live (archived or deleted): it shows without one.
-		const context = { ...CONTEXT, memberships: { joined: "pi", outside: "web", "archived-project": "old" } };
+		const context = { ...CONTEXT, memberships: { joined: "lingshu", outside: "web", "archived-project": "old" } };
 		assert.deepEqual(sectionsOf(ROLLUPS, rows, context, VIEW).map(short).slice(0, 2), [
 			[OTHER, "sessions", ["inside", "archived-project"]],
 			[
 				PROJECTS,
 				"groups",
 				[
-					[projectKey("pi"), ["joined"]],
+					[projectKey("lingshu"), ["joined"]],
 					[projectKey("web"), ["outside"]],
 				],
 			],
@@ -152,7 +152,7 @@ describe("sectionsOf", () => {
 	});
 
 	it("uses each rollup's window, and the owner's collapsed rollups and groups", () => {
-		const view: View = { ...VIEW, windows: { [OTHER]: "forever" }, collapsed: { [projectKey("pi")]: true } };
+		const view: View = { ...VIEW, windows: { [OTHER]: "forever" }, collapsed: { [projectKey("lingshu")]: true } };
 		const sections = sectionsOf(ROLLUPS, ROWS, CONTEXT, view);
 		assert.deepEqual(short(sections[0]!), [OTHER, "sessions", ["free", "stale"]]);
 		// A collapsed group keeps its row, without its sessions.
@@ -160,7 +160,7 @@ describe("sectionsOf", () => {
 			PROJECTS,
 			"groups",
 			[
-				[projectKey("pi"), []],
+				[projectKey("lingshu"), []],
 				[projectKey("web"), []],
 			],
 		]);
@@ -218,11 +218,11 @@ describe("activity", () => {
 	it("says what a collapsed rollup or group hides, and nothing while it shows its sessions", () => {
 		const idle = { working: 0, failed: 0, unread: 0 };
 		const all = { working: 3, failed: 3, unread: 2 };
-		// Every one is in pi.
-		const context = { ...CONTEXT, memberships: Object.fromEntries(states.map((each) => [each.id, "pi"])) };
+		// Every one is in lingshu.
+		const context = { ...CONTEXT, memberships: Object.fromEntries(states.map((each) => [each.id, "lingshu"])) };
 		const open = sectionsOf(ROLLUPS, states, context, VIEW);
 		for (const section of open) if (section.layout !== "link") assert.deepEqual(section.hidden, idle);
-		const closed = sectionsOf(ROLLUPS, states, context, { ...VIEW, collapsed: { [projectKey("pi")]: true } });
+		const closed = sectionsOf(ROLLUPS, states, context, { ...VIEW, collapsed: { [projectKey("lingshu")]: true } });
 		const projects = closed[1]!;
 		assert.ok(projects.layout === "groups");
 		assert.deepEqual(projects.hidden, idle);
@@ -293,14 +293,14 @@ describe("listPageOf", () => {
 			"Folders",
 			[
 				["box:elsewhere", ["stale aged"]],
-				["pi", ["p", "b", "a", "old aged"]],
+				["lingshu", ["p", "b", "a", "old aged"]],
 				["w", ["free"]],
 			],
 		]);
 		assert.deepEqual(page(PROJECTS), [
 			"Projects",
 			[
-				["pi", ["p", "b", "a", "old aged"]],
+				["lingshu", ["p", "b", "a", "old aged"]],
 				["web", []],
 			],
 		]);

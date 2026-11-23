@@ -1,33 +1,33 @@
-// A Pi is its data directory. Which one a command means: the default Pi (`~/.pi/p3`), a named one
-// (`~/.pi/p3/pis/<name>`) or any directory; the port each takes at its first start; and the named Pis there are.
+// A Lingshu is its data directory. Which one a command means: the default Lingshu (`~/.lingshu/p3`), a named one
+// (`~/.lingshu/p3/pis/<name>`) or any directory; the port each takes at its first start; and the named Pis there are.
 
 import { readdir } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { defaultDataDir } from "./kit/layout.ts";
 
-/** Which Pi a command line names: `--pi <name>`, `--dir <path>`, or neither (the default Pi). */
-export type PiChoice = { readonly pi?: string; readonly dir?: string };
+/** Which Lingshu a command line names: `--lingshu <name>`, `--dir <path>`, or neither (the default Lingshu). */
+export type PiChoice = { readonly lingshu?: string; readonly dir?: string };
 
-/** The default Pi's port (p2 keeps 8788). Every other Pi takes a free one at its first start. */
+/** The default Lingshu's port (p2 keeps 8788). Every other Lingshu takes a free one at its first start. */
 export const DEFAULT_PORT = 8789;
 
-/** Whether `name` can name a Pi: lower case letters, digits, `-` and `_`, at most 32, a directory name as it is. */
+/** Whether `name` can name a Lingshu: lower case letters, digits, `-` and `_`, at most 32, a directory name as it is. */
 export function isPiName(name: string): boolean {
 	return /^[a-z0-9][a-z0-9_-]{0,31}$/.test(name);
 }
 
-/** The data directory of the Pi `choice` names. */
+/** The data directory of the Lingshu `choice` names. */
 export function dataDirOf(choice: PiChoice): string {
 	if (choice.dir !== undefined) return resolve(choice.dir);
-	return choice.pi === undefined ? defaultDataDir() : join(pisRoot(), choice.pi);
+	return choice.lingshu === undefined ? defaultDataDir() : join(pisRoot(), choice.lingshu);
 }
 
-/** The port the Pi on `dataDir` (the default one when `undefined`) takes at its first start; 0 is a free one. */
+/** The port the Lingshu on `dataDir` (the default one when `undefined`) takes at its first start; 0 is a free one. */
 export function firstPort(dataDir: string | undefined): number {
 	return dataDir === undefined || resolve(dataDir) === defaultDataDir() ? DEFAULT_PORT : 0;
 }
 
-/** The named Pis: every directory under `~/.pi/p3/pis/`, by name. */
+/** The named Pis: every directory under `~/.lingshu/p3/pis/`, by name. */
 export async function namedPis(): Promise<{ readonly name: string; readonly dataDir: string }[]> {
 	const root = pisRoot();
 	const entries = await readdir(root, { withFileTypes: true }).catch((error: NodeJS.ErrnoException) => {

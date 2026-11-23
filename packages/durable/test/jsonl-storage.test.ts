@@ -1,10 +1,10 @@
 import { mkdtemp, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
-import type { Context } from "@earendil-works/chord/context";
-import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
-import type { JsonValue } from "@earendil-works/chord/json";
-import { registerStorageConformance } from "@earendil-works/pi-durable/testing";
+import type { Context } from "@lingshu/chord/context";
+import { BACKGROUND_CONTEXT } from "@lingshu/chord/context";
+import type { JsonValue } from "@lingshu/chord/json";
+import { registerStorageConformance } from "@lingshu/durable/testing";
 import { afterEach, describe, expect, it } from "vitest";
 import { err, FileError, type FileSystem, type Result } from "../src/env/index.ts";
 import { NodeExecutionEnv } from "../src/env/node.ts";
@@ -39,7 +39,7 @@ afterEach(async () => {
 	tempDirectories.clear();
 });
 
-async function tempDirectory(prefix = "pi-durable-jsonl-"): Promise<string> {
+async function tempDirectory(prefix = "lingshu-durable-jsonl-"): Promise<string> {
 	const directory = await mkdtemp(join(tmpdir(), prefix));
 	tempDirectories.add(directory);
 	return directory;
@@ -130,7 +130,7 @@ class ReopeningStorage implements Storage {
 registerStorageConformance({ describe, expect, it }, "JsonlStorage", async (use) => use(await createStorage()));
 
 registerStorageConformance({ describe, expect, it }, "JsonlStorage across reopen", async (use) => {
-	const directory = await tempDirectory("pi-durable-jsonl-conformance-");
+	const directory = await tempDirectory("lingshu-durable-jsonl-conformance-");
 	const current = await JsonlStorage.open(directory, new NodeExecutionEnv({ cwd: directory }), context);
 	const storage = new ReopeningStorage(current, directory);
 	try {

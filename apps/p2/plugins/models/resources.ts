@@ -1,9 +1,9 @@
 import { stat } from "node:fs/promises";
 import { join } from "node:path";
-import type { CredentialInfo, CredentialStore } from "@earendil-works/pi-ai";
-import { getSupportedThinkingLevels, type Models, type MutableModels } from "@earendil-works/pi-ai/models";
-import type { HarnessSettings } from "@earendil-works/pi-durable";
-import { NodeExecutionEnv } from "@earendil-works/pi-durable/env/node";
+import type { CredentialInfo, CredentialStore } from "@lingshu/ai";
+import { getSupportedThinkingLevels, type Models, type MutableModels } from "@lingshu/ai/models";
+import type { HarnessSettings } from "@lingshu/durable";
+import { NodeExecutionEnv } from "@lingshu/durable/env/node";
 import {
 	type MobileSettings,
 	normalizePath,

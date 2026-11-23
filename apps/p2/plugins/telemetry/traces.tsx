@@ -96,7 +96,7 @@ function TraceSearch({ open, onOpen }: { open: string | undefined; onOpen: (trac
 				<input
 					className="input"
 					aria-label="Span name"
-					placeholder="First span's name (chord.hold, pi.durable.submit…)"
+					placeholder="First span's name (chord.hold, lingshu.durable.submit…)"
 					value={name}
 					onChange={(event) => setName(event.target.value)}
 				/>
