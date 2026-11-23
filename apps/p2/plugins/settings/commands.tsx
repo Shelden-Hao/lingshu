@@ -1,30 +1,38 @@
 // The Settings window's part of the command menu: Open settings… (a page of its sections in the window's order) and
 // the sections whose name matches the root's query; each opens the window at that section.
+
+import type { Language } from "@p2/app/v1";
 import {
 	type Command,
 	CommandMenu,
 	type CommandPage,
 	type CommandSearch,
+	type ContributedText,
 	openSettings,
 	SettingsIcon,
 	type SettingsSection,
 	type SettingsSectionChoice,
+	showText,
+	textIn,
 	useCommandMatches,
 	useCommandMenu,
+	useLanguage,
+	useMessages,
 	useOwner,
 	useSettingsSections,
 } from "@p2/app/v1/web";
 import { type ComponentType, useMemo } from "react";
+import { messages, sectionText } from "./messages.ts";
 import { OWN_SECTIONS } from "./sections.ts";
 
 /** The commands, by id. */
 export const SETTINGS_COMMANDS: Readonly<Record<string, Command>> = {
 	"settings.open": {
-		title: "Open settings…",
-		group: "Settings",
+		title: textIn(messages, "open"),
+		group: textIn(messages, "group"),
 		order: 80,
 		icon: SettingsIcon,
-		keywords: ["preferences", "configuration"],
+		keywords: [textIn(messages, "keywordPreferences"), textIn(messages, "keywordConfiguration")],
 		owner: true,
 		action: { kind: "page", page: "settings" },
 	},
@@ -32,17 +40,25 @@ export const SETTINGS_COMMANDS: Readonly<Record<string, Command>> = {
 
 /** The pages, by name. */
 export const SETTINGS_PAGES: Readonly<Record<string, CommandPage>> = {
-	settings: { label: "Settings", placeholder: "Search settings…", Body: SettingsPage },
+	settings: {
+		label: textIn(messages, "page"),
+		placeholder: textIn(messages, "pageSearch"),
+		Body: SettingsPage,
+	},
 };
 
 /** The sections the root's query matches, in the Settings group beside Open settings…. */
-export const SETTINGS_SEARCH: CommandSearch = { group: "Settings", order: 80, Results: SectionResults };
+export const SETTINGS_SEARCH: CommandSearch = {
+	group: textIn(messages, "group"),
+	order: 80,
+	Results: SectionResults,
+};
 
 /** A section of the window as the menu lists it: its label, its tooltip (matched too) and where it opens. */
 type Entry = {
 	readonly key: string;
-	readonly label: string;
-	readonly title?: string;
+	readonly label: ContributedText;
+	readonly title?: ContributedText;
 	readonly section: SettingsSectionChoice;
 	readonly Shown?: SettingsSection["Shown"];
 };
@@ -52,9 +68,9 @@ function useEntries(): readonly Entry[] {
 	const sections = useSettingsSections();
 	return useMemo(
 		() => [
-			...OWN_SECTIONS.map(({ id, label }) => ({
+			...OWN_SECTIONS.map((id) => ({
 				key: `own:${id}`,
-				label,
+				label: sectionText(id),
 				section: { kind: "own" as const, locator: id },
 			})),
 			...sections.map(([name, { label, title, Shown }]) => ({
@@ -69,13 +85,20 @@ function useEntries(): readonly Entry[] {
 	);
 }
 
-const entryText = (entry: Entry): string => (entry.title ? `${entry.label} ${entry.title}` : entry.label);
+/** What a section matches on: its label and its tooltip, in the reader's language. */
+const entryText = (entry: Entry, language: Language | undefined): string => {
+	const label = showText(entry.label, language);
+	return entry.title === undefined ? label : `${label} ${showText(entry.title, language)}`;
+};
 
 /** Every section, the window's order kept while the query is empty. */
 function SettingsPage() {
-	const matches = useCommandMatches(useEntries(), entryText);
+	const { t } = useMessages(messages);
+	const language = useLanguage();
+	const entries = useEntries();
+	const matches = useCommandMatches(entries, (entry) => entryText(entry, language));
 	return (
-		<CommandMenu.Group heading="Settings">
+		<CommandMenu.Group heading={t("group")}>
 			{matches.map((entry) => (
 				<SectionRow key={entry.key} entry={entry} />
 			))}
@@ -89,7 +112,8 @@ const SEARCH_ROWS = 5;
 /** The sections matching the root's query, for the owner only (the window is the owner's). */
 function SectionResults() {
 	const owner = useOwner();
-	const matches = useCommandMatches(useEntries(), entryText);
+	const language = useLanguage();
+	const matches = useCommandMatches(useEntries(), (entry) => entryText(entry, language));
 	if (!owner) return null;
 	return matches
 		.slice(0, SEARCH_ROWS)
@@ -99,9 +123,10 @@ function SectionResults() {
 /** A section; it opens the window there. At the root it has an icon, as the commands beside it do. */
 function SectionRow({ entry, icon }: { entry: Entry; icon?: ComponentType }) {
 	const { close } = useCommandMenu();
+	const language = useLanguage();
 	const row = (
 		<CommandMenu.Row
-			title={entry.label}
+			title={showText(entry.label, language)}
 			icon={icon}
 			onSelect={async () => {
 				await close();

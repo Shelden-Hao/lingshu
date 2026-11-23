@@ -14,57 +14,73 @@ import {
 	setTheme,
 	THEME_CHOICES,
 	type ThemePreference,
+	textIn,
 	useCommandMatches,
 	useCommandMenu,
+	useMessages,
 	useRoute,
 	useSidebarCollapsed,
 	useSidebarDocked,
 	useThemePreference,
 } from "@p2/app/v1/web";
 import type { ReactNode } from "react";
+import { messages } from "./messages.ts";
 
 /** The commands, by id. */
 export const SHELL_COMMANDS: Readonly<Record<string, Command>> = {
 	"web-shell.show-sidebar": {
-		title: "Show sidebar",
-		group: "Layout",
+		title: textIn(messages, "showSidebar"),
+		group: textIn(messages, "groupLayout"),
 		order: 70,
 		icon: SidebarIcon,
-		keywords: ["open sidebar", "toggle sidebar", "sessions"],
+		keywords: [
+			textIn(messages, "keywordOpenSidebar"),
+			textIn(messages, "keywordToggleSidebar"),
+			textIn(messages, "keywordSessions"),
+		],
 		Shown: SidebarHidden,
 		action: { kind: "run", run: openSidebar },
 	},
 	"web-shell.hide-sidebar": {
-		title: "Hide sidebar",
-		group: "Layout",
+		title: textIn(messages, "hideSidebar"),
+		group: textIn(messages, "groupLayout"),
 		order: 70,
 		icon: SidebarIcon,
-		keywords: ["collapse sidebar", "toggle sidebar"],
+		keywords: [textIn(messages, "keywordCollapseSidebar"), textIn(messages, "keywordToggleSidebar")],
 		Shown: SidebarDocked,
 		action: { kind: "run", run: hideSidebar },
 	},
 	"web-shell.close-side-panel": {
-		title: "Close side panel",
-		group: "Layout",
+		title: textIn(messages, "closeSidePanel"),
+		group: textIn(messages, "groupLayout"),
 		order: 70,
 		icon: PanelSideIcon,
-		keywords: ["hide panel", "activity"],
+		keywords: [textIn(messages, "keywordHidePanel"), textIn(messages, "keywordActivity")],
 		Shown: SidePanelOpen,
 		action: { kind: "run", run: closePanel },
 	},
 	"web-shell.theme": {
-		title: "Change theme…",
-		group: "Settings",
+		title: textIn(messages, "changeTheme"),
+		group: textIn(messages, "groupSettings"),
 		order: 80,
 		icon: SystemThemeIcon,
-		keywords: ["dark mode", "light mode", "appearance", "color scheme"],
+		keywords: [
+			textIn(messages, "keywordDarkMode"),
+			textIn(messages, "keywordLightMode"),
+			textIn(messages, "keywordAppearance"),
+			textIn(messages, "keywordColorScheme"),
+		],
 		action: { kind: "page", page: "theme" },
 	},
 };
 
 /** The pages, by name. */
 export const SHELL_PAGES: Readonly<Record<string, CommandPage>> = {
-	theme: { label: "Theme", placeholder: "Search themes…", Body: ThemePage },
+	theme: {
+		label: textIn(messages, "theme"),
+		placeholder: textIn(messages, "themeSearch"),
+		Body: ThemePage,
+	},
 };
 
 /** Collapses the docked sidebar; below the docking width the sessions are a drawer, which the menu's close closed. */
@@ -99,10 +115,11 @@ const themeText = (theme: ThemePreference): string => THEME_CHOICES[theme].label
 /** System, Light and Dark, this browser's choice checked; picking one applies it at once, as the theme switch does. */
 function ThemePage() {
 	const { close } = useCommandMenu();
+	const { t } = useMessages(messages);
 	const current = useThemePreference();
 	const matches = useCommandMatches(THEMES, themeText);
 	return (
-		<CommandMenu.Group heading="Theme">
+		<CommandMenu.Group heading={t("theme")}>
 			{matches.map((theme) => (
 				<CommandMenu.Row
 					key={theme}

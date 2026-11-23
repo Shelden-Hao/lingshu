@@ -1,7 +1,10 @@
 // The command menu's header: the target chip with the open pages' crumbs, and the input, which owns the menu's keys.
 import type { KeyboardEvent, Ref } from "react";
 import { CommandPages, useRegistry } from "../../runtime/web.tsx";
+import { showText } from "../../runtime/web-core.ts";
 import { ChevronIcon, CloseIcon } from "../icons.tsx";
+import { useLanguage, useMessages } from "../language.ts";
+import { messages } from "../messages.ts";
 import { useCommandMenuValue } from "./context.ts";
 import { enter, moveHighlight } from "./highlight.ts";
 
@@ -13,6 +16,8 @@ import { enter, moveHighlight } from "./highlight.ts";
 export function Target() {
 	const { state, actions } = useCommandMenuValue();
 	const pages = useRegistry(CommandPages);
+	const language = useLanguage();
+	const { t } = useMessages(messages);
 	const { target } = state;
 	if (target === undefined && state.pages.length === 0) return null;
 	return (
@@ -31,7 +36,7 @@ export function Target() {
 					<button
 						type="button"
 						className="command-chip-remove"
-						aria-label="Remove target"
+						aria-label={t("removeTarget")}
 						tabIndex={-1}
 						onClick={actions.removeTarget}
 					>
@@ -43,14 +48,12 @@ export function Target() {
 				// biome-ignore lint/suspicious/noArrayIndexKey: a crumb is its place in the page stack.
 				<span key={index} className="command-crumb">
 					<ChevronIcon size={12} />
-					{(name === undefined ? undefined : pages.get(name)?.label) ?? "Page"}
+					{showText((name === undefined ? undefined : pages.get(name)?.label) ?? t("page"), language)}
 				</span>
 			))}
 		</div>
 	);
 }
-
-const ROOT_PLACEHOLDER = "Type a command or search…";
 
 /**
  * The input, controlled by the dialog (`query` is the open page's, at once). Up/Down move the highlight, Enter clicks
@@ -67,11 +70,13 @@ export function Input({
 }) {
 	const { state, actions, meta } = useCommandMenuValue();
 	const pages = useRegistry(CommandPages);
+	const language = useLanguage();
+	const { t } = useMessages(messages);
 	const name = state.pages.at(-1);
 	const placeholder =
 		state.pages.length === 0
-			? ROOT_PLACEHOLDER
-			: ((name === undefined ? undefined : pages.get(name)?.placeholder) ?? "Search…");
+			? t("searchCommands")
+			: showText((name === undefined ? undefined : pages.get(name)?.placeholder) ?? t("search"), language);
 	const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
 		if (event.nativeEvent.isComposing) return;
 		const list = meta.list.current;
@@ -107,7 +112,7 @@ export function Input({
 			<input
 				ref={ref}
 				role="combobox"
-				aria-label="Command menu"
+				aria-label={t("commandMenu")}
 				aria-expanded="true"
 				aria-controls={meta.listId}
 				aria-autocomplete="list"

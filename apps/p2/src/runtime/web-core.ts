@@ -1,9 +1,42 @@
 // The web page's base facet and the web's own registries: plain TypeScript (no JSX), so tests load it too.
+
+import type { Catalog, Language, Messages, MessageValue } from "@lingshu/chord";
+import { Translations } from "@lingshu/chord";
 import type { ComponentType, ReactNode } from "react";
 import type { ToolActivity } from "../web/activity/model.ts";
+import { messages as appText } from "../web/messages.ts";
 import type { Route } from "../web/navigation.ts";
 import { defineFacet, type Host, keyedRegistry, serveKeyed } from "./chord.ts";
 import { ComposerExpanders } from "./composer.ts";
+
+/**
+ * A text a plugin contributes to a registry (a command's title, a Settings section's label): either final, as it stands
+ * (a plugin whose texts are not translated yet), or rendered in the language the reader sees (`textIn`), which closes
+ * over the plugin's own `t.in` and so also applies a translation plugin's override of its catalog. A pick re-renders
+ * what the registry shows.
+ */
+export type ContributedText = string | ((language: Language | undefined) => string);
+
+/** `text` as the reader shows it: itself, or rendered in `language`. */
+export function showText(text: ContributedText, language: Language | undefined): string {
+	return typeof text === "string" ? text : text(language);
+}
+
+/** The keys of `M` that take no arguments: the ones a contributed text can name. */
+type NoArgsKeys<M> = {
+	[K in keyof M & string]: M[K] extends MessageValue ? (M[K] extends (...args: never[]) => string ? never : K) : never;
+}[keyof M & string];
+
+/**
+ * `messages`' `key` as a `ContributedText`: `textIn(t, "archive")` shows the plugin's text in the reader's language.
+ * A key with arguments has its arguments at contribution time (a count is the same in every language).
+ */
+export function textIn<N extends string, M extends Catalog>(
+	messages: Messages<N, M>,
+	key: NoArgsKeys<M>,
+): (language: Language | undefined) => string {
+	return (language) => (messages.in(language) as unknown as (key: string) => string)(key);
+}
 
 /** React components by slot name ("app", "sidebar", "main"), contributed by web facets. */
 export const Slots = keyedRegistry<ComponentType<{ children?: ReactNode }>>("p2.web-slots");
@@ -17,9 +50,9 @@ export const ToolActivities = keyedRegistry<ToolActivity>("p2.web-tool-activitie
 /** A plugin's section of the Settings window (src/web/SettingsNav.tsx). */
 export type SettingsSection = {
 	/** The entry's text in the window's list of sections. */
-	readonly label: string;
+	readonly label: ContributedText;
 	/** The entry's tooltip. */
-	readonly title?: string;
+	readonly title?: ContributedText;
 	/** Its place in the list: lower first, equal ones by key. Leave gaps (10, 20, ...) for later plugins. */
 	readonly order: number;
 	/** Renders the plugin's sheet while the route opens it, as a page of the window or on its own; always mounted. */
@@ -48,14 +81,14 @@ export type CommandTarget = {
 /** A command of the command menu (Cmd+K): listed in the menu, runnable by id (shortcuts, the Recent group). */
 export type Command = {
 	/** Sentence case verb phrase, `…` when it opens a page ("Archive session", "Change model…"). */
-	readonly title: string;
+	readonly title: ContributedText;
 	/** The group's heading, one or two words ("Session"). */
-	readonly group: string;
+	readonly group: ContributedText;
 	/** The group's place in the list: lower first, equal ones by heading. Leave gaps (10, 20, ...). */
 	readonly order: number;
 	readonly icon?: ComponentType;
 	/** More words the menu's filter matches ("delete" for Archive). */
-	readonly keywords?: readonly string[];
+	readonly keywords?: readonly ContributedText[];
 	/** Shown only for targets of these types (["session"]); for every target and none when absent. */
 	readonly target?: readonly string[];
 	/** Hidden from guests. */
@@ -76,11 +109,11 @@ export type CommandContext = { readonly host: Host; readonly target?: CommandTar
 /** A page of the command menu: a list of live data (sessions, models) its `Body` renders with `CommandMenu.Row`s. */
 export type CommandPage = {
 	/** Names the page's scope, shown as a crumb after the target chip ("Models"). */
-	readonly label: string;
+	readonly label: ContributedText;
 	/** What its input searches ("Search models…"). */
-	readonly placeholder: string;
+	readonly placeholder: ContributedText;
 	/** What the menu says while the page has no rows ("Type the new title"); "No results" when absent. */
-	readonly empty?: string;
+	readonly empty?: ContributedText;
 	readonly Body: ComponentType;
 };
 
@@ -88,7 +121,11 @@ export type CommandPage = {
  * Rows a plugin adds to the menu's root while the query is not empty (sessions matching their title): `Results`
  * renders `CommandMenu.Row`s, which the menu shows in the group `group`, placed by `order` as commands' groups are.
  */
-export type CommandSearch = { readonly group: string; readonly order: number; readonly Results: ComponentType };
+export type CommandSearch = {
+	readonly group: ContributedText;
+	readonly order: number;
+	readonly Results: ComponentType;
+};
 
 /** The command menu's commands by id (`<plugin>.<verb>`, "sessions.archive"). */
 export const Commands = keyedRegistry<Command>("p2.web-commands");
@@ -100,7 +137,7 @@ export const CommandPages = keyedRegistry<CommandPage>("p2.web-command-pages");
 export const CommandSearches = keyedRegistry<CommandSearch>("p2.web-command-searches");
 
 /** The web's base facet (the page loads it with the plugins' web facets): it serves the web's keyed registries. */
-export const webCoreFacet = defineFacet((host) => {
+export const webCoreFacet = defineFacet((host, self) => {
 	serveKeyed(host, Slots);
 	serveKeyed(host, ComposerExpanders);
 	serveKeyed(host, ToolActivities);
@@ -108,4 +145,6 @@ export const webCoreFacet = defineFacet((host) => {
 	serveKeyed(host, Commands);
 	serveKeyed(host, CommandPages);
 	serveKeyed(host, CommandSearches);
+	// p2's own texts (src/web/messages.ts): the app's frame, its windows and its defaults, in each offered language.
+	self.contribute(Translations, appText.translations);
 });

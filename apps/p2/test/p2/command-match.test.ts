@@ -43,9 +43,9 @@ describe("matchScore", () => {
 			keywords: ["delete", "hide"],
 			action: { kind: "run", run: () => {} },
 		};
-		assert.ok(commandScore("del", archive) > 0);
-		assert.equal(commandScore("arch", archive), matchScore("arch", "Archive session"));
-		assert.equal(commandScore("rename", archive), 0);
+		assert.ok(commandScore("del", archive, undefined) > 0);
+		assert.equal(commandScore("arch", archive, undefined), matchScore("arch", "Archive session"));
+		assert.equal(commandScore("rename", archive, undefined), 0);
 	});
 
 	test("no match: missing characters, scattered inside words, an empty query", () => {

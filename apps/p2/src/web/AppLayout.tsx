@@ -4,6 +4,8 @@ import { CommandMenu } from "./command-menu/CommandMenu.tsx";
 import { useComposerState } from "./composer-state.tsx";
 import { useDragSize } from "./drag-size.ts";
 import { useDrawerSwipe } from "./drawer-swipe.ts";
+import { useMessages } from "./language.ts";
+import { messages } from "./messages.ts";
 import { OwnerNotices } from "./OwnerNotices.tsx";
 import { SettingsSectionSheets } from "./SettingsNav.tsx";
 import { useSidebarCollapsed } from "./sidebar.ts";
@@ -25,6 +27,7 @@ function Layout() {
 	// Files dropped go to the composer: a list page (`Route.page`) has none.
 	const canDrop = useCanWrite(route.session) && route.page === undefined;
 	const { addFiles, focus } = useComposerState();
+	const { t } = useMessages(messages);
 	const [draggingFiles, setDraggingFiles] = useState(false);
 	const dragDepth = useRef(0);
 	const swipe = useDrawerSwipe();
@@ -50,7 +53,7 @@ function Layout() {
 				<button
 					type="button"
 					className="sidebar-resize"
-					aria-label="Drag to resize sidebar"
+					aria-label={t("dragSidebar")}
 					tabIndex={-1}
 					onPointerDown={startResize}
 				/>
@@ -59,7 +62,7 @@ function Layout() {
 				type="button"
 				className="drawer-scrim"
 				ref={swipe.scrim}
-				aria-label="Close sessions"
+				aria-label={t("closeSessions")}
 				onClick={closeLayers}
 				tabIndex={drawer ? 0 : -1}
 			/>

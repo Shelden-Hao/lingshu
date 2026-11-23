@@ -89,13 +89,17 @@ function record(url: string, source?: ModuleSource): void {
 
 // Collect before startServer({ dev: true }) can be called, even without P2_DEV in the environment.
 // Only dev servers consume these hashes; only explicitly opted-in workers publish them over private IPC.
-registerHooks({
-	load(url, context, nextLoad) {
-		const result = nextLoad(url, context);
-		record(url, result.source);
-		return result;
-	},
-});
+// Node 23 validates the null source its CommonJS loader returns through a load hook (Node 24 allows it), which breaks
+// every plugin that requires a CommonJS package: the hashes are off there, and with them only the dev reload's change
+// detection (P2_DEV), never the server or a plugin.
+if (Number(process.versions.node.split(".")[0]) >= 24)
+	registerHooks({
+		load(url, context, nextLoad) {
+			const result = nextLoad(url, context);
+			record(url, result.source);
+			return result;
+		},
+	});
 // The preload graph itself is loaded before a hook can run. Capture its startup sources as well.
 for (const url of [
 	import.meta.url,

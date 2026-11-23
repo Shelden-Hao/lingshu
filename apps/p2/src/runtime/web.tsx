@@ -19,6 +19,8 @@ import {
 import { createPortal } from "react-dom";
 import { clearKept } from "../web/conversation-cache.ts";
 import { ChevronIcon, CloseIcon } from "../web/icons.tsx";
+import { useMessages } from "../web/language.ts";
+import { messages } from "../web/messages.ts";
 import {
 	conversationRoute,
 	forgetLastConversation,
@@ -179,6 +181,7 @@ export function Sheet(props: SheetProps) {
 
 /** A sheet that is always modal, never a page of the Settings window: the Settings window itself. */
 export function ModalSheet({ title, onClose, onBack, className, testId, children }: SheetProps) {
+	const { t } = useMessages(messages);
 	const body = useRef<HTMLDivElement>(null);
 	const section = useRef<HTMLElement>(null);
 	const scrim = useRef<HTMLButtonElement>(null);
@@ -199,7 +202,7 @@ export function ModalSheet({ title, onClose, onBack, className, testId, children
 	// relative to the viewport, as in Lingshu Mobile's app-level sheets, instead of the hidden drawer.
 	return createPortal(
 		<div className="sheet-layer">
-			<button type="button" className="scrim" aria-label="Close" onClick={onClose} ref={scrim} />
+			<button type="button" className="scrim" aria-label={t("close")} onClick={onClose} ref={scrim} />
 			<section
 				className={`sheet ${className ?? ""}`}
 				role="dialog"
@@ -211,12 +214,12 @@ export function ModalSheet({ title, onClose, onBack, className, testId, children
 				<div className="sheet-grip" aria-hidden="true" />
 				<header className={`sheet-head ${onBack ? "has-back" : ""}`}>
 					{onBack && (
-						<button type="button" className="icon-button back" onClick={onBack} aria-label="Back">
+						<button type="button" className="icon-button back" onClick={onBack} aria-label={t("back")}>
 							<ChevronIcon size={18} />
 						</button>
 					)}
 					<h2>{title}</h2>
-					<button type="button" className="icon-button" onClick={onClose} aria-label="Close">
+					<button type="button" className="icon-button" onClick={onClose} aria-label={t("close")}>
 						<CloseIcon />
 					</button>
 				</header>
@@ -234,6 +237,7 @@ export function ModalSheet({ title, onClose, onBack, className, testId, children
  * everything), so the page has only its title and, inside a section or on phones, Back.
  */
 function SettingsPage({ title, onBack, className, testId, children, embed }: SheetProps & { embed: SettingsEmbed }) {
+	const { t } = useMessages(messages);
 	const body = useRef<HTMLDivElement>(null);
 	useScrollMemory(body);
 	const back = onBack ?? embed.back;
@@ -241,7 +245,7 @@ function SettingsPage({ title, onBack, className, testId, children, embed }: She
 		<section className={`settings-page ${className ?? ""}`} aria-label={title} data-testid={testId}>
 			<header className={`settings-page-head ${back ? "has-back" : ""}`}>
 				{back && (
-					<button type="button" className="icon-button back" onClick={back} aria-label="Back">
+					<button type="button" className="icon-button back" onClick={back} aria-label={t("back")}>
 						<ChevronIcon size={18} />
 					</button>
 				)}

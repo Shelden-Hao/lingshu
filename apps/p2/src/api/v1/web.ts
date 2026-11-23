@@ -1,6 +1,7 @@
 // p2's plugin API, version 1, for web facets (`@p2/app/v1/web`): the browser runtime (objects as React hooks, slots,
 // sheets, navigation) and the shared components and stores of p2's page (chat, drawer, viewers, icons).
 export * from "../../runtime/web.tsx";
+export { type ContributedText, showText, textIn } from "../../runtime/web-core.ts";
 export * from "../../web/AppLayout.tsx";
 export * from "../../web/activity/api.ts";
 export { reportClientError } from "../../web/app-boundary.tsx";
@@ -35,6 +36,13 @@ export * from "../../web/haptics.ts";
 export * from "../../web/history.ts";
 export * from "../../web/icons.tsx";
 export * from "../../web/input-hints.ts";
+export {
+	localeName,
+	useLanguage,
+	useLocalePick,
+	useMessages,
+	useOfferedLocales,
+} from "../../web/language.ts";
 export { type LongPress, type LongPressHandlers, useLongPress } from "../../web/long-press.ts";
 export * from "../../web/Markdown.tsx";
 export * from "../../web/menu-components.ts";

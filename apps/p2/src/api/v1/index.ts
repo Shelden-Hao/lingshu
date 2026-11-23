@@ -2,6 +2,17 @@
 // Chord v2 only through this API and its per-kind modules (`/node`, `/server`, `/worker`, `/tui`, `/web`), never through
 // relative paths into `src`: a plugin is built and reloaded on its own, and the API is the code its host provides.
 
+export type {
+	Catalog,
+	CatalogShape,
+	Language,
+	Messages,
+	MessagesOf,
+	Translation,
+	TranslationIndex,
+	Translator,
+} from "@lingshu/chord";
+// Texts and languages (Chord's app kit, packages/chord/docs/i18n/book.md): a plugin writes its texts once per namespace
 export {
 	type AcceptsTable,
 	type Address,
@@ -11,6 +22,7 @@ export {
 	type Contract,
 	constant,
 	defineJob,
+	defineMessages,
 	defineRegistry,
 	defineState,
 	defineTable,
@@ -21,6 +33,8 @@ export {
 	event,
 	evolve,
 	evolveTable,
+	formatNumber,
+	formatTime,
 	type HandleOf,
 	host as hostColumn,
 	int as columnInt,
@@ -55,6 +69,7 @@ export {
 	str as columnStr,
 	type Table,
 	type TableOf,
+	Translations,
 	type Tx,
 	untilAborted,
 	type Watchable,

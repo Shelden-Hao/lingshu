@@ -1,0 +1,91 @@
+// p2's own texts (Chord's app kit: packages/chord/docs/i18n/book.md): the app's frame, its windows and the words the
+// page's own components use. A plugin has its own namespace and its own messages.ts; this one is p2's ("p2").
+// `zh` is the Chinese catalog; `en` is the source of truth and defines every key's arguments.
+import { defineMessages } from "@lingshu/chord";
+
+export const messages = defineMessages("p2", {
+	en: {
+		// the frame
+		dragSidebar: "Drag to resize sidebar",
+		dragPanel: "Drag to resize panel",
+		closeSessions: "Close sessions",
+		back: "Back",
+		close: "Close",
+		loading: "Loading…",
+		// the chat's actions
+		contextUsage: "Estimated active context usage",
+		edit: "Edit",
+		editHint: "Edit: continue the session before this message, with its text in the composer",
+		showAnswered: "Show the message this answers",
+		branch: "Branch from here",
+		branchHint: "Branch from here: continue the session after this answer",
+		copyCode: "Copy code",
+		// the command menu
+		commandMenu: "Command menu",
+		removeTarget: "Remove target",
+		searchCommands: "Type a command or search…",
+		search: "Search…",
+		page: "Page",
+		noResults: "No results",
+		recent: "Recent",
+		commands: "Commands",
+		// notices, stats and costs
+		dismissNotice: "Dismiss owner notice",
+		pageFailed: "This page failed",
+		activity: "Activity",
+		noOutput: "No output",
+		interruptedRestart: "Interrupted by a restart, not run again.",
+		costUsd: "Cost (USD)",
+		timestamp: "Timestamp",
+		model: "Model",
+		result: "Result",
+		cache: "Cache",
+		cacheHitRate: "Cache hit rate: cache read / (input + cache read + cache write)",
+		cost: "Cost",
+		viewersWithSharing: "Browsers viewing this session, including subagent views. Open sharing.",
+		viewers: "Browsers viewing this session, including subagent views",
+		costDetails: "Open response cost details; session total includes subagents and tools",
+	},
+	zh: {
+		// the frame
+		dragSidebar: "拖动调整侧边栏宽度",
+		dragPanel: "拖动调整面板宽度",
+		closeSessions: "关闭会话列表",
+		back: "返回",
+		close: "关闭",
+		loading: "加载中…",
+		// the chat's actions
+		contextUsage: "当前上下文占用估算",
+		edit: "编辑",
+		editHint: "编辑：回到这条消息之前的会话，其文本进入输入框",
+		showAnswered: "查看这条回复所回答的消息",
+		branch: "从这里分支",
+		branchHint: "从这里分支：在这条回答之后继续会话",
+		copyCode: "复制代码",
+		// the command menu
+		commandMenu: "命令菜单",
+		removeTarget: "移除目标",
+		searchCommands: "输入命令或搜索…",
+		search: "搜索…",
+		page: "页面",
+		noResults: "没有结果",
+		recent: "最近使用",
+		commands: "命令",
+		// notices, stats and costs
+		dismissNotice: "关闭提示",
+		pageFailed: "页面出错了",
+		activity: "活动",
+		noOutput: "没有输出",
+		interruptedRestart: "因重启中断，未重新运行。",
+		costUsd: "费用（美元）",
+		timestamp: "时间",
+		model: "模型",
+		result: "结果",
+		cache: "缓存",
+		cacheHitRate: "缓存命中率：缓存读取 /（输入 + 缓存读取 + 缓存写入）",
+		cost: "费用",
+		viewersWithSharing: "正在查看此会话的浏览器，含子代理视图。打开分享。",
+		viewers: "正在查看此会话的浏览器，含子代理视图",
+		costDetails: "查看单次回复的费用明细；会话总计含子代理和工具",
+	},
+});

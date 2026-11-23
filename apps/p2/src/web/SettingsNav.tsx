@@ -3,6 +3,8 @@
 // the window (src/web/settings-embed.ts). Plugins add their section by contributing to `SettingsSections`.
 import { useCallback, useMemo } from "react";
 import { getNavigation, type SettingsSection, SettingsSections, useRegistry, useRoute } from "../runtime/web.tsx";
+import { type ContributedText, showText } from "../runtime/web-core.ts";
+import { useLanguage } from "./language.ts";
 import type { Layer, Route } from "./navigation.ts";
 import { useWide } from "./SidePanel.tsx";
 import { setSettingsEmbed } from "./settings-embed.ts";
@@ -86,19 +88,28 @@ export function SettingsSectionSheets() {
 }
 
 /** An entry in the Settings window's list of sections that opens the plugin's sheet `name` as a page of the window. */
-export function SettingsNavItem({ name, label, title }: { name: string; label: string; title?: string }) {
+export function SettingsNavItem({
+	name,
+	label,
+	title,
+}: {
+	name: string;
+	label: ContributedText;
+	title?: ContributedText;
+}) {
 	const section = useSettingsSection();
 	const wide = useWide();
+	const language = useLanguage();
 	const current = section?.kind === "plugin" && section.name === name;
 	return (
 		<button
 			type="button"
 			className="settings-nav-item"
 			aria-current={current ? "page" : undefined}
-			title={title}
+			title={title === undefined ? undefined : showText(title, language)}
 			onClick={() => showSettingsSection({ kind: "plugin", layer: { kind: "sheet", name } }, wide)}
 		>
-			{label}
+			{showText(label, language)}
 		</button>
 	);
 }

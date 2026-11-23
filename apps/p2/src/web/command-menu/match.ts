@@ -1,7 +1,8 @@
 // The command menu's fuzzy scorer: each word of the query matches as a subsequence of a text, starting at a word start
 // (or as a substring), with bonuses for word starts and contiguous runs. Commands, pages and searches rank with it.
+import type { Language } from "@lingshu/chord";
 import { useMemo } from "react";
-import type { Command } from "../../runtime/web-core.ts";
+import { type Command, showText } from "../../runtime/web-core.ts";
 import { useCommandQuery } from "./context.ts";
 
 /** How well `query` matches `text`: 0 when it does not, higher is better. A query without words matches nothing. */
@@ -20,11 +21,11 @@ export function matchScore(query: string, text: string): number {
 	return total;
 }
 
-/** How well `query` matches a command: its title, or one of its keywords. */
-export function commandScore(query: string, command: Command): number {
+/** How well `query` matches a command in `language`: its title, or one of its keywords. */
+export function commandScore(query: string, command: Command, language: Language | undefined): number {
 	return Math.max(
-		matchScore(query, command.title),
-		...(command.keywords ?? []).map((word) => matchScore(query, word)),
+		matchScore(query, showText(command.title, language)),
+		...(command.keywords ?? []).map((word) => matchScore(query, showText(word, language))),
 	);
 }
 
