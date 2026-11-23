@@ -1,0 +1,43 @@
+{
+	"name": "@lingshu/desktop",
+	"version": "0.1.0",
+	"private": true,
+	"description": "Lingshu desktop shell - Electron wrapper around the p2 web app",
+	"main": "dist/main.js",
+	"scripts": {
+		"dev": "node scripts/dev.mjs",
+		"build": "tsc -p tsconfig.build.json",
+		"check": "node ../../scripts/biome-check.mjs && tsc -p tsconfig.build.json --noEmit",
+		"package": "npm run build && electron-builder"
+	},
+	"devDependencies": {
+		"@types/node": "22.18.6",
+		"electron": "45.4.1",
+		"electron-builder": "26.18.0",
+		"typescript": "5.9.2"
+	},
+	"build": {
+		"appId": "com.lingshu.desktop",
+		"productName": "Lingshu",
+		"directories": {
+			"output": "release"
+		},
+		"files": [
+			"dist/**/*",
+			"package.json",
+			"../p2/src/**/*",
+			"../p2/package.json",
+			"../../scripts/kcoder_proxy.py",
+			"../../node_modules/**/*"
+		],
+		"win": {
+			"target": "nsis"
+		},
+		"mac": {
+			"target": "dmg"
+		},
+		"linux": {
+			"target": "AppImage"
+		}
+	}
+}
