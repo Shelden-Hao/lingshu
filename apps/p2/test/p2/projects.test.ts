@@ -74,7 +74,10 @@ test("a directory's subpath below a place, from the paths alone", () => {
 	assert(lingshu);
 	assert.deepEqual(placeOn(lingshu, "mac", "david-lingshu"), { env: "mac", path: "~/projects/lingshu/lingshu" });
 	assert.deepEqual(placeOn(lingshu, "local", "david-lingshu"), { env: null, path: "~/projects/lingshu/lingshu" });
-	assert.deepEqual(placeOn(lingshu, "David-lingshu", "david-lingshu"), { env: null, path: "~/projects/lingshu/lingshu" });
+	assert.deepEqual(placeOn(lingshu, "David-lingshu", "david-lingshu"), {
+		env: null,
+		path: "~/projects/lingshu/lingshu",
+	});
 	assert.equal(placeOn(lingshu, "gpu", "david-lingshu"), undefined);
 });
 
@@ -352,7 +355,10 @@ describe("Projects", () => {
 		assert(!Object.values(members).includes("web"));
 		// The same name (trimmed) is no clash.
 		await projects.rename({ name: "site", to: "site" }, BACKGROUND_CONTEXT);
-		await assert.rejects(projects.rename({ name: "site", to: "lingshu" }, BACKGROUND_CONTEXT), /"lingshu" exists already/);
+		await assert.rejects(
+			projects.rename({ name: "site", to: "lingshu" }, BACKGROUND_CONTEXT),
+			/"lingshu" exists already/,
+		);
 		await assert.rejects(projects.rename({ name: "nope", to: "x" }, BACKGROUND_CONTEXT), /No project "nope"/);
 		await assert.rejects(projects.rename({ name: "site", to: "  " }, BACKGROUND_CONTEXT), /Invalid project name/);
 		assert.equal(names(projects.projects.value), "lingshu,site,gpu-app");

@@ -2,6 +2,7 @@
 // (highlighted), its calls as a timeline (each opens its own detail; nested.ts reads them), the images it showed
 // (`image()`) and what it printed.
 import {
+	activityMessages,
 	CodeBlock,
 	DetailImages,
 	failureOf,
@@ -15,11 +16,12 @@ import {
 	type ToolActivity,
 	type ToolView,
 } from "@p2/app/v1/web";
+import { messages } from "./messages.ts";
 import { repeatedRuns, scriptCalls } from "./nested.ts";
 
 /** The script's first comment: what it is for. */
 const comment = (tool: ToolView) => firstLine(stringOf(tool.args.code)).replace(/^\/\/\s*/, "");
-const calls = (count: number) => `${count} ${count === 1 ? "call" : "calls"}`;
+const calls = (count: number) => activityMessages(messages)("calls", count);
 
 function ScriptDetail({ step }: { step: Step }) {
 	const { tool } = step;
@@ -43,11 +45,12 @@ export const codemodeActivity: ToolActivity = {
 	describe(step) {
 		const count = step.tool.calls?.length ?? 0;
 		const failed = step.tool.calls?.filter((call) => call.status === "error").length ?? 0;
+		const t = activityMessages(messages);
 		return {
 			label: {
 				kind: "script",
-				verb: "Ran a script",
-				...(count ? { extra: `${calls(count)}${failed ? `, ${failed} failed` : ""}` } : {}),
+				verb: t("ranScript"),
+				...(count ? { extra: `${calls(count)}${failed ? t("failed", failed) : ""}` } : {}),
 			},
 			description: failureOf(step) ?? comment(step.tool),
 		};
@@ -55,11 +58,11 @@ export const codemodeActivity: ToolActivity = {
 	// The calls made so far: a running script's total is not known yet.
 	running: (step) => ({
 		kind: "script",
-		verb: "Running a script",
+		verb: activityMessages(messages)("runningScript"),
 		...(step.tool.calls?.length ? { extra: calls(step.tool.calls.length) } : {}),
 	}),
 	argument: comment,
-	summary: (count) => (count === 1 ? "ran a script" : `ran ${count} scripts`),
+	summary: (count) => activityMessages(messages)("summaryScript", count),
 	// The script's calls: live from Durable, then the final list in its result's details.
 	nestedCalls: scriptCalls,
 	repeated: repeatedRuns,

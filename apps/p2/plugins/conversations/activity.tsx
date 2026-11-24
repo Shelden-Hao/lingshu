@@ -1,6 +1,7 @@
 // How the `conversations` tool shows in the chat: whether it listed, messaged, read an answer of, started, stopped,
 // archived or restored another conversation; its detail the message sent and the answer read as Markdown.
 import {
+	activityMessages,
 	DetailNote,
 	DetailProse,
 	DetailSection,
@@ -12,6 +13,7 @@ import {
 	stringOf,
 	type ToolActivity,
 } from "@p2/app/v1/web";
+import { messages } from "./messages.ts";
 
 function ConversationsDetail({ step }: { step: Step }) {
 	const { tool } = step;
@@ -36,23 +38,25 @@ function ConversationsDetail({ step }: { step: Step }) {
 }
 
 /** What each action did, as the step's label says it. */
-const VERBS = new Map([
-	["send", "Messaged a conversation"],
-	["answer", "Read an answer"],
-	["create", "Started a session"],
-	["stop", "Stopped a session"],
-	["archive", "Archived a session"],
-	["restore", "Restored a session"],
-]);
+const VERBS: Record<string, "messaged" | "readAnswer" | "started" | "stopped" | "archived" | "restored"> = {
+	send: "messaged",
+	answer: "readAnswer",
+	create: "started",
+	stop: "stopped",
+	archive: "archived",
+	restore: "restored",
+};
 
 export const conversationsActivity: ToolActivity = {
 	brief: "Messaging",
 	describe(step) {
 		const action = stringOf(step.tool.args.action);
+		const t = activityMessages(messages);
+		const verb = VERBS[action];
 		return {
 			label: {
 				kind: "message",
-				verb: VERBS.get(action) ?? "Listed conversations",
+				verb: verb ? t(verb) : t("listed"),
 			},
 			description: failureOf(step) ?? (plainText(sentence(stringOf(step.tool.args.message))) || undefined),
 		};

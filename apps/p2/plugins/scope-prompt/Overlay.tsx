@@ -12,6 +12,7 @@ import {
 	type Route,
 	useComposerState,
 	useHost,
+	useMessages,
 	useOwner,
 	usePointerKind,
 	useRoute,
@@ -22,6 +23,7 @@ import { FAMILIAR_TITLE, Familiar } from "../familiar/contract.ts";
 import { Sessions } from "../sessions/contract.ts";
 import { ScopeStage } from "./contract.ts";
 import { familiarMessage, inOpenSession, type Scope, scopeBlock, scopeNote } from "./message.ts";
+import { messages } from "./messages.ts";
 import { setPointing, useModeKeys, usePointing } from "./mode.ts";
 import { excerpt, type ScopeLevel, scopesAt } from "./scopes.ts";
 
@@ -37,10 +39,10 @@ type Sent =
 	| { readonly kind: "familiar"; readonly session: string; readonly conversation: number };
 
 /** What pointing mode asks for: a mouse picks on click; a tap shows the scope and a second tap on it asks. */
-const POINTING_HINT: Readonly<Record<PointerKind, string>> = {
-	touch: "Tap to see the scope, tap it again to ask",
-	mouse: "Click what to ask about",
-	both: "Click what to ask about, or tap it twice",
+const POINTING_HINT: Readonly<Record<PointerKind, "hintTouch" | "hintMouse" | "hintBoth">> = {
+	touch: "hintTouch",
+	mouse: "hintMouse",
+	both: "hintBoth",
 };
 
 /** The overlay, for the owner only (it talks to the Familiar, which is the owner's). */
@@ -50,6 +52,7 @@ export function ScopePrompt() {
 
 function Overlay() {
 	useModeKeys();
+	const { t } = useMessages(messages);
 	const pointer = usePointerKind();
 	const pointing = usePointing();
 	const [hover, setHover] = useState<readonly ScopeLevel[]>();
@@ -156,10 +159,10 @@ function Overlay() {
 			{hover && <Outline level={hover.at(-1)} chain={hover} />}
 			{pointing && (
 				<output className="scope-mode scope-ui">
-					<span>{POINTING_HINT[pointer]}</span>
-					{pointer !== "touch" && <span className="muted">Esc to stop</span>}
+					<span>{t(POINTING_HINT[pointer])}</span>
+					{pointer !== "touch" && <span className="muted">{t("escStops")}</span>}
 					<button type="button" className="text-action" onClick={() => setPointing(false)}>
-						Stop
+						{t("stop")}
 					</button>
 				</output>
 			)}
@@ -259,6 +262,7 @@ function Composer({
 	onClose: () => void;
 	onSent: (sent: Sent) => void;
 }) {
+	const { t } = useMessages(messages);
 	const host = useHost();
 	const route = useRoute();
 	const { fail } = useComposerState();
@@ -302,7 +306,7 @@ function Composer({
 				style={{ left, width, ...(below ? { top: pick.y + 16 } : { bottom: window.innerHeight - pick.y + 16 }) }}
 				onSubmit={submit}
 			>
-				<fieldset className="scope-steps" aria-label="Scope">
+				<fieldset className="scope-steps" aria-label={t("scope")}>
 					{pick.levels.map((level, index) => (
 						<button
 							// biome-ignore lint/suspicious/noArrayIndexKey: the chain is fixed for the pick.
@@ -317,7 +321,7 @@ function Composer({
 						</button>
 					))}
 					<span className="scope-fill" />
-					<button type="button" className="icon-button scope-close" aria-label="Close" onClick={onClose}>
+					<button type="button" className="icon-button scope-close" aria-label={t("close")} onClick={onClose}>
 						<CloseIcon />
 					</button>
 				</fieldset>
@@ -327,7 +331,7 @@ function Composer({
 					autoFocus
 					value={text}
 					rows={2}
-					placeholder={`Ask about ${excerpt(levels.at(-1)?.label ?? "this", 40)}…`}
+					placeholder={t("placeholder", excerpt(levels.at(-1)?.label ?? "this", 40))}
 					onChange={(event) => setText(event.target.value)}
 					onKeyDown={(event) => {
 						if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) submit(event);
@@ -335,8 +339,8 @@ function Composer({
 					}}
 				/>
 				<div className="scope-foot">
-					<fieldset className="scope-destination" aria-label="Send to">
-						<span className="muted">To</span>
+					<fieldset className="scope-destination" aria-label={t("sendTo")}>
+						<span className="muted">{t("to")}</span>
 						{inChat && (
 							<button
 								type="button"
@@ -344,7 +348,7 @@ function Composer({
 								aria-pressed={destination === "chat"}
 								onClick={() => setDestination("chat")}
 							>
-								Chat
+								{t("chat")}
 							</button>
 						)}
 						<button
@@ -357,7 +361,7 @@ function Composer({
 						</button>
 					</fieldset>
 					<button type="submit" className="text-action" disabled={!text.trim() || sending}>
-						{sending ? "Sending…" : "Send"}
+						{sending ? t("sending") : t("send")}
 					</button>
 				</div>
 			</form>
@@ -420,13 +424,14 @@ const SENT_FOR = 4000;
 
 /** "Sent to Chat", or "Sent to Ask Lingshu" with a link that opens it, at the bottom. */
 function SentNote({ sent, onDone }: { sent: Sent; onDone: () => void }) {
+	const { t } = useMessages(messages);
 	useEffect(() => {
 		const timer = setTimeout(onDone, SENT_FOR);
 		return () => clearTimeout(timer);
 	}, [onDone]);
 	return (
 		<output className="scope-sent scope-ui">
-			<span>Sent to {sent.kind === "chat" ? "Chat" : FAMILIAR_TITLE}</span>
+			<span>{t("sentTo", sent.kind === "chat" ? t("chat") : FAMILIAR_TITLE)}</span>
 			{sent.kind === "familiar" && (
 				<button
 					type="button"
@@ -436,7 +441,7 @@ function SentNote({ sent, onDone }: { sent: Sent; onDone: () => void }) {
 						navigate({ session: sent.session, conversation: sent.conversation });
 					}}
 				>
-					Open
+					{t("open")}
 				</button>
 			)}
 		</output>

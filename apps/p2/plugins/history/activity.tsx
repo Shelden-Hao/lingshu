@@ -1,6 +1,7 @@
 // How the history tools show in the chat: what was searched or read, and the entries found, each opening its message
 // in the transcript (loading older history first); a handoff's text.
 import {
+	activityMessages,
 	CodeBlock,
 	CommandBlock,
 	closeLayers,
@@ -18,12 +19,13 @@ import {
 	sentence,
 	stringOf,
 	type ToolActivity,
+	useMessages,
 } from "@p2/app/v1/web";
 import { useContext } from "react";
-import "./activity.css";
+import { messages } from "./messages.ts";
 
 /** The entries a history tool found or read: each opens its message in the transcript, closing the sheet. */
-function HistoryEntries({ rows, field }: { rows: unknown; field: "snippet" | "preview" }) {
+function _HistoryEntries({ rows, field }: { rows: unknown; field: "snippet" | "preview" }) {
 	const reveal = useContext(RevealEntry);
 	if (!Array.isArray(rows) || !rows.length) return null;
 	const show = async (entry: number) => {
@@ -77,11 +79,7 @@ function HistoryDetail({ step }: { step: Step }) {
 			}
 			output={
 				Array.isArray(rows) && rows.length > 0 ? (
-					<>
-						<HistoryEntries rows={rows} field={search ? "snippet" : "preview"} />
-						{details.more === true && <DetailNote>More matches</DetailNote>}
-						{details.truncated === true && <DetailNote>Cut at the output budget</DetailNote>}
-					</>
+					<HistoryDetailNote details={details} />
 				) : (
 					<OutputBlock output={tool.output} failed={step.status === "error"} />
 				)
@@ -89,37 +87,50 @@ function HistoryDetail({ step }: { step: Step }) {
 		/>
 	);
 }
+/** The entries list's notes: more matches, and a cut at the output budget. */
+function HistoryDetailNote({ details }: { details: { more?: unknown; truncated?: unknown } }) {
+	const { t } = useMessages(messages);
+	return (
+		<>
+			{details.more === true && <DetailNote>{t("moreMatches")}</DetailNote>}
+			{details.truncated === true && <DetailNote>{t("cutAtBudget")}</DetailNote>}
+		</>
+	);
+}
+
+/** The activities' words, in the language the activity components render in (outside one: the first catalog). */
+const t = () => activityMessages(messages);
 
 /** history_search and history_read count together in a run's summary: the same function. */
-const looked = () => "looked through the history";
+const looked = () => activityMessages(messages)("summaryLooked");
 
 const historySearch: ToolActivity = {
-	brief: "Searching history",
+	brief: t()("briefSearch"),
 	describe(step) {
 		const details = detailsOf(step.tool);
 		const hits = Array.isArray(details.hits) ? details.hits.length : 0;
 		return {
 			label: {
 				kind: "search",
-				verb: "Searched the history for",
+				verb: t()("searchedFor"),
 				object: stringOf(step.tool.args.query),
 				style: "words",
 			},
 			description:
 				failureOf(step) ??
 				(step.status === "done"
-					? `${hits ? `${hits} ${hits === 1 ? "match" : "matches"}` : "No matches"}${details.more === true ? ", and more" : ""}`
+					? `${hits ? t()("hits", hits) : t()("noHits")}${details.more === true ? t()("andMore") : ""}`
 					: undefined),
 		};
 	},
 	running: (step) => ({
 		kind: "search",
-		verb: "Searching the history for",
+		verb: t()("searchingFor"),
 		object: stringOf(step.tool.args.query),
 		style: "words",
 	}),
 	argument: (tool) => stringOf(tool.args.query),
-	summary: looked,
+	summary: (_count) => looked(),
 	Detail: HistoryDetail,
 };
 
@@ -128,48 +139,48 @@ function describeRead(step: Step): Described {
 	const details = detailsOf(step.tool);
 	const mode = stringOf(args.mode);
 	const entries = Array.isArray(details.entries) ? details.entries.length : 0;
-	const count = `${entries} ${entries === 1 ? "entry" : "entries"}`;
+	const count = t()("entries", entries);
 	const range =
 		mode === "range" ? `#${String(args.from)}${args.to === undefined ? "" : `–#${String(args.to)}`}` : undefined;
 	return {
-		label: { kind: "read", verb: "Read the history", ...(range ? { object: range, style: "code" as const } : {}) },
+		label: { kind: "read", verb: t()("readHistory"), ...(range ? { object: range, style: "code" as const } : {}) },
 		description:
 			failureOf(step) ??
 			(step.status === "done"
 				? mode === "tail"
-					? `${count} before the last compaction or handoff`
-					: `${count}${details.truncated === true ? ", cut at the output budget" : ""}`
+					? `${count}${t()("beforeCompaction")}`
+					: `${count}${details.truncated === true ? t()("cutBudget") : ""}`
 				: undefined),
 	};
 }
 
 const historyRead: ToolActivity = {
-	brief: "Reading history",
+	brief: t()("briefRead"),
 	describe: describeRead,
-	running: (step) => ({ ...describeRead(step).label, verb: "Reading the history" }),
+	running: (step) => ({ ...describeRead(step).label, verb: t()("readingHistory") }),
 	argument: (tool) => stringOf(tool.args.mode),
-	summary: looked,
+	summary: (_count) => looked(),
 	Detail: HistoryDetail,
 };
 
 function HandoffDetail({ step }: { step: Step }) {
+	const { t } = useMessages(messages);
 	return (
 		<>
 			<DetailProse text={stringOf(step.tool.args.text)} />
-			<DetailNote>New context started; earlier history stays searchable.</DetailNote>
+			<DetailNote>{t("handoffNote")}</DetailNote>
 		</>
 	);
 }
-
 const historyHandoff: ToolActivity = {
-	brief: "Handing off",
+	brief: t()("briefHandoff"),
 	describe: (step) => ({
-		label: { kind: "handoff", verb: "Handed off to a new context" },
+		label: { kind: "handoff", verb: t()("handedOff") },
 		description: failureOf(step) ?? (plainText(sentence(stringOf(step.tool.args.text))) || undefined),
 	}),
-	running: () => ({ kind: "handoff", verb: "Handing off to a new context" }),
+	running: () => ({ kind: "handoff", verb: t()("handingOff") }),
 	argument: (tool) => plainText(sentence(stringOf(tool.args.text))),
-	summary: () => "handed off",
+	summary: () => t()("summaryHandoff"),
 	Detail: HandoffDetail,
 };
 

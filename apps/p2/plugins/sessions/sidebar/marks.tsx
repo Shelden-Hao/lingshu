@@ -1,7 +1,10 @@
 // The status marks of sidebar items, apart from the rows so other plugins' web facets (the Familiar's row, the command
 // menu's conversations) can show them through the sessions plugin's contract (`contract.web.tsx`) with nothing but
 // React.
+
+import { showText, useLanguage } from "@p2/app/v1/web";
 import { type CSSProperties, type ReactNode, useState } from "react";
+import { sidebarText } from "../messages.ts";
 
 /** The frames of lingshu's working indicator (the terminal UI's loader, `packages/tui`'s `Loader`). */
 const LINGSHU_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
@@ -35,9 +38,15 @@ const LINGSHU_CYCLE_MS = 1600;
  * cycle, so all of them step together.
  */
 export function PiDots() {
+	const language = useLanguage();
 	const [phase] = useState(() => `${-(performance.now() % LINGSHU_CYCLE_MS)}ms`);
 	return (
-		<span className="lingshu-dots" role="img" aria-label="Working" title="Working">
+		<span
+			className="lingshu-dots"
+			role="img"
+			aria-label={showText(sidebarText("working"), language)}
+			title={showText(sidebarText("working"), language)}
+		>
 			<span className="lingshu-dots-strip" style={{ animationDelay: phase }} aria-hidden="true">
 				{LINGSHU_CELLS.map(({ frame, dots }) => (
 					<span key={frame}>
@@ -53,7 +62,15 @@ export function PiDots() {
 
 /** An answer the owner has not read: a steady blue dot. */
 export function UnreadMark() {
-	return <span className="unread-dot" role="img" aria-label="New answer" title="New answer" />;
+	const language = useLanguage();
+	return (
+		<span
+			className="unread-dot"
+			role="img"
+			aria-label={showText(sidebarText("newAnswer"), language)}
+			title={showText(sidebarText("newAnswer"), language)}
+		/>
+	);
 }
 
 /** A failure that wants the owner (a worker, an operation or a run that failed): a steady dot in the error colour. */
@@ -66,12 +83,18 @@ export function FailedDot({ title }: { title: string }) {
  * clear of its corners, whose dash travels around it (a still dashed frame with reduced motion).
  */
 export function IconMarker({ working, children }: { working: boolean; children: ReactNode }) {
+	const language = useLanguage();
 	return (
 		<span className={`nav-icon ${working ? "working" : ""}`}>
 			{children}
 			{working && (
-				<svg className="working-frame" viewBox="0 0 22 22" role="img" aria-label="Working">
-					<title>Working</title>
+				<svg
+					className="working-frame"
+					viewBox="0 0 22 22"
+					role="img"
+					aria-label={showText(sidebarText("working"), language)}
+				>
+					<title>{showText(sidebarText("working"), language)}</title>
 					<rect className="working-frame-track" {...FRAME} />
 					<rect className="working-frame-dash" {...FRAME} />
 				</svg>

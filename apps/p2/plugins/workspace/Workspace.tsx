@@ -1,3 +1,4 @@
+import type { MessagesOf, Translator } from "@lingshu/chord";
 import type { Held, Location } from "@p2/app/v1";
 import { BACKGROUND_CONTEXT, filePreview, follow } from "@p2/app/v1";
 import {
@@ -17,6 +18,7 @@ import {
 	TerminalIcon,
 	upperFirst,
 	useDragSize,
+	useMessages,
 	usePointerKind,
 	useScrollMemory,
 	type WorkspaceFileRoute,
@@ -38,6 +40,7 @@ import {
 import type { Workspace } from "./contract.ts";
 import { type CommentEditor, type FileView, type ReviewComment, reviewMessage, WorkspaceFile } from "./file.tsx";
 import { type FuzzyMatch, rankFiles } from "./fuzzy.ts";
+import { messages } from "./messages.ts";
 import type { WorkspaceChange, WorkspaceCommit, WorkspaceQuery, WorkspaceResult } from "./protocol.ts";
 import { showWorkspaceTab } from "./tabs.ts";
 
@@ -102,12 +105,21 @@ function size(bytes: number): string {
 }
 
 /** What a status letter pair means, for the change list's tooltip. */
-function describe(status: string): string {
-	if (status === "??") return "untracked";
-	if (status.includes("U") || status === "AA" || status === "DD") return "conflict";
+function describe(status: string, t: Translator<"workspace", MessagesOf<typeof messages>>): string {
+	if (status === "??") return t("statusUntracked");
+	if (status.includes("U") || status === "AA" || status === "DD") return t("statusConflict");
 	const letter = status[1] !== "." ? status[1] : status[0];
-	const staged = status[0] !== "." ? "staged " : "";
-	return `${staged}${{ M: "modified", A: "added", D: "deleted", R: "renamed", C: "copied", T: "type changed" }[letter ?? ""] ?? "changed"}`;
+	const staged = status[0] !== "." ? t("statusStaged") : "";
+	return `${staged}${
+		{
+			M: t("statusModified"),
+			A: t("statusAdded"),
+			D: t("statusDeleted"),
+			R: t("statusRenamed"),
+			C: t("statusCopied"),
+			T: t("statusTypeChanged"),
+		}[letter ?? ""] ?? t("statusChanged")
+	}`;
 }
 
 function letter(status: string): string {
@@ -196,6 +208,7 @@ export function WorkspacePanel({
 	/** Deliver review comments as the user's next message; absent for viewers who cannot send. */
 	onSend?: (text: string) => Promise<void>;
 }) {
+	const { t } = useMessages(messages);
 	const pointer = usePointerKind();
 	const { tab, directory, file: selection, commit: openCommit, search: submitted } = route;
 	// Docked with room for a file beside the list (measured below): Files, Changes and Search then show the open file
@@ -469,9 +482,9 @@ export function WorkspacePanel({
 	const opened = place.value?.location;
 	const shownWhere = opened && label ? label(opened) : where;
 	const moveNote = place.value?.failed
-		? `Moving the session to ${label ? label(place.value.failed.to) : place.value.failed.to.cwd} failed: ${place.value.failed.error}`
+		? t("moveFailed", label ? label(place.value.failed.to) : place.value.failed.to.cwd, place.value.failed.error)
 		: place.value?.pending
-			? `The session moves to ${label ? label(place.value.pending) : place.value.pending.cwd} when its turn ends.`
+			? t("movePending", label ? label(place.value.pending) : place.value.pending.cwd)
 			: undefined;
 	// biome-ignore lint/correctness/useExhaustiveDependencies: version triggers refetches.
 	useEffect(() => {
@@ -528,9 +541,9 @@ export function WorkspacePanel({
 					credentials: "same-origin",
 				});
 				const result = (await response.json().catch(() => ({}))) as { error?: string };
-				if (!response.ok) throw new Error(result.error ?? `Upload failed (${response.status})`);
+				if (!response.ok) throw new Error(result.error ?? t("uploadFailed", response.status));
 			} catch (error) {
-				setUploadError(`${entry.name}: ${error instanceof Error ? error.message : "upload failed"}`);
+				setUploadError(`${entry.name}: ${error instanceof Error ? error.message : t("uploadFailedText")}`);
 				break;
 			}
 		}
@@ -707,10 +720,10 @@ export function WorkspacePanel({
 	if (!terminal && !attached && unavailable !== undefined) {
 		body = (
 			<>
-				<p className="notice error workspace-note">The workspace could not be opened: {unavailable}</p>
+				<p className="notice error workspace-note">{t("openError", unavailable)}</p>
 				{onRetry && (
 					<button type="button" className="text-action workspace-note" onClick={onRetry}>
-						Retry
+						{t("retry")}
 					</button>
 				)}
 			</>
@@ -771,21 +784,21 @@ export function WorkspacePanel({
 						>
 							<FileIcon />
 							<span className="workspace-name">{entry.name}</span>
-							<small>{entry.kind === "symlink" ? "link" : size(entry.size)}</small>
+							<small>{entry.kind === "symlink" ? t("symlink") : size(entry.size)}</small>
 						</button>,
 					];
 				}),
 				...(!entries.length
 					? [
 							<p key={`${folder}\0empty`} className="notice workspace-note" style={indent(depth)}>
-								{folder ? "Empty folder." : "Empty directory."}
+								{folder ? t("emptyFolder") : t("emptyDirectory")}
 							</p>,
 						]
 					: []),
 				...(loaded.value.truncated
 					? [
 							<p key={`${folder}\0truncated`} className="notice workspace-note" style={indent(depth)}>
-								Showing the first 2,000 entries.
+								{t("treeTruncated")}
 							</p>,
 						]
 					: []),
@@ -814,20 +827,20 @@ export function WorkspacePanel({
 									setFileFilter("");
 								}
 							}}
-							placeholder="Go to file"
-							aria-label="Go to file by name"
+							placeholder={t("goToFile")}
+							aria-label={t("goToFileAria")}
 						/>
 						{fileFilter && (
 							<button type="button" className="text-action" onClick={() => setFileFilter("")}>
-								Clear
+								{t("clear")}
 							</button>
 						)}
 					</div>
 					<label
 						className="text-action workspace-upload"
-						title={`Upload into ${directory ? `${rootName}/${directory}` : rootName}`}
+						title={t("uploadInto", directory ? `${rootName}/${directory}` : rootName)}
 					>
-						{uploading ? `Uploading ${uploading}…` : `Upload to ${directory.split("/").pop() || rootName}`}
+						{uploading ? t("uploading", uploading) : t("uploadTo", directory.split("/").pop() || rootName)}
 						<input
 							type="file"
 							multiple
@@ -871,10 +884,8 @@ export function WorkspacePanel({
 									</button>
 								);
 							})}
-							{!ranked.length && <p className="notice workspace-note">No matching files.</p>}
-							{fileIndex.value?.truncated && (
-								<p className="notice workspace-note">Only the first 50,000 files are searched.</p>
-							)}
+							{!ranked.length && <p className="notice workspace-note">{t("noMatchingFiles")}</p>}
+							{fileIndex.value?.truncated && <p className="notice workspace-note">{t("searchTruncated")}</p>}
 						</div>
 					)
 				) : (
@@ -908,7 +919,7 @@ export function WorkspacePanel({
 								<span className="muted">
 									{comment.path}:{comment.end}
 									{comment.commit ? ` @${comment.commit.slice(0, 8)}` : ""}
-									{comment.view === "changes" ? " (diff)" : ""}
+									{comment.view === "changes" ? t("commentDiffSuffix") : ""}
 								</span>
 								<br />
 								<span className="comment-quote">{comment.quote}</span>
@@ -924,13 +935,13 @@ export function WorkspacePanel({
 									disabled={sending}
 									onClick={() => send([comment])}
 								>
-									Send
+									{t("send")}
 								</button>
 							)}
 							<button
 								type="button"
 								className="icon-button"
-								aria-label="Delete comment"
+								aria-label={t("deleteCommentAria")}
 								onClick={() => setComments(comments.filter((entry) => entry.id !== comment.id))}
 							>
 								<CloseIcon />
@@ -940,9 +951,7 @@ export function WorkspacePanel({
 				))}
 			</div>
 		) : (
-			<p className="notice workspace-note">
-				No unsent comments. {upperFirst(pressVerb(pointer))} a line number in a file or diff to comment.
-			</p>
+			<p className="notice workspace-note">{t("noUnsentComments", upperFirst(pressVerb(pointer)))}</p>
 		);
 	} else if (tab === "search") {
 		const value = search.value;
@@ -958,7 +967,7 @@ export function WorkspacePanel({
 					spellCheck={false}
 					onChange={(event) => set(event.target.value)}
 					placeholder={example}
-					aria-label={`Files to ${label}`}
+					aria-label={t("filesTo", label)}
 				/>
 			</label>
 		);
@@ -977,8 +986,8 @@ export function WorkspacePanel({
 							value={searchText}
 							maxLength={200}
 							onChange={(event) => setSearchText(event.target.value)}
-							placeholder="Search text in files"
-							aria-label="Search text in files"
+							placeholder={t("searchPlaceholder")}
+							aria-label={t("searchPlaceholder")}
 						/>
 						<button
 							type="button"
@@ -986,13 +995,13 @@ export function WorkspacePanel({
 							aria-expanded={filters}
 							onClick={() => setFilters(!filters)}
 						>
-							{filters || !filtered ? "Filters" : "Filters on"}
+							{filters || !filtered ? t("filters") : t("filtersOn")}
 						</button>
 					</div>
 					{filters && (
 						<>
-							{glob("include", include, setInclude, "*.ts, src/")}
-							{glob("exclude", exclude, setExclude, "*.test.ts, dist")}
+							{glob(t("include"), include, setInclude, "*.ts, src/")}
+							{glob(t("exclude"), exclude, setExclude, "*.test.ts, dist")}
 						</>
 					)}
 					{/* Enter in any field submits the form. */}
@@ -1002,9 +1011,8 @@ export function WorkspacePanel({
 					<p className="notice error workspace-note">{search.error}</p>
 				) : !submitted ? (
 					<p className="notice workspace-note">
-						Literal text; case-insensitive unless it has capitals. Ignored files are skipped.
-						{filters &&
-							" Filters take comma-separated globs such as *.ts, *.{ts,tsx} or src/, matching at any depth unless they start with ./."}
+						{t("searchHint")}
+						{filters && t("filtersHint")}
 					</p>
 				) : !value || search.key !== searchKey ? (
 					<div className="spinner large" />
@@ -1029,8 +1037,8 @@ export function WorkspacePanel({
 								</span>
 							</button>
 						))}
-						{!value.matches.length && <p className="notice workspace-note">No matches.</p>}
-						{value.truncated && <p className="notice workspace-note">Showing the first matches.</p>}
+						{!value.matches.length && <p className="notice workspace-note">{t("noMatches")}</p>}
+						{value.truncated && <p className="notice workspace-note">{t("matchesTruncated")}</p>}
 					</div>
 				)}
 			</>
@@ -1048,7 +1056,7 @@ export function WorkspacePanel({
 							key={node.path}
 							className="workspace-row"
 							style={indent}
-							title={`${describe(change.status)}${change.from ? ` from ${change.from}` : ""}`}
+							title={`${describe(change.status, t)}${change.from ? t("statusFrom", change.from) : ""}`}
 							aria-current={
 								split && selection?.path === change.path && selection.commit === commit ? "true" : undefined
 							}
@@ -1061,8 +1069,8 @@ export function WorkspacePanel({
 									(comment) => comment.path === change.path && comment.commit === commit,
 								).length;
 								return count ? (
-									<small className="comment-count" title="Has review comments">
-										{count} comment{count === 1 ? "" : "s"}
+									<small className="comment-count" title={t("hasComments")}>
+										{t("commentCount", count)}
 									</small>
 								) : null;
 							})()}
@@ -1104,7 +1112,7 @@ export function WorkspacePanel({
 							type="button"
 							className="icon-button back"
 							onClick={() => setOpenCommit(undefined)}
-							aria-label="Back"
+							aria-label={t("backAria")}
 						>
 							<ChevronIcon size={18} />
 						</button>
@@ -1121,7 +1129,7 @@ export function WorkspacePanel({
 						<div className="commit-meta">
 							<span className="muted">
 								{detail.value.author} · {new Date(detail.value.time).toLocaleString()}
-								{summary?.unpushed ? " · not pushed" : ""}
+								{summary?.unpushed ? ` · ${t("notPushed")}` : ""}
 							</span>
 							{detail.value.message.includes("\n") && (
 								<pre className="commit-message">
@@ -1131,8 +1139,8 @@ export function WorkspacePanel({
 						</div>
 						<div className="workspace-list">
 							{render(changeTree(detail.value.changes), 0, openCommit)}
-							{!detail.value.changes.length && <p className="notice workspace-note">No file changes.</p>}
-							{detail.value.truncated && <p className="notice workspace-note">Change list truncated.</p>}
+							{!detail.value.changes.length && <p className="notice workspace-note">{t("noFileChanges")}</p>}
+							{detail.value.truncated && <p className="notice workspace-note">{t("changesTruncated")}</p>}
 						</div>
 					</>
 				)}
@@ -1142,30 +1150,30 @@ export function WorkspacePanel({
 		) : !value ? (
 			<div className="spinner large" />
 		) : !value.repo ? (
-			<p className="notice workspace-note">Not a git repository.</p>
+			<p className="notice workspace-note">{t("notGitRepo")}</p>
 		) : (
 			<>
 				<p className="workspace-crumbs mono muted">
-					{value.branch ?? "detached"}
+					{value.branch ?? t("detached")}
 					{log.upstream ? ` → ${log.upstream}` : ""}
 				</p>
 				{value.changes.length > 0 && (
 					<>
-						<h3 className="workspace-section">Uncommitted</h3>
+						<h3 className="workspace-section">{t("uncommitted")}</h3>
 						<div className="workspace-list">
 							{render(changeTree(value.changes), 0)}
-							{value.truncated && <p className="notice workspace-note">Change list truncated.</p>}
+							{value.truncated && <p className="notice workspace-note">{t("changesTruncated")}</p>}
 						</div>
 					</>
 				)}
-				<h3 className="workspace-section">Commits</h3>
+				<h3 className="workspace-section">{t("commits")}</h3>
 				<div className="workspace-list">
 					{log.commits.map((entry) => (
 						<button
 							type="button"
 							key={entry.hash}
 							className={`workspace-row commit-row ${entry.unpushed ? "unpushed" : ""}`}
-							title={entry.unpushed ? "Not pushed" : undefined}
+							title={entry.unpushed ? t("notPushedTitle") : undefined}
 							onClick={() => setOpenCommit(entry.hash)}
 						>
 							<span className="commit-dot" />
@@ -1179,10 +1187,10 @@ export function WorkspacePanel({
 						</button>
 					))}
 					{log.error && <p className="notice error workspace-note">{log.error}</p>}
-					{!log.commits.length && !log.error && <p className="notice workspace-note">No commits.</p>}
+					{!log.commits.length && !log.error && <p className="notice workspace-note">{t("noCommits")}</p>}
 					{log.more && (
 						<button type="button" className="text-action workspace-note" onClick={loadMore}>
-							Load more commits
+							{t("loadMore")}
 						</button>
 					)}
 				</div>
@@ -1191,10 +1199,15 @@ export function WorkspacePanel({
 	}
 
 	return (
-		<aside className={`workspace ${split ? "split" : ""}`} aria-label="Workspace" ref={panel} style={width.style}>
+		<aside
+			className={`workspace ${split ? "split" : ""}`}
+			aria-label={t("workspaceAria")}
+			ref={panel}
+			style={width.style}
+		>
 			{/* The column stays the second child either way, so toggling the split never remounts the list. */}
 			{split && (
-				<section className="workspace-preview" aria-label="Open file">
+				<section className="workspace-preview" aria-label={t("openFileAria")}>
 					<div className="workspace-preview-body" ref={previewScroller}>
 						{fileBody}
 					</div>
@@ -1204,7 +1217,7 @@ export function WorkspacePanel({
 				<button
 					type="button"
 					className="workspace-resize"
-					aria-label="Drag to resize workspace"
+					aria-label={t("resizeAria")}
 					tabIndex={-1}
 					onPointerDown={startResize}
 				/>
@@ -1212,11 +1225,13 @@ export function WorkspacePanel({
 					<div className="workspace-tabs">
 						{(
 							[
-								["files", "Files", <FolderIcon key="icon" size={20} />, 0],
-								["changes", "Changes", <DiffIcon key="icon" />, changes.length],
-								["search", "Search", <SearchIcon key="icon" size={20} />, 0],
-								["comments", "Comments", <CommentIcon key="icon" />, comments.length],
-								...(owner ? [["terminal", "Terminal", <TerminalIcon key="icon" size={20} />, 0] as const] : []),
+								["files", t("tabFiles"), <FolderIcon key="icon" size={20} />, 0],
+								["changes", t("tabChanges"), <DiffIcon key="icon" />, changes.length],
+								["search", t("tabSearch"), <SearchIcon key="icon" size={20} />, 0],
+								["comments", t("tabComments"), <CommentIcon key="icon" />, comments.length],
+								...(owner
+									? [["terminal", t("tabTerminal"), <TerminalIcon key="icon" size={20} />, 0] as const]
+									: []),
 							] as const
 						).map(([id, label, icon, count]) => (
 							<button
@@ -1240,8 +1255,8 @@ export function WorkspacePanel({
 							type="button"
 							className="icon-button"
 							onClick={() => setVersion((current) => current + 1)}
-							aria-label="Refresh"
-							title="Refresh"
+							aria-label={t("refreshAria")}
+							title={t("refreshAria")}
 						>
 							<RefreshIcon />
 						</button>
@@ -1250,7 +1265,7 @@ export function WorkspacePanel({
 						type="button"
 						className="icon-button"
 						onClick={() => void nav.close((current) => ({ ...current, workspace: undefined }))}
-						aria-label="Close workspace"
+						aria-label={t("closeAria")}
 					>
 						<CloseIcon />
 					</button>
@@ -1262,8 +1277,8 @@ export function WorkspacePanel({
 				{comments.length > 0 && (
 					<div className="review-bar">
 						<span>
-							{comments.length} comment{comments.length === 1 ? "" : "s"}
-							{commented.size > 1 ? ` in ${commented.size} files` : ""}
+							{t("commentCount", comments.length)}
+							{commented.size > 1 ? t("inFiles", commented.size) : ""}
 						</span>
 						<button
 							type="button"
@@ -1273,7 +1288,7 @@ export function WorkspacePanel({
 								setEditor(undefined);
 							}}
 						>
-							Discard
+							{t("discard")}
 						</button>
 						<button
 							type="button"
@@ -1281,7 +1296,7 @@ export function WorkspacePanel({
 							disabled={!onSend || sending}
 							onClick={() => send(comments)}
 						>
-							Send all
+							{t("sendAll")}
 						</button>
 					</div>
 				)}

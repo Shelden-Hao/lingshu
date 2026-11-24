@@ -1,12 +1,7 @@
 // The location tools: an agent lists the environments it may work on and their directories, and moves itself. Every main
 // agent has them, and the subagents and one-shot agents it gives them to. A session in a sandbox stays in it.
 
-import {
-	type ConversationId,
-	type DocumentReader,
-	defineExtension,
-	ROOT_CONVERSATION_ID,
-} from "@lingshu/durable";
+import { type ConversationId, type DocumentReader, defineExtension, ROOT_CONVERSATION_ID } from "@lingshu/durable";
 import { nul, obj, opt, str, union } from "@lingshu/schema";
 import type { Context, DirectoryListing } from "@p2/app/v1";
 import { type Location, locationText, parseLocation, sameLocation } from "@p2/app/v1";

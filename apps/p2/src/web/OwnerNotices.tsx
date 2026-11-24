@@ -14,6 +14,8 @@ import {
 	useRoute,
 	useSheet,
 } from "../runtime/web.tsx";
+import { useMessages } from "./language.ts";
+import { messages } from "./messages.ts";
 import {
 	DISMISSED_NOTICE_PREFIX,
 	isSuccessResult,
@@ -43,18 +45,18 @@ function NoticeCard({
 	showDetails: (notice: OwnerNotice) => void;
 }) {
 	// A poll/new array is not a new success: only a new notice identity starts this timer.
-	// biome-ignore lint/correctness/useExhaustiveDependencies: dismiss uses the current notice; identity/tone own its lifetime.
+	const { t } = useMessages(messages);
 	useEffect(() => {
 		if (notice.tone !== "success") return;
 		const timer = setTimeout(() => dismiss(notice), 5000);
 		return () => clearTimeout(timer);
-	}, [notice.id, notice.tone, dismiss]);
+	}, [notice.id, notice.tone, dismiss, notice]);
 	const label = notice.details ? (
 		<button
 			type="button"
 			className="owner-notice-summary"
 			onClick={() => showDetails(notice)}
-			aria-label={`${notice.message} · Details`}
+			aria-label={t("noticeDetails", notice.message)}
 		>
 			{notice.message}
 		</button>
@@ -64,7 +66,7 @@ function NoticeCard({
 	return (
 		<section
 			className={`owner-notice ${notice.tone}`}
-			aria-label={notice.tone === "pending" ? "Pending development change" : "Owner notification"}
+			aria-label={notice.tone === "pending" ? t("pendingChange") : t("ownerNotification")}
 		>
 			{notice.tone === "error" ? (
 				<div className="owner-notice-message" role="alert">
@@ -91,13 +93,8 @@ function NoticeCard({
 					</button>
 				))}
 				{notice.tone !== "pending" && (
-					<button
-						type="button"
-						className="button"
-						aria-label="Dismiss owner notice"
-						onClick={() => dismiss(notice)}
-					>
-						Dismiss
+					<button type="button" className="button" aria-label={t("dismissNotice")} onClick={() => dismiss(notice)}>
+						{t("dismissAction")}
 					</button>
 				)}
 			</div>
@@ -106,6 +103,7 @@ function NoticeCard({
 }
 
 export function OwnerNotices() {
+	const { t } = useMessages(messages);
 	const owner = useOwner();
 	const dev = useDevNotices(owner, useConnected());
 	const service = useObject(LogNotices, owner ? {} : undefined);
@@ -146,10 +144,10 @@ export function OwnerNotices() {
 			.map((log) => ({
 				id: `log:${log.id}:${log.time}`,
 				tone: isSuccessResult(log.message) ? ("success" as const) : ("error" as const),
-				message: `${log.source.startsWith("session:") ? "Worker" : log.source === "dev" ? "Dev supervisor" : log.source === "terminals" ? "Terminal host" : "Server"}: ${log.message}`,
+				message: `${log.source.startsWith("session:") ? t("sourceWorker") : log.source === "dev" ? t("sourceDev") : log.source === "terminals" ? t("sourceTerminals") : t("sourceServer")}: ${log.message}`,
 				details: log.message,
 				actions: [
-					{ label: "Show logs", run: () => openLayer({ kind: "sheet", name: "logs", locator: log.source }) },
+					{ label: t("showLogs"), run: () => openLayer({ kind: "sheet", name: "logs", locator: log.source }) },
 				],
 				onDismiss: () => {
 					void service?.dismiss({ id: log.id }, BACKGROUND_CONTEXT).catch(() => {});
@@ -182,7 +180,7 @@ export function OwnerNotices() {
 	return (
 		<>
 			{!route.layers.length && visible.length > 0 && (
-				<aside className="owner-notices" aria-label="Owner notices">
+				<aside className="owner-notices" aria-label={t("ownerNotices")}>
 					<div className="owner-pending">
 						{visible
 							.filter((notice) => notice.tone === "pending")
@@ -198,7 +196,7 @@ export function OwnerNotices() {
 				</aside>
 			)}
 			{detail && (
-				<Sheet title={detail.tone === "error" ? "Notice details" : detail.message} onClose={closeLayers}>
+				<Sheet title={detail.tone === "error" ? t("noticeDetailsTitle") : detail.message} onClose={closeLayers}>
 					<p className="notice owner-notice-details">{detail.details}</p>
 				</Sheet>
 			)}

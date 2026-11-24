@@ -6,9 +6,12 @@ import { useRoute } from "../../runtime/web.tsx";
 import { ToolActivityContext } from "../chat-context.ts";
 import { Ticker } from "../elanor-extra/ticker.tsx";
 import { tick } from "../haptics.ts";
+import { useLanguage, useMessages } from "../language.ts";
+import { messages } from "../messages.ts";
 import { StepList, toggleActivity, useElapsed } from "./ActivitySheet.tsx";
 import { CheckIcon, ChevronIcon, CommentIcon, SparkIcon } from "./icons.tsx";
 import { KindIcon, LabelText } from "./Label.tsx";
+import { inActivityLanguage } from "./language.ts";
 import { live, plain, plainText, type Step, sentence, summary, type WheelEntry, wheelThought } from "./model.ts";
 import { ThoughtSlot } from "./ThoughtSlot.tsx";
 import "./activity.css";
@@ -48,6 +51,8 @@ export function ActivityRow({
 	endedAt?: number;
 }) {
 	const tools = useContext(ToolActivityContext);
+	const language = useLanguage();
+	const { t } = useMessages(messages);
 	const route = useRoute();
 	const selected = !route.workspace && route.activity?.row === rowKey;
 	// At detail 4 each call opens the same panel with that step expanded; a wheel only before the first call.
@@ -59,10 +64,10 @@ export function ActivityRow({
 		);
 	const thought = entries.some((entry) => entry.kind === "thought");
 	// "Thought, read 3 files": with thinking on the wheel, its summary says so first.
-	const calls = steps.length ? summary(steps, tools, { failures: false }) : "";
+	const calls = steps.length ? inActivityLanguage(language, () => summary(steps, tools, { failures: false })) : "";
 	const done = thought
-		? ["Thought", calls.charAt(0).toLowerCase() + calls.slice(1)].filter(Boolean).join(", ")
-		: calls || summary(steps, tools);
+		? [t("thought"), calls.charAt(0).toLowerCase() + calls.slice(1)].filter(Boolean).join(", ")
+		: calls || inActivityLanguage(language, () => summary(steps, tools));
 	const idOf = (entry: WheelEntry) => (entry.kind === "call" ? entry.step.id : entry.id);
 	/** Opens this block's panel, expanding the step selected on the wheel; the same tap again closes it. */
 	const show = (step?: string) =>
@@ -74,7 +79,7 @@ export function ActivityRow({
 	const faces: Face[] = entries.map((entry) => {
 		if (entry.kind !== "call") {
 			const words =
-				entry.kind === "thought" ? (entry.live ? "Thinking…" : "Thought") : plainText(sentence(entry.text));
+				entry.kind === "thought" ? (entry.live ? t("thinking") : t("thought")) : plainText(sentence(entry.text));
 			return {
 				key: entry.id,
 				label: words,
@@ -87,7 +92,7 @@ export function ActivityRow({
 			};
 		}
 		const { step } = entry;
-		const label = live(step, tools);
+		const label = inActivityLanguage(language, () => live(step, tools));
 		return {
 			key: step.id,
 			label: plain(label),
@@ -103,11 +108,11 @@ export function ActivityRow({
 	if (!entries.length)
 		faces.push({
 			key: "waiting",
-			label: "Working",
+			label: t("working"),
 			content: (
 				<>
 					<SparkIcon />
-					<span className="label-text">Working…</span>
+					<span className="label-text">{t("workingEllipsis")}</span>
 				</>
 			),
 		});
@@ -120,10 +125,7 @@ export function ActivityRow({
 					<CheckIcon />
 					<span className="label-text">
 						{done}
-						<span className="label-extra">
-							{" "}
-							· {entries.length} {entries.length === 1 ? "step" : "steps"}
-						</span>
+						<span className="label-extra"> · {t("stepsCount", entries.length)}</span>
 					</span>
 				</>
 			),
@@ -147,7 +149,7 @@ export function ActivityRow({
 					onActivate={(key) => show(key ?? faces.at(-1)?.key)}
 					// A very slight tick at each detent: rolled by the reader or by a new step rolling in.
 					onTurn={tick}
-					aria-label={`${faces.at(-1)?.label ?? "Working"}. Show the steps`}
+					aria-label={t("showSteps", faces.at(-1)?.label ?? t("working"))}
 					aria-expanded={selected}
 				>
 					{faces.map((face) => (

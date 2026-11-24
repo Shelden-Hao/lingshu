@@ -1,16 +1,20 @@
 // A transcript block's activity in the side panel (SidePanel.tsx: docked on the right, p2's sheet on phones). Steps
 // expand in place; choosing another block in the transcript replaces the panel's selection. Opening and closing it
 // participate in Back.
+
 import { type ReactNode, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { ShownImage } from "../../runtime/entry-images.ts";
 import { getNavigation, useRoute, useScrollMemory } from "../../runtime/web.tsx";
 import { ToolActivityContext, WorkingDirectory } from "../chat-context.ts";
+import { useLanguage, useMessages } from "../language.ts";
+import { messages } from "../messages.ts";
 import type { Route } from "../navigation.ts";
 import { closePanel, SidePanel, showInSidePanel, useSidePanelShown } from "../SidePanel.tsx";
 import { clockTime, Time } from "../Time.tsx";
 import { DetailProse, StepDetail } from "./Detail.tsx";
 import { ChevronIcon, CommentIcon, SparkIcon } from "./icons.tsx";
 import { KindIcon } from "./Label.tsx";
+import { inActivityLanguage } from "./language.ts";
 import {
 	argumentOf,
 	type ChatItem,
@@ -95,6 +99,7 @@ function ActivityPanel({
 	expanded: ReadonlySet<string> | undefined;
 	onExpanded: (steps: ReadonlySet<string>) => void;
 }) {
+	const { t } = useMessages(messages);
 	const entries = activity.entries ?? activity.steps.map((step): WheelEntry => ({ kind: "call", step }));
 	const running = entries.findLast((entry) => entry.kind === "call" && entry.step.status === "running");
 	const initial = place.step ?? (running?.kind === "call" ? running.step.id : undefined);
@@ -104,7 +109,7 @@ function ActivityPanel({
 	const mounted = useRef(false);
 	const revealed = useRef<string>(undefined);
 	const time = useElapsed(activity.startedAt, activity.endedAt, activity.working);
-	const count = `${entries.length} ${entries.length === 1 ? "step" : "steps"}`;
+	const count = t("stepsCount", entries.length);
 	useScrollMemory(body);
 	useLayoutEffect(() => {
 		const element = body.current;
@@ -131,7 +136,7 @@ function ActivityPanel({
 	const meta = [count, time].filter(Boolean).join(" · ");
 	return (
 		<SidePanel
-			title="Activity"
+			title={t("activity")}
 			sheetTitle={meta}
 			meta={meta}
 			onClose={closePanel}
@@ -157,13 +162,13 @@ function ActivityPanel({
 						onExpanded(next);
 					}}
 				/>
-				{!entries.length && <p className="empty-note">Working…</p>}
+				{!entries.length && <p className="empty-note">{t("workingEllipsis")}</p>}
 			</div>
 		</SidePanel>
 	);
 }
 
-const WORDS = { thought: "Thought", text: "Note" } as const;
+const WORDS = ["thought", "note"] as const;
 
 /** Thumbnails a collapsed row shows at most: the newest, the rest counted. */
 const THUMBNAILS = { phone: 2, wide: 4 } as const;
@@ -208,6 +213,8 @@ export function StepList({
 	expanded?: ReadonlySet<string>;
 }) {
 	const tools = useContext(ToolActivityContext);
+	const language = useLanguage();
+	const { t } = useMessages(messages);
 	const cwd = useContext(WorkingDirectory)?.replace(/\/+$/, "");
 	let shownTime: string | undefined;
 	return (
@@ -221,10 +228,10 @@ export function StepList({
 				const id = entry.kind === "call" ? entry.step.id : entry.id;
 				const open = expanded?.has(id) ?? false;
 				const argument = step
-					? argumentOf(step.tool, tools, cwd)
+					? inActivityLanguage(language, () => argumentOf(step.tool, tools, cwd))
 					: plainText(sentence(entry.kind !== "call" ? entry.text : ""));
 				const icon: ReactNode = step ? (
-					<KindIcon kind={describe(step, tools).label.kind} />
+					<KindIcon kind={inActivityLanguage(language, () => describe(step, tools)).label.kind} />
 				) : entry.kind === "thought" ? (
 					<SparkIcon />
 				) : (
@@ -247,14 +254,18 @@ export function StepList({
 							<span className="step-icon">{icon}</span>
 							<span className="step-words">
 								<span className="step-name">
-									{step ? step.tool.name : WORDS[entry.kind === "thought" ? "thought" : "text"]}
+									{step ? step.tool.name : t(WORDS[entry.kind === "thought" ? 0 : 1])}
 								</span>
 								{argument && <span className="step-argument">{argument}</span>}
 							</span>
 							{step && <StepThumbnails images={step.tool.images} />}
 							<span className="step-end">
 								<span className="step-state" data-state={step?.status ?? "done"}>
-									{step ? stepState(step, tools) : entry.kind !== "call" && entry.live ? "● thinking" : ""}
+									{step
+										? inActivityLanguage(language, () => stepState(step, tools))
+										: entry.kind !== "call" && entry.live
+											? t("thinkingState")
+											: ""}
 								</span>
 								{time !== undefined && <Time at={time} className="step-time" />}
 							</span>

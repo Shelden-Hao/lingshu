@@ -1,7 +1,15 @@
 // The Providers sheet (any owner): sign in to model providers, refresh their catalogs, sign out.
 
 import type { AuthEvent } from "@lingshu/ai";
-import { BACKGROUND_CONTEXT, contribute, defineFacet, type Held } from "@p2/app/v1";
+import {
+	BACKGROUND_CONTEXT,
+	contribute,
+	defineFacet,
+	type Held,
+	type MessagesOf,
+	Translations,
+	type Translator,
+} from "@p2/app/v1";
 import {
 	CheckIcon,
 	ChevronIcon,
@@ -9,6 +17,7 @@ import {
 	SearchIcon,
 	SettingsSections,
 	Sheet,
+	textIn,
 	useComposerState,
 	useHost,
 	useNavigation,
@@ -20,7 +29,9 @@ import {
 	useSheet,
 } from "@p2/app/v1/web";
 import { type ReactNode, useEffect, useRef, useState } from "react";
+import { useMessages } from "../../src/web/language.ts";
 import { type LoginState, ProviderLogin } from "./contract.ts";
+import { messages } from "./messages.ts";
 
 /** Links from providers open only over http(s). */
 function Link({ url, label }: { url: string; label: string }) {
@@ -38,25 +49,25 @@ function Link({ url, label }: { url: string; label: string }) {
 	);
 }
 
-function Notice({ event }: { event: AuthEvent }): ReactNode {
+function Notice({ event, t }: { event: AuthEvent; t: Translator<"login", MessagesOf<typeof messages>> }): ReactNode {
 	switch (event.type) {
 		case "auth_url":
 			return (
 				<div className="login-step">
-					<Link url={event.url} label="Continue in browser" />
+					<Link url={event.url} label={t("continueInBrowser")} />
 					{event.instructions && <p className="muted small">{event.instructions}</p>}
 				</div>
 			);
 		case "device_code":
 			return (
 				<div className="login-step">
-					<p className="muted small">Enter this code on the verification page</p>
+					<p className="muted small">{t("enterCode")}</p>
 					<div className="code-box">{event.userCode}</div>
 					{/* A provider may ask clients not to offer opening the page; its address is still needed. */}
 					{event.openBrowserOnConfirm === false ? (
 						<p className="muted small">{event.verificationUri}</p>
 					) : (
-						<Link url={event.verificationUri} label="Open verification page" />
+						<Link url={event.verificationUri} label={t("openVerification")} />
 					)}
 				</div>
 			);
@@ -67,7 +78,7 @@ function Notice({ event }: { event: AuthEvent }): ReactNode {
 				<div className="login-step">
 					<p>{event.message}</p>
 					{event.links?.map((link) => (
-						<Link key={link.url} url={link.url} label={link.label ?? "More information"} />
+						<Link key={link.url} url={link.url} label={link.label ?? t("moreInformation")} />
 					))}
 				</div>
 			);
@@ -75,7 +86,15 @@ function Notice({ event }: { event: AuthEvent }): ReactNode {
 }
 
 /** The provider's question; answering it shows the flow working at once (the next prompt or progress follows). */
-function PromptForm({ state, onAnswer }: { state: LoginState; onAnswer: (promptId: string, value: string) => void }) {
+function PromptForm({
+	state,
+	onAnswer,
+	t,
+}: {
+	state: LoginState;
+	onAnswer: (promptId: string, value: string) => void;
+	t: Translator<"login", MessagesOf<typeof messages>>;
+}) {
 	const prompt = state.prompt;
 	const [value, setValue] = useState("");
 	if (!prompt) return null;
@@ -108,13 +127,7 @@ function PromptForm({ state, onAnswer }: { state: LoginState; onAnswer: (promptI
 			<label className="label" htmlFor="login-value">
 				{prompt.message}
 			</label>
-			{prompt.type === "manual_code" && (
-				<p className="muted small">
-					Complete sign-in in the provider tab, then paste the authorization code or final redirect URL below. If
-					you land on an unreachable localhost page, copy its full address from the address bar and paste it here;
-					that page does not need to load.
-				</p>
-			)}
+			{prompt.type === "manual_code" && <p className="muted small">{t("manualCodeHint")}</p>}
 			<input
 				id="login-value"
 				className="input"
@@ -125,7 +138,7 @@ function PromptForm({ state, onAnswer }: { state: LoginState; onAnswer: (promptI
 				onChange={(event) => setValue(event.target.value)}
 			/>
 			<button type="submit" className="login-continue">
-				<span>Continue</span>
+				<span>{t("continue")}</span>
 				<ChevronIcon />
 			</button>
 		</form>
@@ -134,7 +147,7 @@ function PromptForm({ state, onAnswer }: { state: LoginState; onAnswer: (promptI
 
 /** The provider list, one provider's actions, or the running login. Closing the sheet cancels an unfinished one. */
 function ProvidersSheet({ login, onClose }: { login: Held<typeof ProviderLogin> | undefined; onClose: () => void }) {
-	// Provider errors go to the app's toast, as in Lingshu Mobile.
+	const { t } = useMessages(messages);
 	const { fail } = useComposerState();
 	const known = useReadable(login?.providers);
 	// Signing out shows at once; a refused sign-out puts the provider back.
@@ -193,12 +206,13 @@ function ProvidersSheet({ login, onClose }: { login: Held<typeof ProviderLogin> 
 				<Sheet title={provider.name} onClose={onClose} className="login-sheet">
 					<div className="login-flow">
 						{state.notices.map((entry) => (
-							<Notice key={entry.id} event={entry.event} />
+							<Notice key={entry.id} event={entry.event} t={t} />
 						))}
 						{state.prompt && (
 							<PromptForm
 								key={state.prompt.id}
 								state={state}
+								t={t}
 								onAnswer={(promptId, value) =>
 									guessLogin({ ...state, prompt: null }, () =>
 										login.answer({ attemptId: state.attemptId, promptId, value }, BACKGROUND_CONTEXT),
@@ -211,7 +225,7 @@ function ProvidersSheet({ login, onClose }: { login: Held<typeof ProviderLogin> 
 						)}
 						{state.status === "success" && (
 							<p className="success">
-								<CheckIcon /> {state.message ?? "Signed in."}
+								<CheckIcon /> {state.message ?? t("signedIn")}
 							</p>
 						)}
 						{state.status !== "working" && state.status !== "success" && (
@@ -224,16 +238,16 @@ function ProvidersSheet({ login, onClose }: { login: Held<typeof ProviderLogin> 
 								// A start not answered yet has no attempt to cancel.
 								disabled={!state.attemptId}
 								onClick={() =>
-									guessLogin({ ...state, status: "cancelled", prompt: null, message: "Cancelled." }, () =>
+									guessLogin({ ...state, status: "cancelled", prompt: null, message: t("cancelled") }, () =>
 										login.cancel({ attemptId: state.attemptId }, BACKGROUND_CONTEXT),
 									)
 								}
 							>
-								Cancel
+								{t("cancel")}
 							</button>
 						) : (
 							<button type="button" className="text-action" onClick={back}>
-								Done
+								{t("done")}
 							</button>
 						)}
 					</div>
@@ -243,10 +257,8 @@ function ProvidersSheet({ login, onClose }: { login: Held<typeof ProviderLogin> 
 			<Sheet title={provider.name} onClose={onClose} onBack={back} className="login-sheet">
 				<div className="provider-detail">
 					<p className="muted small">
-						{provider.signedIn
-							? `Signed in with ${provider.signedIn === "oauth" ? "a subscription" : "an API key"}.`
-							: "Not signed in. Environment keys may still apply."}{" "}
-						<span>Credentials are stored on the server.</span>
+						{provider.signedIn ? t("signedInWith", provider.signedIn) : t("notSignedIn")}{" "}
+						<span>{t("credentialsStored")}</span>
 					</p>
 					<div className="login-actions">
 						{provider.loginMethods.map((method) => (
@@ -283,17 +295,13 @@ function ProvidersSheet({ login, onClose }: { login: Held<typeof ProviderLogin> 
 									login
 										.refresh({ providerId: provider.id }, BACKGROUND_CONTEXT)
 										.then(({ models }) =>
-											setResult(
-												models
-													? `${models} model${models === 1 ? "" : "s"} available.`
-													: "Catalog updated; no models reported.",
-											),
+											setResult(models ? t("modelsAvailable", models) : t("catalogNoModels")),
 										)
 										.catch(fail)
 										.finally(() => setBusy(false));
 								}}
 							>
-								<span>{busy ? "Updating model catalog…" : "Update model catalog"}</span>
+								<span>{busy ? t("updatingCatalog") : t("updateCatalog")}</span>
 								{!busy && <ChevronIcon />}
 							</button>
 						)}
@@ -305,7 +313,7 @@ function ProvidersSheet({ login, onClose }: { login: Held<typeof ProviderLogin> 
 									signOut(provider.id, () => login.logout({ providerId: provider.id }, BACKGROUND_CONTEXT))
 								}
 							>
-								<span>Sign out</span>
+								<span>{t("signOut")}</span>
 							</button>
 						)}
 					</div>
@@ -319,15 +327,15 @@ function ProvidersSheet({ login, onClose }: { login: Held<typeof ProviderLogin> 
 		.filter((entry) => `${entry.name} ${entry.id}`.toLowerCase().includes(terms))
 		.sort((a, b) => Number(Boolean(b.signedIn)) - Number(Boolean(a.signedIn)) || a.name.localeCompare(b.name));
 	return (
-		<Sheet title="Providers" onClose={onClose} className="login-sheet">
+		<Sheet title={t("providers")} onClose={onClose} className="login-sheet">
 			<div className="sheet-sticky">
 				<label className="search">
 					<SearchIcon />
 					<input
 						value={query}
 						onChange={(event) => setQuery(event.target.value)}
-						placeholder="Search providers"
-						aria-label="Search providers"
+						placeholder={t("searchProviders")}
+						aria-label={t("searchProviders")}
 					/>
 				</label>
 			</div>
@@ -350,12 +358,12 @@ function ProvidersSheet({ login, onClose }: { login: Held<typeof ProviderLogin> 
 						}}
 					>
 						<span>{entry.name}</span>
-						{entry.signedIn && <small className="row-value">Signed in</small>}
+						{entry.signedIn && <small className="row-value">{t("signedInRow")}</small>}
 						<ChevronIcon />
 					</button>
 				))}
 				{known && !listed.length && (
-					<p className="empty-note">{query ? "No provider matches." : "No providers available."}</p>
+					<p className="empty-note">{query ? t("noProviderMatches") : t("noProviders")}</p>
 				)}
 			</div>
 		</Sheet>
@@ -376,6 +384,9 @@ function ProvidersSheetSlot() {
 
 export default defineFacet((host) => {
 	contribute(host, "p2.web-login", (self) => {
-		self.contribute(SettingsSections, { providers: { label: "Providers", order: 10, Sheet: ProvidersSheetSlot } });
+		self.contribute(SettingsSections, {
+			providers: { label: textIn(messages, "providers"), order: 10, Sheet: ProvidersSheetSlot },
+		});
+		self.contribute(Translations, messages.translations);
 	});
 });

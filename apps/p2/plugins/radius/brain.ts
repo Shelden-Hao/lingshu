@@ -139,7 +139,12 @@ import {
  */
 
 /** Offered newest first; v3 adds credit flow control for HTTP channels, v4 port forwards, v5 channel sockets. */
-const HOST_SUBPROTOCOLS = ["lingshu-server.host.v5", "lingshu-server.host.v4", "lingshu-server.host.v3", "lingshu-server.host.v2"];
+const HOST_SUBPROTOCOLS = [
+	"lingshu-server.host.v5",
+	"lingshu-server.host.v4",
+	"lingshu-server.host.v3",
+	"lingshu-server.host.v2",
+];
 const FLOW_SUBPROTOCOLS = new Set(["lingshu-server.host.v5", "lingshu-server.host.v4", "lingshu-server.host.v3"]);
 const CHANNEL_HOST_SUBPROTOCOL = "lingshu-server.host.v5";
 const CHANNEL_SUBPROTOCOL = "lingshu-server.channel.v1";

@@ -361,7 +361,9 @@ test("/move <env> follows the stored project, keeps the subfolder, works while t
 	send(TAB);
 	await poll(() => runtime.drafts.get("s#1") === "/move mac");
 	send(ENTER);
-	await poll(async () => (await screen()).includes("Move this session to mac:/Users/me/projects/lingshu/lingshu/apps?"));
+	await poll(async () =>
+		(await screen()).includes("Move this session to mac:/Users/me/projects/lingshu/lingshu/apps?"),
+	);
 	typed(send, "y");
 	await poll(() => (calls.relocate?.length ?? 0) === 1);
 	assert.deepEqual(calls.relocate?.[0], { id: "s", env: "mac", cwd: "/Users/me/projects/lingshu/lingshu/apps" });
@@ -475,7 +477,9 @@ test("/move without an argument: a picker of the project's places, the current o
 	send(ENTER);
 	await poll(async () => /→ ✓ mac/.test(await screen()));
 	send(ENTER);
-	await poll(async () => (await screen()).includes("Move this session to mac:/Users/me/projects/lingshu/lingshu/apps?"));
+	await poll(async () =>
+		(await screen()).includes("Move this session to mac:/Users/me/projects/lingshu/lingshu/apps?"),
+	);
 	typed(send, "y");
 	await poll(() => (calls.relocate?.length ?? 0) === 1);
 	assert.deepEqual(calls.relocate?.[0], { id: "s", env: "mac", cwd: "/Users/me/projects/lingshu/lingshu/apps" });

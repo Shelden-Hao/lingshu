@@ -16,14 +16,7 @@
 // The grouped list shows every session; Tab's scope (current folder / all) applies to the flat lists. `/move` moves the
 // viewed session within its project (tui-move.ts).
 
-import {
-	type Component,
-	type Focusable,
-	fuzzyFilter,
-	Input,
-	truncateToWidth,
-	visibleWidth,
-} from "@lingshu/tui";
+import { type Component, type Focusable, fuzzyFilter, Input, truncateToWidth, visibleWidth } from "@lingshu/tui";
 import type { Held, HeldIn } from "@p2/app/v1";
 import { BACKGROUND_CONTEXT, contribute, defineFacet, followRegistry, liveIn } from "@p2/app/v1";
 import type { TuiContext } from "@p2/app/v1/tui";

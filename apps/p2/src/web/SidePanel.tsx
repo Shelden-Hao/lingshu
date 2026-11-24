@@ -1,11 +1,14 @@
 // The right-hand side panel: docked beside the chat on wide screens (`#side-dock` in AppLayout), p2's sheet on phones.
 // The route names what it shows, one thing at a time: a transcript block's activity (`activity`) or a plugin's panel
 // (`panel`). It is not modal: on wide screens the chat stays usable and sheets or viewers open above it.
+
 import { type ReactNode, useEffect, useRef, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { getNavigation, Sheet, useRoute, useScrollMemory } from "../runtime/web.tsx";
 import { useDragSize } from "./drag-size.ts";
 import { CloseIcon } from "./icons.tsx";
+import { useMessages } from "./language.ts";
+import { messages } from "./messages.ts";
 import type { Route } from "./navigation.ts";
 
 /** Where the panel docks instead of being a sheet. */
@@ -115,6 +118,7 @@ function DockedPanel({
 	testId: string | undefined;
 	children: ReactNode;
 }) {
+	const { t } = useMessages(messages);
 	const panel = useRef<HTMLElement>(null);
 	const body = useRef<HTMLDivElement>(null);
 	useScrollMemory(body);
@@ -140,7 +144,7 @@ function DockedPanel({
 			<button
 				type="button"
 				className="side-panel-resize"
-				aria-label="Drag to resize panel"
+				aria-label={t("dragPanel")}
 				tabIndex={-1}
 				onPointerDown={(event) => {
 					const element = panel.current;
@@ -154,7 +158,7 @@ function DockedPanel({
 			<header className="side-panel-head sheet-head">
 				<h2>{title}</h2>
 				{meta && <span className="side-panel-meta">{meta}</span>}
-				<button type="button" className="icon-button" onClick={onClose} aria-label="Close">
+				<button type="button" className="icon-button" onClick={onClose} aria-label={t("close")}>
 					<CloseIcon />
 				</button>
 			</header>

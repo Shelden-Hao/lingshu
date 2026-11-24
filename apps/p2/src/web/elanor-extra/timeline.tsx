@@ -14,6 +14,8 @@ import {
 	useRef,
 } from "react";
 import "./elanor-extra.css";
+import { useMessages } from "../language.ts";
+import { messages } from "../messages.ts";
 
 /** Whether the root has rendered once: items mounted after that arrive. */
 const ReadyContext = createContext<RefObject<boolean> | null>(null);
@@ -38,7 +40,11 @@ function TimelineRoot({ className, ...props }: ComponentPropsWithRef<"ol">) {
 
 export type TimelineItemStatus = "running" | "done" | "error";
 
-const STATUS_LABELS: Record<TimelineItemStatus, string> = { running: "Running", done: "Done", error: "Failed" };
+const STATUS_LABELS: Record<TimelineItemStatus, "statusRunning" | "statusDone" | "statusFailed"> = {
+	running: "statusRunning",
+	done: "statusDone",
+	error: "statusFailed",
+};
 
 export interface TimelineItemProps extends Omit<ComponentPropsWithRef<"li">, "title" | "onClick" | "children"> {
 	/** The step's state: `running` breathes, `error` is negative. Default `done`. */
@@ -76,6 +82,7 @@ function TimelineItem({
 	ref,
 	...props
 }: TimelineItemProps) {
+	const { t } = useMessages(messages);
 	const ready = useContext(ReadyContext);
 	const element = useRef<HTMLLIElement | null>(null);
 	const itemRef = useCallback(
@@ -96,7 +103,7 @@ function TimelineItem({
 				className="el-timeline-marker"
 				data-status={status}
 				role="img"
-				aria-label={statusLabel ?? STATUS_LABELS[status]}
+				aria-label={statusLabel ?? t(STATUS_LABELS[status])}
 			>
 				{icon ?? <span className="el-timeline-dot" />}
 			</span>

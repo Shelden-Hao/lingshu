@@ -593,7 +593,9 @@ describe("voice answers read while they stream", () => {
 		const view = (content: unknown[]) =>
 			({
 				entries: [],
-				docs: { "lingshu.live": { run: {}, generation: { message: { role: "assistant", timestamp: 1, content } } } },
+				docs: {
+					"lingshu.live": { run: {}, generation: { message: { role: "assistant", timestamp: 1, content } } },
+				},
 			}) as unknown as ConversationView;
 		const [streaming] = responses(view([{ type: "text", text: "I will hand this to a doer." }]));
 		assert.deepEqual({ done: streaming?.done, closed: streaming?.closed }, { done: false, closed: false });
@@ -639,7 +641,13 @@ describe("voice in chat mode", () => {
 		])
 			assert.equal(spokenMention(spoken), written, spoken);
 		// Whole words only; a possessive or contraction ("Lingshu's") talks about the agent, not to it.
-		for (const text of ["Pie is great.", "Piano lessons today", "pip install it", "Lingshu's answer was odd", "lingshu-hole"])
+		for (const text of [
+			"Pie is great.",
+			"Piano lessons today",
+			"pip install it",
+			"Lingshu's answer was odd",
+			"lingshu-hole",
+		])
 			assert.equal(spokenMention(text), text, text);
 		// A renamed agent: its name counts, Lingshu's does not.
 		assert.equal(spokenMention("hey Claude, run it", "Claude"), "@claude hey Claude, run it");
@@ -711,7 +719,10 @@ describe("voice in chat mode", () => {
 			],
 		);
 		assert(!answered(chatted), "no run for chat");
-		await alice.send({ text: voiceMessage("Hey Lingshu, which place?", true).text, requestId: "3" }, BACKGROUND_CONTEXT);
+		await alice.send(
+			{ text: voiceMessage("Hey Lingshu, which place?", true).text, requestId: "3" },
+			BACKGROUND_CONTEXT,
+		);
 		const view = await until(owner.view, answered);
 		assert.deepEqual(view?.entries.find((entry) => entry.kind === "chat.mention")?.data, {
 			author: { kind: "guest", id: "alice", name: "Alice" },

@@ -2,6 +2,8 @@
 
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Duplex } from "node:stream";
+import type { CredentialStore, ModelsStore } from "@lingshu/ai";
+import type { MutableModels } from "@lingshu/ai/models";
 import {
 	constant,
 	defineRegistry,
@@ -13,8 +15,6 @@ import {
 } from "@lingshu/chord";
 import type { Context } from "@lingshu/chord/context";
 import type { JsonValue } from "@lingshu/chord/json";
-import type { CredentialStore, ModelsStore } from "@lingshu/ai";
-import type { MutableModels } from "@lingshu/ai/models";
 import { arr, bool, nul, num, obj, opt, type Static, str, union } from "@lingshu/schema";
 import type { TelemetryStore } from "@lingshu/telemetry";
 import { Access } from "./access.ts";

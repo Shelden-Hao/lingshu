@@ -1,7 +1,7 @@
 // The views' part of the command menu, for the open session: Show view… and Hide view… (this device's layout), Add
 // changes view and Add Markdown view… (as the Views sheet adds them), and Annotate / Stop annotating (the top bar's
 // switch); with their pages.
-import { BACKGROUND_CONTEXT, type Host, liveIn, withHeld } from "@p2/app/v1";
+import { BACKGROUND_CONTEXT, type Host, type Language, liveIn, withHeld } from "@p2/app/v1";
 import {
 	type Command,
 	type CommandContext,
@@ -13,12 +13,15 @@ import {
 	EyeOffIcon,
 	FileIcon,
 	PencilIcon,
+	textIn,
 	useCommandMatches,
 	useCommandMenu,
 	useCommandQuery,
 	useCommandTarget,
 	useComposerState,
 	useHost,
+	useLanguage,
+	useMessages,
 	useObject,
 	useReadable,
 	useRoute,
@@ -27,66 +30,75 @@ import type { ReactNode } from "react";
 import { type OpenInput, type View, Views } from "./contract.ts";
 import { viewsIn } from "./layout.ts";
 import { hide, setAnnotateMode, show, useAnnotateMode, useLayout } from "./layout-store.ts";
-import { describe, markdownPath, openView } from "./sheet.tsx";
+import { messages } from "./messages.ts";
+import { describeIn, markdownPath, openView } from "./sheet.tsx";
 
 /** The commands, by id. Each acts on the session target while it is the open one: views show beside its chat. */
 export const VIEW_COMMANDS: Readonly<Record<string, Command>> = {
 	"views.show": {
-		title: "Show view…",
-		group: "Views",
+		title: textIn(messages, "cmdShowView"),
+		group: textIn(messages, "groupViews"),
 		order: 60,
 		icon: EyeIcon,
-		keywords: ["switch view", "open view", "pane"],
+		keywords: [
+			textIn(messages, "keywordSwitchView"),
+			textIn(messages, "keywordOpenView"),
+			textIn(messages, "keywordPane"),
+		],
 		target: ["session"],
 		Shown: HasViews,
 		action: { kind: "page", page: "views-show" },
 	},
 	"views.hide": {
-		title: "Hide view…",
-		group: "Views",
+		title: textIn(messages, "cmdHideView"),
+		group: textIn(messages, "groupViews"),
 		order: 60,
 		icon: EyeOffIcon,
-		keywords: ["close view", "pane"],
+		keywords: [textIn(messages, "keywordCloseView"), textIn(messages, "keywordPane")],
 		target: ["session"],
 		Shown: ShowsViews,
 		action: { kind: "page", page: "views-hide" },
 	},
 	"views.add-changes": {
-		title: "Add changes view",
-		group: "Views",
+		title: textIn(messages, "cmdAddChanges"),
+		group: textIn(messages, "groupViews"),
 		order: 60,
 		icon: DiffIcon,
-		keywords: ["diff", "working tree"],
+		keywords: [textIn(messages, "keywordDiff"), textIn(messages, "keywordWorkingTree")],
 		target: ["session"],
 		Shown: CanEdit,
 		action: { kind: "run", run: addChanges },
 	},
 	"views.add-markdown": {
-		title: "Add Markdown view…",
-		group: "Views",
+		title: textIn(messages, "cmdAddMarkdown"),
+		group: textIn(messages, "groupViews"),
 		order: 60,
 		icon: FileIcon,
-		keywords: ["open file", "document"],
+		keywords: [textIn(messages, "keywordOpenFile"), textIn(messages, "keywordDocument")],
 		target: ["session"],
 		Shown: CanEdit,
 		action: { kind: "page", page: "views-markdown" },
 	},
 	"views.annotate": {
-		title: "Annotate",
-		group: "Views",
+		title: textIn(messages, "cmdAnnotate"),
+		group: textIn(messages, "groupViews"),
 		order: 60,
 		icon: PencilIcon,
-		keywords: ["comment", "draw", "mark for removal"],
+		keywords: [
+			textIn(messages, "keywordComment"),
+			textIn(messages, "keywordDraw"),
+			textIn(messages, "keywordMarkRemoval"),
+		],
 		target: ["session"],
 		Shown: NotAnnotating,
 		action: { kind: "run", run: (ctx) => annotate(ctx, "text") },
 	},
 	"views.stop-annotating": {
-		title: "Stop annotating",
-		group: "Views",
+		title: textIn(messages, "cmdStopAnnotating"),
+		group: textIn(messages, "groupViews"),
 		order: 60,
 		icon: PencilIcon,
-		keywords: ["annotate"],
+		keywords: [textIn(messages, "keywordAnnotate")],
 		target: ["session"],
 		Shown: Annotating,
 		action: { kind: "run", run: (ctx) => annotate(ctx, "off") },
@@ -95,12 +107,20 @@ export const VIEW_COMMANDS: Readonly<Record<string, Command>> = {
 
 /** The pages, by name. */
 export const VIEW_PAGES: Readonly<Record<string, CommandPage>> = {
-	"views-show": { label: "Show view", placeholder: "Search views…", Body: ShowPage },
-	"views-hide": { label: "Hide view", placeholder: "Search views…", Body: HidePage },
+	"views-show": {
+		label: textIn(messages, "pageShowView"),
+		placeholder: textIn(messages, "pageSearchViews"),
+		Body: ShowPage,
+	},
+	"views-hide": {
+		label: textIn(messages, "pageHideView"),
+		placeholder: textIn(messages, "pageSearchViews"),
+		Body: HidePage,
+	},
 	"views-markdown": {
-		label: "Markdown view",
-		placeholder: "File, e.g. docs/notes.md…",
-		empty: "Type the file's path in the workspace",
+		label: textIn(messages, "pageMarkdownView"),
+		placeholder: textIn(messages, "pageMarkdownSearch"),
+		empty: textIn(messages, "pageMarkdownEmpty"),
 		Body: MarkdownPage,
 	},
 };
@@ -172,13 +192,14 @@ function Annotating({ children }: { children: ReactNode }) {
 	return useSession() !== undefined && mode !== "off" ? children : null;
 }
 
-const viewText = (view: View): string => `${view.title} ${describe(view)}`;
+const viewText = (view: View, language: Language | undefined): string => `${view.title} ${describeIn(view, language)}`;
 
 /** Every view of the open session; picking one shows it in front on this device (hidden ones say so). */
 function ShowPage() {
 	const session = useSession();
 	const shown = useShown(session);
-	const matches = useCommandMatches(useViews(session) ?? NO_VIEWS, viewText);
+	const language = useLanguage();
+	const matches = useCommandMatches(useViews(session) ?? NO_VIEWS, (view) => viewText(view, language));
 	if (session === undefined) return null;
 	return <ViewRows session={session} views={matches} shown={shown} pick={show} />;
 }
@@ -187,7 +208,8 @@ function ShowPage() {
 function HidePage() {
 	const session = useSession();
 	const shown = useShown(session);
-	const matches = useCommandMatches(useViews(session) ?? NO_VIEWS, viewText);
+	const language = useLanguage();
+	const matches = useCommandMatches(useViews(session) ?? NO_VIEWS, (view) => viewText(view, language));
 	if (session === undefined) return null;
 	const views = matches.filter((view) => shown.has(view.id));
 	return <ViewRows session={session} views={views} shown={shown} pick={hide} />;
@@ -208,13 +230,19 @@ function ViewRows({
 	pick: (session: string, id: string) => void;
 }) {
 	const { close } = useCommandMenu();
+	const { t } = useMessages(messages);
+	const language = useLanguage();
 	return (
-		<CommandMenu.Group heading="Views">
+		<CommandMenu.Group heading={t("groupViews")}>
 			{views.map((view) => (
 				<CommandMenu.Row
 					key={view.id}
 					title={view.title}
-					suffix={shown.has(view.id) ? describe(view) : `${describe(view)} · Hidden`}
+					suffix={
+						shown.has(view.id)
+							? describeIn(view, language)
+							: `${describeIn(view, language)} · ${t("hiddenSuffix")}`
+					}
 					onSelect={async () => {
 						await close();
 						pick(session, view.id);
@@ -230,13 +258,14 @@ function MarkdownPage() {
 	const host = useHost();
 	const { close } = useCommandMenu();
 	const { fail } = useComposerState();
+	const { t } = useMessages(messages);
 	const session = useSession();
 	const path = markdownPath(useCommandQuery());
 	if (session === undefined || path === "") return null;
 	return (
-		<CommandMenu.Group heading="Views">
+		<CommandMenu.Group heading={t("groupViews")}>
 			<CommandMenu.Row
-				title={`Open “${path}”`}
+				title={t("openFile", path)}
 				icon={FileIcon}
 				onSelect={async () => {
 					await close();

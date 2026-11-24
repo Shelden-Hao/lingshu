@@ -216,7 +216,11 @@ describe("history tools end to end (fake provider)", () => {
 		await say("the zebrafish migration plan", "one");
 		await say("unrelated second message", "two");
 		await chat.compact({}, BACKGROUND_CONTEXT);
-		await until(chat.view, (view) => (view?.entries ?? []).some((each) => each.kind === "lingshu.compaction"), 60_000);
+		await until(
+			chat.view,
+			(view) => (view?.entries ?? []).some((each) => each.kind === "lingshu.compaction"),
+			60_000,
+		);
 		await idle();
 		await say("after the compaction", "three");
 
@@ -232,7 +236,9 @@ describe("history tools end to end (fake provider)", () => {
 		assert.equal((read.match(/^#\d+ /gm) ?? []).length, 1, "exactly the requested entry");
 
 		await call("history_handoff", { text: "Continue the zebrafish plan." }, "handoff");
-		const view = await until(chat.view, (value) => (value?.entries ?? []).some((each) => each.kind === "lingshu.reset"));
+		const view = await until(chat.view, (value) =>
+			(value?.entries ?? []).some((each) => each.kind === "lingshu.reset"),
+		);
 		const reset = view?.entries.find((each) => each.kind === "lingshu.reset");
 		assert.match(JSON.stringify(reset?.model), /Continue the zebrafish plan/);
 		const tail = await call("history_read", { mode: "tail", count: 3 }, "tail");

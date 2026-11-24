@@ -5,15 +5,7 @@
 
 import { randomUUID } from "node:crypto";
 import type { ConversationView, LiveState } from "@lingshu/durable";
-import {
-	type Component,
-	Container,
-	ScrollView,
-	Text,
-	TruncatedText,
-	truncateToWidth,
-	VStack,
-} from "@lingshu/tui";
+import { type Component, Container, ScrollView, Text, TruncatedText, truncateToWidth, VStack } from "@lingshu/tui";
 import type { Held, HeldIn } from "@p2/app/v1";
 import { BACKGROUND_CONTEXT, FileIndex, followRegistry, liveIn, serveKeyed, statusOf, whenLive } from "@p2/app/v1";
 import {

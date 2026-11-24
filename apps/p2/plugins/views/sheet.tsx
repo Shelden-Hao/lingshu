@@ -1,7 +1,7 @@
 // The views' controls outside the workbench: the top bar's Annotate switch and Views sheet (the session's views, shown
 // or hidden on this device, adding one), and the composer's chip for what the next message carries; opening a view and
 // describing one, shared with the views' commands (commands.tsx).
-import { BACKGROUND_CONTEXT, type HeldIn, liveIn } from "@p2/app/v1";
+import { BACKGROUND_CONTEXT, type HeldIn, type Language, liveIn } from "@p2/app/v1";
 import {
 	closeLayers,
 	openLayer,
@@ -9,6 +9,8 @@ import {
 	PencilIcon,
 	Sheet,
 	useComposerState,
+	useLanguage,
+	useMessages,
 	useObject,
 	useReadable,
 	useRoute,
@@ -19,6 +21,7 @@ import { type FormEvent, useState } from "react";
 import { type OpenInput, type View, Views } from "./contract.ts";
 import { viewsIn } from "./layout.ts";
 import { hide, setAnnotateMode, show, useAnnotateMode, useLayout } from "./layout-store.ts";
+import { messages } from "./messages.ts";
 
 const SHEET = "views";
 
@@ -29,6 +32,7 @@ const SHEET = "views";
 export function ViewActions() {
 	const route = useRoute();
 	const mode = useAnnotateMode();
+	const { t } = useMessages(messages);
 	const sheet = useSheet(SHEET);
 	const views = useReadable(useObject(Views, route.session ? { session: route.session } : undefined)?.views);
 	if (!route.session) return null;
@@ -37,9 +41,9 @@ export function ViewActions() {
 			<button
 				type="button"
 				className={`icon-button views-annotate-toggle ${mode !== "off" ? "on" : ""}`}
-				aria-label="Annotate"
+				aria-label={t("annotate")}
 				aria-pressed={mode !== "off"}
-				title="Annotate: comment, mark for removal, draw"
+				title={t("annotateTip")}
 				onClick={() => setAnnotateMode(mode === "off" ? "text" : "off")}
 			>
 				<PencilIcon />
@@ -48,8 +52,8 @@ export function ViewActions() {
 				<button
 					type="button"
 					className="icon-button views-toggle"
-					aria-label="Views"
-					title="Views"
+					aria-label={t("views")}
+					title={t("views")}
 					onClick={() => openLayer({ kind: "sheet", name: SHEET })}
 				>
 					<PanelSideIcon />
@@ -61,6 +65,8 @@ export function ViewActions() {
 }
 
 function ViewsSheet({ session }: { session: string }) {
+	const { t } = useMessages(messages);
+	const language = useLanguage();
 	const views = useObject(Views, { session });
 	useStatus(views);
 	const editor = liveIn(views, "editor");
@@ -83,19 +89,19 @@ function ViewsSheet({ session }: { session: string }) {
 	};
 
 	return (
-		<Sheet title="Views" onClose={closeLayers} testId="views-sheet">
-			<h3 className="views-sheet-head">In this session</h3>
+		<Sheet title={t("sheetTitle")} onClose={closeLayers} testId="views-sheet">
+			<h3 className="views-sheet-head">{t("inThisSession")}</h3>
 			{list.length ? (
 				<ul className="views-list">
 					{list.map((view) => (
 						<li key={view.id}>
 							<div className="views-list-title">
 								<span>{view.title}</span>
-								<span className="muted">{describe(view)}</span>
+								<span className="muted">{describeIn(view, language)}</span>
 							</div>
 							{placed.has(view.id) && !layout.hidden.includes(view.id) ? (
 								<button type="button" className="text-action" onClick={() => hide(session, view.id)}>
-									Hide
+									{t("hide")}
 								</button>
 							) : (
 								<button
@@ -106,7 +112,7 @@ function ViewsSheet({ session }: { session: string }) {
 										closeLayers();
 									}}
 								>
-									Show
+									{t("show")}
 								</button>
 							)}
 							{editor &&
@@ -119,35 +125,35 @@ function ViewsSheet({ session }: { session: string }) {
 											editor.close({ id: view.id }, BACKGROUND_CONTEXT).catch(fail);
 										}}
 									>
-										Close for everyone
+										{t("closeForEveryone")}
 									</button>
 								) : (
 									<button type="button" className="text-action" onClick={() => setClosing(view.id)}>
-										Close
+										{t("close")}
 									</button>
 								))}
 						</li>
 					))}
 				</ul>
 			) : (
-				<p className="empty-note">No views yet. Ask the agent for one, or add one below.</p>
+				<p className="empty-note">{t("sheetEmpty")}</p>
 			)}
 			{editor && (
 				<>
-					<h3 className="views-sheet-head">Add</h3>
+					<h3 className="views-sheet-head">{t("add")}</h3>
 					<div className="views-add">
 						<button type="button" className="text-action" onClick={() => void open({ kind: "changes" })}>
-							Changes in the working tree
+							{t("addChanges")}
 						</button>
 						<form onSubmit={openMarkdown}>
 							<input
 								value={path}
 								onChange={(event) => setPath(event.target.value)}
-								placeholder="Markdown file, e.g. docs/notes.md"
-								aria-label="Markdown file"
+								placeholder={t("markdownPlaceholder")}
+								aria-label={t("markdownLabel")}
 							/>
 							<button type="submit" className="text-action" disabled={!path.trim()}>
-								Open
+								{t("open")}
 							</button>
 						</form>
 					</div>
@@ -170,12 +176,14 @@ export async function openView(
 /** A Markdown file's path as the person typed it, relative to the workspace (a leading `./` dropped); empty: none. */
 export const markdownPath = (text: string): string => text.trim().replace(/^\.\//, "");
 
-/** What a view shows, in a few words. */
-export function describe(view: View): string {
-	if (view.kind === "markdown") return `Markdown · ${view.item ?? ""}`;
-	if (view.kind === "changes") return view.item ? `Changes · ${view.item}` : "Changes";
-	const kind = view.kind === "html" || view.kind === "md" ? `Artifact · ${view.kind}` : `Plugin · ${view.kind}`;
-	return view.selection && !view.selection.sent ? `${kind} · selection waiting` : kind;
+/** What a view shows, in a few words, in the language `language` (components pass `useLanguage()`'s value). */
+export function describeIn(view: View, language: Language | undefined): string {
+	const t = messages.in(language);
+	if (view.kind === "markdown") return t("describeMarkdown", view.item ?? "");
+	if (view.kind === "changes") return view.item ? t("describeChangesItem", view.item) : t("describeChanges");
+	const kind =
+		view.kind === "html" || view.kind === "md" ? t("describeArtifact", view.kind) : t("describePlugin", view.kind);
+	return view.selection && !view.selection.sent ? `${kind} · ${t("selectionWaiting")}` : kind;
 }
 
 /** In the composer: the selections and annotations the next message carries, which the person may drop. */
@@ -188,6 +196,7 @@ export function ContextChip() {
 	const notes = useReadable(views?.annotations) ?? [];
 	const inline = useReadable(views?.inline) ?? [];
 	const { fail } = useComposerState();
+	const { t } = useMessages(messages);
 	const selections = [
 		...list.filter((view) => view.selection && !view.selection.sent),
 		...inline.filter((each) => !each.selection.sent),
@@ -196,20 +205,20 @@ export function ContextChip() {
 	if (!editor || (!selections.length && !pending)) return null;
 	const words = [
 		selections.length === 1
-			? `Selection in ${selections[0]?.title}`
+			? t("selectionIn", selections[0]?.title ?? "")
 			: selections.length
-				? `${selections.length} selections`
+				? t("selectionCount", selections.length)
 				: "",
-		pending ? `${pending} note${pending === 1 ? "" : "s"}` : "",
+		pending ? t("noteCount", pending) : "",
 	]
 		.filter(Boolean)
 		.join(" · ");
 	return (
-		<span className="chip on views-chip" title="Your next message carries these to the agent">
+		<span className="chip on views-chip" title={t("chipTitle")}>
 			<span>{words}</span>
 			<button
 				type="button"
-				aria-label="Do not send them"
+				aria-label={t("chipDontSend")}
 				onPointerDown={(event) => event.preventDefault()}
 				onClick={() => editor.discard(BACKGROUND_CONTEXT).catch(fail)}
 			>

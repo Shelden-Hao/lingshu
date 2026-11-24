@@ -56,7 +56,11 @@ function setup(t: { after(fn: () => void): void }, mode: CacheWarmingMode = "idl
 		recorded: 0,
 	};
 	const models = {
-		completeSimple: async (_model: Model<"lingshu-messages">, context: Context, options: ModelsSimpleStreamOptions) => {
+		completeSimple: async (
+			_model: Model<"lingshu-messages">,
+			context: Context,
+			options: ModelsSimpleStreamOptions,
+		) => {
 			assert.deepEqual(context.messages, REQUEST.messages);
 			state.sent.push(options);
 			return { ...fauxAssistantMessage([]), stopReason: options.signal?.aborted ? "aborted" : "length" };

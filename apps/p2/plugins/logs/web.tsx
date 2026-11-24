@@ -1,10 +1,11 @@
-import { contribute, defineFacet, whenLive } from "@p2/app/v1";
+import { contribute, defineFacet, type MessagesOf, Translations, type Translator, whenLive } from "@p2/app/v1";
 import {
 	closeLayers,
 	errorText,
 	SettingsSections,
 	Sheet,
 	Switch,
+	textIn,
 	useNavigation,
 	useObject,
 	useOwner,
@@ -13,15 +14,18 @@ import {
 	useStatus,
 } from "@p2/app/v1/web";
 import { useEffect, useRef, useState } from "react";
+import { useMessages } from "../../src/web/language.ts";
 import { Logs } from "./contract.ts";
+import { messages } from "./messages.ts";
 import "./style.css";
 
-function sourceLabel(source: string): string {
-	if (source.startsWith("session:")) return `Worker ${source.slice(8)}`;
-	return source === "dev" ? "Dev supervisor" : source === "terminals" ? "Terminal host" : "Server";
+function sourceLabel(source: string, t: Translator<"logs", MessagesOf<typeof messages>>): string {
+	if (source.startsWith("session:")) return t("worker", source.slice(8));
+	return source === "dev" ? t("devSupervisor") : source === "terminals" ? t("terminalHost") : t("server");
 }
 
 function LogsSheet({ source }: { source: string }) {
+	const { t } = useMessages(messages);
 	const logs = useObject(Logs, { source });
 	const status = useStatus(logs);
 	const sources = useReadable(logs?.sources) ?? [];
@@ -49,10 +53,10 @@ function LogsSheet({ source }: { source: string }) {
 	}, [logs]);
 	const choices = [...new Set(["server", "terminals", "dev", source, ...sources.map((entry) => entry.id)])];
 	return (
-		<Sheet title="Logs" onClose={closeLayers} className="logs-sheet">
+		<Sheet title={t("logs")} onClose={closeLayers} className="logs-sheet">
 			<div className="logs-controls">
 				<label className="label" htmlFor="logs-source">
-					Source
+					{t("source")}
 				</label>
 				<select
 					id="logs-source"
@@ -70,19 +74,19 @@ function LogsSheet({ source }: { source: string }) {
 				>
 					{choices.map((id) => (
 						<option key={id} value={id}>
-							{sourceLabel(id)}
+							{sourceLabel(id, t)}
 						</option>
 					))}
 				</select>
 				<input
 					className="input"
-					aria-label="Filter logs"
-					placeholder="Filter logs"
+					aria-label={t("filterLogs")}
+					placeholder={t("filterLogs")}
 					value={filter}
 					onChange={(event) => setFilter(event.target.value)}
 				/>
 				<div className="logs-actions">
-					<Switch label="Follow tail" checked={follow} onChange={setFollow} />
+					<Switch label={t("followTail")} checked={follow} onChange={setFollow} />
 					<button
 						type="button"
 						className="text-action"
@@ -90,23 +94,23 @@ function LogsSheet({ source }: { source: string }) {
 							void (
 								navigator.clipboard?.writeText(text) ?? Promise.reject(new Error("Clipboard unavailable"))
 							).then(
-								() => setMessage("Copied"),
-								() => setMessage("Could not copy logs"),
+								() => setMessage(t("copied")),
+								() => setMessage(t("couldNotCopy")),
 							);
 						}}
 					>
-						Copy
+						{t("copy")}
 					</button>
 				</div>
 			</div>
 			{message && <output className="notice">{message}</output>}
-			<pre ref={area} className="logs-output" title="Log lines">
+			<pre ref={area} className="logs-output" title={t("logLines")}>
 				{text ||
 					(status === "live"
-						? "No log lines"
+						? t("noLogLines")
 						: status === "failed" || status === "ended"
-							? "Logs unavailable"
-							: "Loading logs…")}
+							? t("logsUnavailable")
+							: t("loadingLogs"))}
 			</pre>
 		</Sheet>
 	);
@@ -120,6 +124,7 @@ function LogsSheetSlot() {
 
 export default defineFacet((host) => {
 	contribute(host, "p2.web-logs", (self) => {
-		self.contribute(SettingsSections, { logs: { label: "Logs", order: 80, Sheet: LogsSheetSlot } });
+		self.contribute(SettingsSections, { logs: { label: textIn(messages, "logs"), order: 80, Sheet: LogsSheetSlot } });
+		self.contribute(Translations, messages.translations);
 	});
 });

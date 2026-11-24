@@ -102,7 +102,12 @@ describe("first paint", () => {
 			assert.deepEqual(painted.replaced, [[painted.state, "", "/s/x?y=1"]]);
 		}
 		// Any other fragment stays, and the system's scheme counts.
-		for (const hash of ["#lingshu-shell-scheme=blue", "#lingshu-shell-scheme=dark&x", "#other", "#lingshu-shell-scheme=DARK"]) {
+		for (const hash of [
+			"#lingshu-shell-scheme=blue",
+			"#lingshu-shell-scheme=dark&x",
+			"#other",
+			"#lingshu-shell-scheme=DARK",
+		]) {
 			const painted = run(relayed, { ...frame, hash });
 			assert.deepEqual([painted.dataset.theme, painted.hash, painted.replaced], ["light", hash, []], hash);
 			assert.equal(painted.dataset.piShellScheme, undefined);

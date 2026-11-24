@@ -1,9 +1,10 @@
 // New project, from the Projects rollup's options: a folder picker (its own layer, `PROJECT_FOLDER`), then this sheet
 // names the project, its default location the chosen place (`NEW_PROJECT`, its locator the place).
 import { compile, nul, obj, str, union } from "@lingshu/schema";
-import { type Layer, Sheet, shortPath } from "@p2/app/v1/web";
+import { type Layer, Sheet, shortPath, useMessages } from "@p2/app/v1/web";
 import { useEffect, useRef, useState } from "react";
 import type { ProjectPlace } from "../../projects/contract.ts";
+import { messages } from "../messages.ts";
 
 /** The layer of the folder picker that New project opens (not the chat's `cwd`: that one moves the open session). */
 export const PROJECT_FOLDER = "project-folder";
@@ -43,6 +44,7 @@ export function NewProjectSheet({
 	onCreate: (name: string) => Promise<void>;
 	onClose: () => void;
 }) {
+	const { t } = useMessages(messages);
 	const [draft, setDraft] = useState(place.path.split(/[\\/]/).filter(Boolean).at(-1) ?? "");
 	const [error, setError] = useState<string>();
 	const [creating, setCreating] = useState(false);
@@ -63,7 +65,7 @@ export function NewProjectSheet({
 		});
 	};
 	return (
-		<Sheet title="New project" onClose={onClose}>
+		<Sheet title={t("sheetNewProject")} onClose={onClose}>
 			<form
 				className="stack"
 				onSubmit={(event) => {
@@ -72,7 +74,7 @@ export function NewProjectSheet({
 				}}
 			>
 				<label className="field">
-					<span className="label">Name</span>
+					<span className="label">{t("nameLabel")}</span>
 					<input
 						ref={field}
 						className="input"
@@ -85,13 +87,13 @@ export function NewProjectSheet({
 					/>
 				</label>
 				<p className="muted small">
-					New sessions in it start in {place.env ? `${place.env}:${place.path}` : shortPath(place.path)}.
+					{t("newProjectStart", place.env ? `${place.env}:${place.path}` : shortPath(place.path))}
 				</p>
-				{exists && <p className="small rollup-error">A project "{name}" exists already.</p>}
+				{exists && <p className="small rollup-error">{t("projectExists", name)}</p>}
 				{error && <p className="small rollup-error">{error}</p>}
 				<div className="inline-form">
 					<button type="submit" className="button primary" disabled={!name || exists || creating}>
-						{creating ? "Creating…" : "Create"}
+						{creating ? t("creating") : t("create")}
 					</button>
 				</div>
 			</form>

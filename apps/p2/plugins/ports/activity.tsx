@@ -1,6 +1,7 @@
 // How the `ports` tool shows in the chat: what it did with which port, and an opened port's links after the turn's
 // answer (only Radius forward addresses).
 import {
+	activityMessages,
 	CodeBlock,
 	detailsOf,
 	failureOf,
@@ -11,8 +12,10 @@ import {
 	type ToolActivity,
 	ToolIcon,
 	type ToolView,
+	useMessages,
 } from "@p2/app/v1/web";
 import "./activity.css";
+import { messages } from "./messages.ts";
 
 /** The addresses of a port a call opened: private, and public when it is public. Only Radius forward addresses. */
 function forwardOf(tool: ToolView): { name: string; url?: string; publicUrl?: string } | undefined {
@@ -34,6 +37,7 @@ function forwardOf(tool: ToolView): { name: string; url?: string; publicUrl?: st
 }
 
 function PortLinks({ tool }: { tool: ToolView }) {
+	const { t } = useMessages(messages);
 	const forward = forwardOf(tool);
 	if (!forward) return null;
 	return (
@@ -47,7 +51,7 @@ function PortLinks({ tool }: { tool: ToolView }) {
 					target="_blank"
 					rel="noopener noreferrer"
 				>
-					Open {forward.name}
+					{t("openLink", forward.name)}
 				</a>
 			)}
 			{forward.publicUrl && (
@@ -58,7 +62,7 @@ function PortLinks({ tool }: { tool: ToolView }) {
 					target="_blank"
 					rel="noopener noreferrer"
 				>
-					Public link
+					{t("publicLink")}
 				</a>
 			)}
 		</div>
@@ -89,7 +93,12 @@ export const portsActivity: ToolActivity = {
 		return {
 			label: {
 				kind: "port",
-				verb: action === "open" ? "Opened port" : action === "close" ? "Closed port" : "Listed ports",
+				verb:
+					action === "open"
+						? activityMessages(messages)("verbOpened")
+						: action === "close"
+							? activityMessages(messages)("verbClosed")
+							: activityMessages(messages)("verbListed"),
 				...(port(step.tool) ? { object: port(step.tool), style: "code" as const } : {}),
 			},
 			description: failureOf(step) ?? (stringOf(step.tool.args.name) || undefined),

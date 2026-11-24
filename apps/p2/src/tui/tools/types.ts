@@ -1,8 +1,9 @@
 // lingshu's tool renderer contract (coding-agent core/extensions/types.ts `ToolRenderers`, `ToolRenderContext`,
 // `ToolRendererResolver`), typed for p2: arguments and details are JSON from the conversation view, the theme is the
 // instance theme (section 5), and the calls a call made to other tools come with the context.
-import type { JsonValue } from "@lingshu/chord/json";
+
 import type { TextContent } from "@lingshu/ai";
+import type { JsonValue } from "@lingshu/chord/json";
 import type { Component } from "@lingshu/tui";
 import type { ImageRef } from "../../runtime/entry-images.ts";
 import type { TuiSettings } from "../../runtime/tui-preferences.ts";

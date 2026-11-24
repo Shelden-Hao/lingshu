@@ -54,7 +54,9 @@ describe("the Familiar as home", { skip: !browserTests }, () => {
 			),
 			["Ask Lingshu", "New session"],
 		);
-		assert.ok(await browser.evaluate<boolean>(`document.querySelector('.drawer-top .brand > .lingshu-logo') !== null`));
+		assert.ok(
+			await browser.evaluate<boolean>(`document.querySelector('.drawer-top .brand > .lingshu-logo') !== null`),
+		);
 		// No rollup lists it.
 		await browser.wait(
 			`[...new Set([...document.querySelectorAll('.sidebar-nav .session-main .session-title')].map(e=>e.textContent))].join()==='Ordinary'`,

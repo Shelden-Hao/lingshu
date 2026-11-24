@@ -3,12 +3,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { AssistantMessage } from "@lingshu/ai";
-import {
-	type ConversationView,
-	type EntryId,
-	type EntryRecord,
-	ROOT_CONVERSATION_ID,
-} from "@lingshu/durable";
+import { type ConversationView, type EntryId, type EntryRecord, ROOT_CONVERSATION_ID } from "@lingshu/durable";
 import { stripTerminalSequences, Text, TuiAltScreen, visibleWidth } from "@lingshu/tui";
 import { BACKGROUND_CONTEXT } from "@p2/app/v1";
 import { VirtualTerminal } from "../../../../packages/tui/test/virtual-terminal.ts";
@@ -249,7 +244,10 @@ test("transcript: streaming answer becomes its entry in place, tool lifecycle, m
 		model: [assistant([{ type: "text", text: "Work" }, call], { timestamp: 7, stopReason: "toolUse" })],
 	});
 	const running = viewOf([userEntry(1, "hi"), answer], {
-		"lingshu.live": { run: { taskId: 1 }, tools: [{ callId: "t1", name: "bash", status: "running", output: "a.txt" }] },
+		"lingshu.live": {
+			run: { taskId: 1 },
+			tools: [{ callId: "t1", name: "bash", status: "running", output: "a.txt" }],
+		},
 	});
 	component.sync(buildTranscript(wholeView(running)));
 	assert.match(plain(component.render(80)), /\$ ls[\s\S]*a\.txt[\s\S]*Elapsed/);
@@ -294,7 +292,9 @@ test("transcript: streaming answer becomes its entry in place, tool lifecycle, m
 	// An answer that never ran its calls: interrupted cards.
 	const interrupted = transcriptComponent(
 		buildTranscript(
-			wholeView(viewOf([entry(1, { kind: "lingshu.assistant", model: [assistant([call], { stopReason: "aborted" })] })])),
+			wholeView(
+				viewOf([entry(1, { kind: "lingshu.assistant", model: [assistant([call], { stopReason: "aborted" })] })]),
+			),
 		),
 		false,
 		false,
@@ -303,7 +303,9 @@ test("transcript: streaming answer becomes its entry in place, tool lifecycle, m
 	assert.match(plain(interrupted.render(80)), /Not run: the answer was interrupted\./);
 	// Compaction failures are state notices.
 	const failed = transcriptComponent(
-		buildTranscript(wholeView(viewOf([], { "lingshu.live": { compactionFailure: { taskId: 3, error: "too big" } } }))),
+		buildTranscript(
+			wholeView(viewOf([], { "lingshu.live": { compactionFailure: { taskId: 3, error: "too big" } } })),
+		),
 		false,
 		false,
 		{ renderers: PLUGIN_TUI_RENDERERS },
@@ -572,7 +574,10 @@ test("plugin contributions: tool renderers, entry renderers and Markdown transfo
 			viewOf([
 				answerEntry(1, "answer with TOKEN"),
 				entry(2, { kind: "test.note", data: { n: 1 } }),
-				entry(3, { kind: "lingshu.assistant", model: [assistant([call], { stopReason: "toolUse", timestamp: 3 })] }),
+				entry(3, {
+					kind: "lingshu.assistant",
+					model: [assistant([call], { stopReason: "toolUse", timestamp: 3 })],
+				}),
 			]),
 		{ facets: [contributions] },
 	);

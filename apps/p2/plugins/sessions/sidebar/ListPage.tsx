@@ -2,6 +2,8 @@
 // window after the others and dimmed but still openable (as a to-do app's logbook), in groups for a rollup of groups;
 // or the archive: the archived projects (their ⋯ restores or deletes one) and the archived sessions, each restored on a
 // click. Its search finds sessions and messages within the list only.
+
+import type { Language } from "@p2/app/v1";
 import {
 	ErrorToast,
 	inPage,
@@ -17,25 +19,46 @@ import {
 	SideNavigation,
 	Slot,
 	SlotList,
+	showText,
+	useLanguage,
 	useLinkHref,
 	useScrollMemory,
 } from "@p2/app/v1/web";
 import { useEffect, useRef, useState } from "react";
 import type { ArchivedProject } from "../../projects/contract.ts";
 import type { SearchResults } from "../../search/contract.ts";
+import { messages, sidebarText } from "../messages.ts";
 import { archivedProjectTarget } from "../project-commands.tsx";
 import { type ListEntry, type ListPageData, type NewTarget, WINDOWS } from "./model.ts";
 import { NavRow } from "./NavRow.tsx";
 import { ago, pageRoute, type RowActions, SessionItem } from "./Row.tsx";
 
+/** The messages key of a built-in rollup's name (project and folder names are their own). */
+const rollupNameKey = (name: string): string =>
+	name === "Folders"
+		? "pageFolders"
+		: name === "Other sessions"
+			? "sidebarOtherSessions"
+			: name === "Projects"
+				? "groupProjects"
+				: name === "Archive"
+					? "pageArchive"
+					: name;
+
+/** Renders a sessions-plugin message `key` with its `args` in `language` (outside React hooks). */
+const showT =
+	(key: string, ...args: readonly unknown[]) =>
+	(language: Language | undefined): string =>
+		(messages.in(language) as unknown as (...a: readonly unknown[]) => string)(key, ...args);
+
 /** What the page says under its title: the window, or what the archive holds. */
-function subtitle(data: ListPageData | undefined): string {
+function subtitle(data: ListPageData | undefined, language: Language | undefined): string {
 	if (!data) return "";
-	if (data.archived) return "Archived projects and sessions. Open a session to restore it.";
+	if (data.archived) return showText(sidebarText("archiveSubtitle"), language);
 	if (!data.window || data.window === "forever" || data.window === "none")
-		return "Every session shows in the sidebar.";
+		return showText(sidebarText("allSessionsSubtitle"), language);
 	const label = WINDOWS.find((each) => each.window === data.window)?.label.toLowerCase();
-	return `Sessions without activity in the last ${label} are dimmed; the sidebar shows the others.`;
+	return label === undefined ? "" : showT("windowSubtitle", label)(language);
 }
 
 const QUERIES_KEY = "p2-list-queries";
@@ -93,12 +116,13 @@ function useSearch(
 
 /** The "+" that starts a session in a group (absent without `onNewIn`). */
 function NewIn({ name, target, onNewIn }: { name: string; target?: NewTarget; onNewIn?: (target: NewTarget) => void }) {
+	const language = useLanguage();
 	return target && onNewIn ? (
 		<button
 			type="button"
 			className="nav-control group-new"
-			aria-label={`New session in ${name}`}
-			title={`New session in ${name}`}
+			aria-label={showT("newSessionIn", name)(language)}
+			title={showT("newSessionIn", name)(language)}
 			onClick={() => onNewIn(target)}
 		>
 			<NavAddIcon size={16} />
@@ -133,6 +157,7 @@ export function ListPage({
 	archivedProjects?: readonly ArchivedProject[];
 }) {
 	const linkHref = useLinkHref();
+	const language = useLanguage();
 	const archived = data?.archived ?? false;
 	const [query, setQuery] = useState(() => storedQuery(page));
 	const body = useRef<HTMLDivElement>(null);
@@ -166,14 +191,23 @@ export function ListPage({
 	return (
 		<div className="list-page">
 			<header className="topbar">
-				<button type="button" className="icon-button menu sidebar-open" onClick={openSidebar} aria-label="Sessions">
+				<button
+					type="button"
+					className="icon-button menu sidebar-open"
+					onClick={openSidebar}
+					aria-label={showText(sidebarText("sidebarLabel"), language)}
+				>
 					<MenuIcon />
 					<Slot name="menu-badge" />
 				</button>
 				<SlotList prefix="topbar-start" />
 				<div className="title">
-					<h1>{data?.name ?? "Sessions"}</h1>
-					<p className="list-page-subtitle">{subtitle(data)}</p>
+					<h1>
+						{data === undefined
+							? showText(sidebarText("sidebarLabel"), language)
+							: showText(sidebarText(rollupNameKey(data.name)), language)}
+					</h1>
+					<p className="list-page-subtitle">{subtitle(data, language)}</p>
 				</div>
 				{data && <NewIn name={data.name} target={data.target} onNewIn={onNewIn} />}
 			</header>
@@ -191,14 +225,18 @@ export function ListPage({
 									setQuery(event.target.value);
 									storeQuery(page, event.target.value);
 								}}
-								placeholder={archived ? "Search the archive" : `Search ${data.name}`}
-								aria-label="Search sessions and messages"
+								placeholder={
+									archived
+										? showText(sidebarText("searchArchive"), language)
+										: showT("searchList", data.name)(language)
+								}
+								aria-label={showText(sidebarText("searchSessions"), language)}
 							/>
 						</label>
 					)}
 					{archived && !results && archivedProjects.length > 0 && (
 						<section className="list-group">
-							<h2 className="list-group-label">Projects</h2>
+							<h2 className="list-group-label">{showText(sidebarText("groupProjects"), language)}</h2>
 							<SideNavigation.List>
 								{archivedProjects.map((project) => (
 									<SideNavigation.Item key={project.name}>
@@ -212,8 +250,8 @@ export function ListPage({
 												<button
 													type="button"
 													className="nav-control group-options"
-													aria-label={`${project.name} options`}
-													title="Options"
+													aria-label={showT("optionsOf", project.name)(language)}
+													title={showText(sidebarText("options"), language)}
 													onClick={() => openCommandMenu(archivedProjectTarget(project.name))}
 												>
 													<NavMoreIcon size={16} />
@@ -223,7 +261,7 @@ export function ListPage({
 									</SideNavigation.Item>
 								))}
 							</SideNavigation.List>
-							<h2 className="list-group-label">Sessions</h2>
+							<h2 className="list-group-label">{showText(sidebarText("pageSessions"), language)}</h2>
 						</section>
 					)}
 					{content?.layout === "sessions" && rows(content.entries)}
@@ -242,13 +280,17 @@ export function ListPage({
 										</a>
 										<NewIn name={group.name} target={group.target} onNewIn={onNewIn} />
 									</h2>
-									{group.entries.length > 0 ? rows(group.entries) : <p className="empty-note">No sessions</p>}
+									{group.entries.length > 0 ? (
+										rows(group.entries)
+									) : (
+										<p className="empty-note">{showText(sidebarText("noSessions"), language)}</p>
+									)}
 								</section>
 							),
 						)}
 					{messages.length > 0 && (
 						<section className="list-group">
-							<h2 className="list-group-label">Messages</h2>
+							<h2 className="list-group-label">{showText(sidebarText("groupMessages"), language)}</h2>
 							{messages.slice(0, 40).map((hit) => (
 								<button
 									type="button"
@@ -268,10 +310,12 @@ export function ListPage({
 						</section>
 					)}
 					{data && listed.length === 0 && content?.layout === "sessions" && (
-						<p className="empty-note">No sessions</p>
+						<p className="empty-note">{showText(sidebarText("noSessions"), language)}</p>
 					)}
-					{results && !found && messages.length === 0 && <p className="empty-note">Nothing found</p>}
-					{!data && <p className="empty-note">This list no longer exists</p>}
+					{results && !found && messages.length === 0 && (
+						<p className="empty-note">{showText(sidebarText("nothingFound"), language)}</p>
+					)}
+					{!data && <p className="empty-note">{showText(sidebarText("listGone"), language)}</p>}
 				</div>
 			</div>
 		</div>

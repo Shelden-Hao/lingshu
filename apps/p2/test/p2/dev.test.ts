@@ -268,7 +268,8 @@ test(
 				Boolean(
 					value?.entries.some(
 						(entry) =>
-							entry.kind === "lingshu.assistant" && JSON.stringify(entry.model).includes("reload-stream-sentinel"),
+							entry.kind === "lingshu.assistant" &&
+							JSON.stringify(entry.model).includes("reload-stream-sentinel"),
 					),
 				),
 			);
@@ -439,7 +440,8 @@ test(
 				Boolean(
 					value?.entries.some(
 						(entry) =>
-							entry.kind === "lingshu.assistant" && JSON.stringify(entry.model).includes("plugin-removal-sentinel"),
+							entry.kind === "lingshu.assistant" &&
+							JSON.stringify(entry.model).includes("plugin-removal-sentinel"),
 					),
 				),
 			);
@@ -449,7 +451,8 @@ test(
 			await until(removalChat.view, (value) =>
 				Boolean(
 					value?.entries.some(
-						(entry) => entry.kind === "lingshu.assistant" && JSON.stringify(entry.model).includes("after-removal"),
+						(entry) =>
+							entry.kind === "lingshu.assistant" && JSON.stringify(entry.model).includes("after-removal"),
 					),
 				),
 			);
@@ -486,7 +489,8 @@ test(
 				Boolean(
 					value?.entries.some(
 						(entry) =>
-							entry.kind === "lingshu.assistant" && JSON.stringify(entry.model).includes("plugin-addition-sentinel"),
+							entry.kind === "lingshu.assistant" &&
+							JSON.stringify(entry.model).includes("plugin-addition-sentinel"),
 					),
 				),
 			);
@@ -536,7 +540,8 @@ test(
 				Boolean(
 					value?.entries.some(
 						(entry) =>
-							entry.kind === "lingshu.assistant" && JSON.stringify(entry.model).includes("restart-stream-sentinel"),
+							entry.kind === "lingshu.assistant" &&
+							JSON.stringify(entry.model).includes("restart-stream-sentinel"),
 					),
 				),
 			);

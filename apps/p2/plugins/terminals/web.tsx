@@ -1,9 +1,10 @@
-import { contribute, defineFacet } from "@p2/app/v1";
+import { contribute, defineFacet, Translations } from "@p2/app/v1";
 import {
 	Commands,
 	Slots,
 	TerminalIcon,
 	ToolActivities,
+	useMessages,
 	useNavigation,
 	useObject,
 	useOwner,
@@ -13,6 +14,7 @@ import { useState } from "react";
 import { terminalActivity } from "./activity.tsx";
 import { TERMINAL_COMMANDS } from "./commands.tsx";
 import { Terminals } from "./contract.ts";
+import { messages } from "./messages.ts";
 import { useNewTerminal } from "./new-terminal.ts";
 import { setTerminalPlacement, TerminalPanel, TerminalView, terminalShown, withTerminal } from "./Terminal.tsx";
 
@@ -84,13 +86,14 @@ function Surface({ bottom }: { bottom: boolean }) {
 function TerminalButton() {
 	const nav = useNavigation();
 	const route = useRoute();
+	const { t } = useMessages(messages);
 	if (!useOwner() || !route.session) return null;
 	const open = terminalShown(route);
 	return (
 		<button
 			type="button"
 			className={`icon-button workspace-toggle ${open ? "on" : ""}`}
-			aria-label="Terminal"
+			aria-label={t("terminal")}
 			aria-pressed={open}
 			onClick={() => {
 				if (route.terminal !== undefined)
@@ -120,6 +123,7 @@ export default defineFacet((host) => {
 			"workspace-terminal": WorkspaceTerminal,
 		});
 		self.contribute(ToolActivities, { terminal: terminalActivity });
+		self.contribute(Translations, messages.translations);
 		self.contribute(Commands, TERMINAL_COMMANDS);
 	});
 });

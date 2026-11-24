@@ -20,16 +20,19 @@ import {
 	openLayer,
 	PencilIcon,
 	RestoreIcon,
+	textIn,
 	useCommandMenu,
 	useCommandQuery,
 	useCommandTarget,
 	useComposerState,
 	useHost,
+	useMessages,
 	useNewSessionState,
 } from "@p2/app/v1/web";
 import { directoryPickerLayer } from "../envs/contract.web.tsx";
 import { Projects } from "../projects/contract.ts";
 import { NotArchived, useCommandSession } from "./command-session.tsx";
+import { messages } from "./messages.ts";
 import { pageData, usePageData } from "./sidebar/page-data.ts";
 
 type Host = ReturnType<typeof useHost>;
@@ -73,19 +76,19 @@ export function projectJoin(host: Host, name: string): NewSessionJoin {
 /** The commands, by id. */
 export const PROJECT_COMMANDS: Readonly<Record<string, Command>> = {
 	"projects.move-session": {
-		title: "Move to project…",
-		group: "Session",
+		title: textIn(messages, "cmdMoveToProject"),
+		group: textIn(messages, "groupSession"),
 		order: 10,
 		icon: FolderMoveIcon,
-		keywords: ["project", "group"],
+		keywords: [textIn(messages, "keywordProject"), textIn(messages, "keywordGroup")],
 		target: ["session"],
 		owner: true,
 		Shown: NotArchived,
 		action: { kind: "page", page: "move-to-project" },
 	},
 	"projects.rename": {
-		title: "Rename project…",
-		group: "Project",
+		title: textIn(messages, "cmdRenameProject"),
+		group: textIn(messages, "groupProject"),
 		order: 20,
 		icon: PencilIcon,
 		target: ["project"],
@@ -93,51 +96,55 @@ export const PROJECT_COMMANDS: Readonly<Record<string, Command>> = {
 		action: { kind: "page", page: "rename-project" },
 	},
 	"projects.locate": {
-		title: "Change default location…",
-		group: "Project",
+		title: textIn(messages, "cmdChangeDefaultLocation"),
+		group: textIn(messages, "groupProject"),
 		order: 20,
 		icon: FolderIcon,
-		keywords: ["folder", "machine", "directory"],
+		keywords: [
+			textIn(messages, "keywordDirectory"),
+			textIn(messages, "keywordMachine"),
+			textIn(messages, "keywordLocation"),
+		],
 		target: ["project"],
 		owner: true,
 		action: { kind: "run", run: locate },
 	},
 	"projects.move-up": {
-		title: "Move project up",
-		group: "Project",
+		title: textIn(messages, "cmdMoveProjectUp"),
+		group: textIn(messages, "groupProject"),
 		order: 20,
-		keywords: ["reorder"],
+		keywords: [textIn(messages, "keywordReorder")],
 		target: ["project"],
 		owner: true,
 		Shown: ({ children }) => (moveOf(usePageData()?.context.projects, useCommandTarget(), -1) ? children : null),
 		action: { kind: "run", run: (ctx) => moveProject(ctx, -1) },
 	},
 	"projects.move-down": {
-		title: "Move project down",
-		group: "Project",
+		title: textIn(messages, "cmdMoveProjectDown"),
+		group: textIn(messages, "groupProject"),
 		order: 20,
-		keywords: ["reorder"],
+		keywords: [textIn(messages, "keywordReorder")],
 		target: ["project"],
 		owner: true,
 		Shown: ({ children }) => (moveOf(usePageData()?.context.projects, useCommandTarget(), 1) ? children : null),
 		action: { kind: "run", run: (ctx) => moveProject(ctx, 1) },
 	},
 	"projects.archive": {
-		title: "Archive project",
-		group: "Project",
+		title: textIn(messages, "cmdArchiveProject"),
+		group: textIn(messages, "groupProject"),
 		order: 20,
 		icon: ArchiveIcon,
-		keywords: ["hide"],
+		keywords: [textIn(messages, "keywordHide")],
 		target: ["project"],
 		owner: true,
 		action: { kind: "run", run: archive },
 	},
 	"projects.restore": {
-		title: "Restore project",
-		group: "Project",
+		title: textIn(messages, "cmdRestoreProject"),
+		group: textIn(messages, "groupProject"),
 		order: 20,
 		icon: RestoreIcon,
-		keywords: ["unarchive"],
+		keywords: [textIn(messages, "keywordUnarchive")],
 		target: ["archived-project"],
 		owner: true,
 		action: {
@@ -146,11 +153,11 @@ export const PROJECT_COMMANDS: Readonly<Record<string, Command>> = {
 		},
 	},
 	"projects.delete": {
-		title: "Delete project…",
-		group: "Project",
+		title: textIn(messages, "cmdDeleteProject"),
+		group: textIn(messages, "groupProject"),
 		order: 20,
 		icon: CloseIcon,
-		keywords: ["remove"],
+		keywords: [textIn(messages, "keywordRemove")],
 		target: ["project", "archived-project"],
 		owner: true,
 		action: { kind: "page", page: "delete-project" },
@@ -159,10 +166,23 @@ export const PROJECT_COMMANDS: Readonly<Record<string, Command>> = {
 
 /** The pages, by name. */
 export const PROJECT_PAGES: Readonly<Record<string, CommandPage>> = {
-	"move-to-project": { label: "Move to project", placeholder: "Search projects…", Body: MoveToProjectPage },
-	"rename-project": { label: "Rename", placeholder: "New name…", empty: "Type the new name", Body: RenameProjectPage },
-	"delete-project": { label: "Delete", placeholder: "", Body: DeleteProjectPage },
-	"new-session-project": { label: "Project", placeholder: "Search projects…", Body: NewSessionProjectPage },
+	"move-to-project": {
+		label: textIn(messages, "pageMoveToProject"),
+		placeholder: textIn(messages, "pageSearchProjects"),
+		Body: MoveToProjectPage,
+	},
+	"rename-project": {
+		label: textIn(messages, "pageRename"),
+		placeholder: textIn(messages, "pageNewName"),
+		empty: textIn(messages, "pageTypeNewName"),
+		Body: RenameProjectPage,
+	},
+	"delete-project": { label: textIn(messages, "pageDelete"), placeholder: "", Body: DeleteProjectPage },
+	"new-session-project": {
+		label: textIn(messages, "pageProject"),
+		placeholder: textIn(messages, "pageSearchProjects"),
+		Body: NewSessionProjectPage,
+	},
 };
 
 /** Runs `action` with the owner's live `Projects` and the target project's name. */
@@ -252,6 +272,7 @@ function NewSessionProjectPage() {
 
 /** The rows of a project choice: "No project", then the live projects in the owner's order, `current` checked. */
 function ProjectRows({ current, onPick }: { current: string | undefined; onPick: (name: string | null) => void }) {
+	const { t } = useMessages(messages);
 	const projects = usePageData()?.context.projects ?? [];
 	const query = useCommandQuery().trim().toLowerCase();
 	const matches = projects.filter((project) => project.name.toLowerCase().includes(query));
@@ -260,9 +281,9 @@ function ProjectRows({ current, onPick }: { current: string | undefined; onPick:
 		return first ? (first.env ? `${first.env}:${first.path}` : first.path) : "";
 	};
 	return (
-		<CommandMenu.Group heading="Projects">
+		<CommandMenu.Group heading={t("groupProjects")}>
 			{(query === "" || "no project".includes(query)) && (
-				<CommandMenu.Row title="No project" checked={current === undefined} onSelect={() => onPick(null)} />
+				<CommandMenu.Row title={t("noProject")} checked={current === undefined} onSelect={() => onPick(null)} />
 			)}
 			{matches.map((project) => (
 				<CommandMenu.Row
@@ -280,6 +301,7 @@ function ProjectRows({ current, onPick }: { current: string | undefined; onPick:
 
 /** The target project's new name is the page's query; its one row renames it. */
 function RenameProjectPage() {
+	const { t } = useMessages(messages);
 	const host = useHost();
 	const { close } = useCommandMenu();
 	const { fail } = useComposerState();
@@ -287,9 +309,9 @@ function RenameProjectPage() {
 	const to = useCommandQuery().trim();
 	if (name === undefined || to === "" || to === name) return null;
 	return (
-		<CommandMenu.Group heading="Project">
+		<CommandMenu.Group heading={t("groupProject")}>
 			<CommandMenu.Row
-				title={`Rename to “${to}”`}
+				title={t("renameProjectTo", to)}
 				icon={PencilIcon}
 				onSelect={async () => {
 					await close();
@@ -304,6 +326,7 @@ function RenameProjectPage() {
 
 /** Confirms deleting the target project: its sessions stay, in no project. */
 function DeleteProjectPage() {
+	const { t } = useMessages(messages);
 	const host = useHost();
 	const { close } = useCommandMenu();
 	const { fail } = useComposerState();
@@ -312,13 +335,11 @@ function DeleteProjectPage() {
 	if (name === undefined) return null;
 	const count = Object.values(memberships).filter((project) => project === name).length;
 	return (
-		<CommandMenu.Group heading="Project">
+		<CommandMenu.Group heading={t("groupProject")}>
 			<CommandMenu.Row
-				title={`Delete “${name}”`}
+				title={t("deleteProject", name)}
 				icon={CloseIcon}
-				suffix={
-					count === 0 ? "No sessions" : `${count} ${count === 1 ? "session moves" : "sessions move"} to No project`
-				}
+				suffix={count === 0 ? t("deleteProjectNone") : t("deleteProjectCount", count)}
 				onSelect={async () => {
 					await close();
 					await withHeld(host.hold(Projects, {}, BACKGROUND_CONTEXT), "owner", (live) =>

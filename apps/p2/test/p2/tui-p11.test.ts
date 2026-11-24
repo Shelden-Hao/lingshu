@@ -2,12 +2,7 @@
 // chip, chat/mention entries, replies); the later P11 groups append below.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {
-	type ConversationView,
-	type EntryId,
-	type EntryRecord,
-	ROOT_CONVERSATION_ID,
-} from "@lingshu/durable";
+import { type ConversationView, type EntryId, type EntryRecord, ROOT_CONVERSATION_ID } from "@lingshu/durable";
 import type { JsonValue } from "@p2/app/v1";
 import { Artifacts } from "../../plugins/artifacts/contract.ts";
 import artifactsTui from "../../plugins/artifacts/tui.ts";

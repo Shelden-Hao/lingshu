@@ -3,7 +3,7 @@
 // sidebar items' actions, for touch screens without their hover button: Stop run (a session's or a subagent's) and
 // Archive subagent; on a `/tree` branch's target Rename branch…; Open folder…; their pages, and the sessions the root's
 // query matches by title.
-import { BACKGROUND_CONTEXT, withHeld } from "@p2/app/v1";
+import { BACKGROUND_CONTEXT, type MessagesOf, type Translator, withHeld } from "@p2/app/v1";
 import {
 	ArchiveIcon,
 	type Command,
@@ -29,12 +29,14 @@ import {
 	StopIcon,
 	shortPath,
 	startNewSession,
+	textIn,
 	useCommandMatches,
 	useCommandMenu,
 	useCommandQuery,
 	useCommandTarget,
 	useComposerState,
 	useHost,
+	useMessages,
 	useNewSessionState,
 	useRoute,
 } from "@p2/app/v1/web";
@@ -45,32 +47,36 @@ import { stoppable } from "./agent-actions.ts";
 import { branchSheetLayer } from "./BranchSheet.tsx";
 import { commandSession, NotArchived, useCommandSession, useOpenFromMenu, useSessions } from "./command-session.tsx";
 import { type Session, Sessions } from "./contract.ts";
+import { messages } from "./messages.ts";
 import { FOLDER_ROLLUP, folderKey, type NewTarget } from "./sidebar/model.ts";
 import { type PageData, pageData, usePageData } from "./sidebar/page-data.ts";
 import { ago, folderName } from "./sidebar/Row.tsx";
 
+/** A translator of the sessions plugin's messages, for helpers outside components. */
+type SessionsT = Translator<"sessions", MessagesOf<typeof messages>>;
+
 /** The commands, by id. */
 export const SESSION_COMMANDS: Readonly<Record<string, Command>> = {
 	"sessions.new": {
-		title: "New session…",
-		group: "Session",
+		title: textIn(messages, "cmdNewSession"),
+		group: textIn(messages, "groupSession"),
 		order: 10,
 		icon: PlusIcon,
-		keywords: ["start session in folder", "new session in folder"],
+		keywords: [textIn(messages, "keywordStartInFolder"), textIn(messages, "keywordNewInFolder")],
 		owner: true,
 		action: { kind: "page", page: "new-session" },
 	},
 	"sessions.switch": {
-		title: "Switch session…",
-		group: "Session",
+		title: textIn(messages, "cmdSwitchSession"),
+		group: textIn(messages, "groupSession"),
 		order: 10,
 		icon: ListIcon,
-		keywords: ["open session", "go to session"],
+		keywords: [textIn(messages, "keywordOpenSession"), textIn(messages, "keywordGoToSession")],
 		action: { kind: "page", page: "sessions" },
 	},
 	"sessions.rename": {
-		title: "Rename session…",
-		group: "Session",
+		title: textIn(messages, "cmdRenameSession"),
+		group: textIn(messages, "groupSession"),
 		order: 10,
 		icon: PencilIcon,
 		target: ["session"],
@@ -78,74 +84,83 @@ export const SESSION_COMMANDS: Readonly<Record<string, Command>> = {
 		action: { kind: "page", page: "rename-session" },
 	},
 	"sessions.rename-branch": {
-		title: "Rename branch…",
-		group: "Branch",
+		title: textIn(messages, "cmdRenameBranch"),
+		group: textIn(messages, "groupBranch"),
 		order: 10,
 		icon: PencilIcon,
-		keywords: ["label", "name"],
+		keywords: [textIn(messages, "keywordLabel"), textIn(messages, "keywordName")],
 		target: ["branch"],
 		owner: true,
 		action: { kind: "run", run: renameBranch },
 	},
 	"sessions.change-directory": {
-		title: "Change working directory…",
-		group: "Session",
+		title: textIn(messages, "cmdChangeDirectory"),
+		group: textIn(messages, "groupSession"),
 		order: 10,
 		icon: FolderMoveIcon,
-		keywords: ["cd", "move session", "relocate", "location"],
+		keywords: [
+			textIn(messages, "keywordCd"),
+			textIn(messages, "keywordMoveSession"),
+			textIn(messages, "keywordRelocate"),
+			textIn(messages, "keywordLocation"),
+		],
 		target: ["session", "new-session"],
 		owner: true,
 		Shown: NotArchived,
 		action: { kind: "run", run: changeDirectory },
 	},
 	"sessions.archive": {
-		title: "Archive session",
-		group: "Session",
+		title: textIn(messages, "cmdArchiveSession"),
+		group: textIn(messages, "groupSession"),
 		order: 10,
 		icon: ArchiveIcon,
-		keywords: ["delete", "remove"],
+		keywords: [textIn(messages, "keywordDelete"), textIn(messages, "keywordRemove")],
 		target: ["session"],
 		owner: true,
 		Shown: NotArchived,
 		action: { kind: "run", run: archive },
 	},
 	"sessions.restore": {
-		title: "Restore session",
-		group: "Session",
+		title: textIn(messages, "cmdRestoreSession"),
+		group: textIn(messages, "groupSession"),
 		order: 10,
 		icon: RestoreIcon,
-		keywords: ["unarchive"],
+		keywords: [textIn(messages, "keywordUnarchive")],
 		target: ["session"],
 		owner: true,
 		Shown: Archived,
 		action: { kind: "run", run: restore },
 	},
 	"sessions.stop": {
-		title: "Stop run",
-		group: "Session",
+		title: textIn(messages, "cmdStopRun"),
+		group: textIn(messages, "groupSession"),
 		order: 10,
 		icon: StopIcon,
-		keywords: ["cancel", "abort", "interrupt"],
+		keywords: [
+			textIn(messages, "keywordCancel"),
+			textIn(messages, "keywordAbort"),
+			textIn(messages, "keywordInterrupt"),
+		],
 		target: ["session", "conversation"],
 		Shown: Running,
 		action: { kind: "run", run: stop },
 	},
 	"sessions.archive-subagent": {
-		title: "Archive subagent",
-		group: "Conversation",
+		title: textIn(messages, "cmdArchiveSubagent"),
+		group: textIn(messages, "groupConversation"),
 		order: 15,
 		icon: ArchiveIcon,
-		keywords: ["remove", "hide"],
+		keywords: [textIn(messages, "keywordRemove"), textIn(messages, "keywordHide")],
 		target: ["conversation"],
 		Shown: Archivable,
 		action: { kind: "run", run: archiveAgent },
 	},
 	"sessions.open-folder": {
-		title: "Open folder…",
-		group: "Folder",
+		title: textIn(messages, "cmdOpenFolder"),
+		group: textIn(messages, "groupFolder"),
 		order: 36,
 		icon: FolderIcon,
-		keywords: ["folder sessions", "list folder"],
+		keywords: [textIn(messages, "keywordFolderSessions"), textIn(messages, "keywordListFolder")],
 		owner: true,
 		action: { kind: "page", page: "folders" },
 	},
@@ -153,10 +168,27 @@ export const SESSION_COMMANDS: Readonly<Record<string, Command>> = {
 
 /** The pages, by name. */
 export const SESSION_PAGES: Readonly<Record<string, CommandPage>> = {
-	sessions: { label: "Sessions", placeholder: "Search sessions…", Body: SessionsPage },
-	"rename-session": { label: "Rename", placeholder: "New title…", empty: "Type the new title", Body: RenamePage },
-	"new-session": { label: "New session", placeholder: "Search folders…", Body: NewSessionPage },
-	folders: { label: "Folders", placeholder: "Search folders…", Body: FoldersPage },
+	sessions: {
+		label: textIn(messages, "pageSessions"),
+		placeholder: textIn(messages, "pageSearchSessions"),
+		Body: SessionsPage,
+	},
+	"rename-session": {
+		label: textIn(messages, "pageRename"),
+		placeholder: textIn(messages, "pageNewTitle"),
+		empty: textIn(messages, "pageTypeNewTitle"),
+		Body: RenamePage,
+	},
+	"new-session": {
+		label: textIn(messages, "pageNewSession"),
+		placeholder: textIn(messages, "pageSearchFolders"),
+		Body: NewSessionPage,
+	},
+	folders: {
+		label: textIn(messages, "pageFolders"),
+		placeholder: textIn(messages, "pageSearchFolders"),
+		Body: FoldersPage,
+	},
 };
 
 /**
@@ -165,7 +197,11 @@ export const SESSION_PAGES: Readonly<Record<string, CommandPage>> = {
  * command group has rows). A search group is never targeted, so the targeted command groups come before it anyway;
  * its order is past every command group's (they leave gaps of 10 from 10) so it follows the untargeted ones too.
  */
-export const SESSION_SEARCH: CommandSearch = { group: "Sessions", order: 1000, Results: SessionResults };
+export const SESSION_SEARCH: CommandSearch = {
+	group: textIn(messages, "groupSessions"),
+	order: 1000,
+	Results: SessionResults,
+};
 
 /**
  * Opens the directory picker over the command's session, else over the new-session screen. The picker is the view's: it
@@ -272,10 +308,11 @@ const titleOf = (session: Session): string => session.title;
 
 /** Every session that is not archived, the most recent first; picking one opens it. */
 function SessionsPage() {
-	const matches = useCommandMatches(useOpenSessions(), titleOf);
+	const { t } = useMessages(messages);
 	const [now] = useState(Date.now);
+	const matches = useCommandMatches(useOpenSessions(), titleOf);
 	return (
-		<CommandMenu.Group heading="Sessions">
+		<CommandMenu.Group heading={t("groupSessions")}>
 			{matches.map((session) => (
 				<SessionRow key={session.id} session={session} now={now} />
 			))}
@@ -312,6 +349,7 @@ function SessionRow({ session, now }: { session: Session; now: number }) {
 
 /** The target session's new title is the page's query; its one row renames it. */
 function RenamePage() {
+	const { t } = useMessages(messages);
 	const host = useHost();
 	const { close } = useCommandMenu();
 	const { fail } = useComposerState();
@@ -319,9 +357,9 @@ function RenamePage() {
 	const title = useCommandQuery().trim();
 	if (!session || title === "" || title === session.title) return null;
 	return (
-		<CommandMenu.Group heading="Session">
+		<CommandMenu.Group heading={t("groupSession")}>
 			<CommandMenu.Row
-				title={`Rename to “${title}”`}
+				title={t("renameTo", title)}
 				icon={PencilIcon}
 				onSelect={async () => {
 					await close();
@@ -361,14 +399,15 @@ function useFolders(): readonly Folder[] {
 const folderTitle = (folder: Folder): string => folderName(null, folder.target.cwd, 1);
 
 /** What a folder's row says after its name, and nothing twice: the machine, and the folder it is in. */
-function folderWhere(folder: Folder): string {
+function folderWhere(folder: Folder, t: SessionsT): string {
 	const path = shortPath(folder.target.cwd);
 	const parent = path.split(/[\\/]/).slice(0, -1).join("/");
-	const machine = folder.target.env ?? "This device";
+	const machine = folder.target.env ?? t("thisDevice");
 	return parent ? `${machine} · ${parent}` : machine;
 }
 
-const folderText = (folder: Folder): string => `${folderTitle(folder)} ${folderWhere(folder)} ${folder.target.cwd}`;
+const folderText = (folder: Folder, t: SessionsT): string =>
+	`${folderTitle(folder)} ${folderWhere(folder, t)} ${folder.target.cwd}`;
 
 /** New session…: picking a folder opens the new-session screen there; Select folder… opens it with the picker over it. */
 function NewSessionPage() {
@@ -381,7 +420,7 @@ function NewSessionPage() {
 }
 
 /** The browse row, matched by what it does. */
-const SELECT_FOLDER = ["Select folder… browse directory"];
+const SELECT_FOLDER = (text: string): readonly string[] => [`${text} ${textIn(messages, "keywordBrowseDirectory")}`];
 const selectText = (text: string): string => text;
 
 /**
@@ -396,19 +435,20 @@ function StartFolders({
 	choose: (location: NewSessionLocation) => void;
 	browse: (location: NewSessionLocation) => void;
 }) {
+	const { t } = useMessages(messages);
 	const { close } = useCommandMenu();
 	const current = useCurrentFolder();
 	const known = useFolders();
 	const folders = useMemo(() => withCurrent(known, current), [known, current]);
-	const matches = useCommandMatches(folders, folderText);
-	const select = useCommandMatches(SELECT_FOLDER, selectText);
+	const matches = useCommandMatches(folders, (folder) => folderText(folder, t));
+	const select = useCommandMatches(SELECT_FOLDER(t("selectFolder")), selectText);
 	const first = folders[0];
 	return (
 		<>
 			{select.length > 0 && (
-				<CommandMenu.Group heading="Browse">
+				<CommandMenu.Group heading={t("groupBrowse")}>
 					<CommandMenu.Row
-						title="Select folder…"
+						title={t("selectFolder")}
 						icon={FolderMoveIcon}
 						onSelect={async () => {
 							await close();
@@ -417,13 +457,13 @@ function StartFolders({
 					/>
 				</CommandMenu.Group>
 			)}
-			<CommandMenu.Group heading="Recent folders">
+			<CommandMenu.Group heading={t("groupRecentFolders")}>
 				{matches.map((folder) => (
 					<CommandMenu.Row
 						key={folder.key}
 						title={folderTitle(folder)}
 						icon={FolderIcon}
-						suffix={folderWhere(folder)}
+						suffix={folderWhere(folder, t)}
 						checked={current !== undefined && sameFolder(folder, current)}
 						preferred={folder === first}
 						onSelect={async () => {
@@ -470,16 +510,17 @@ const locationOf = (folder: Folder): NewSessionLocation => ({ env: folder.target
 
 /** The folders, the one whose list is open checked; picking one opens its list of sessions in the main area. */
 function FoldersPage() {
+	const { t } = useMessages(messages);
 	const { close } = useCommandMenu();
 	const page = useRoute().page;
-	const matches = useCommandMatches(useFolders(), folderText);
+	const matches = useCommandMatches(useFolders(), (folder) => folderText(folder, t));
 	return (
-		<CommandMenu.Group heading="Folders">
+		<CommandMenu.Group heading={t("pageFolders")}>
 			{matches.map((folder) => (
 				<CommandMenu.Row
 					key={folder.key}
 					title={folderTitle(folder)}
-					suffix={folderWhere(folder)}
+					suffix={folderWhere(folder, t)}
 					checked={folder.key === page}
 					onSelect={async () => {
 						await close();

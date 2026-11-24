@@ -263,7 +263,8 @@ describe("session relocation (fake provider)", () => {
 				await until((await ctx.get(Hosts, {})).workers, (value) => value?.[session.id]?.running === false);
 			}, BACKGROUND_CONTEXT);
 		};
-		const cwdOf = (view: ConversationView | null | undefined) => (view?.docs["lingshu.agent"] as { cwd?: string })?.cwd;
+		const cwdOf = (view: ConversationView | null | undefined) =>
+			(view?.docs["lingshu.agent"] as { cwd?: string })?.cwd;
 		return { owner, sessions, session, chat, start, next, before, answers, gone, kill, cwdOf };
 	};
 	type Steps = RelocationSteps;

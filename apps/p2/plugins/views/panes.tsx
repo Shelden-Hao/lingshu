@@ -8,6 +8,7 @@ import {
 	Markdown,
 	type PaneProps,
 	patchLines,
+	useMessages,
 	useObject,
 	useReadable,
 	useStatus,
@@ -15,6 +16,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { Workspace } from "../workspace/contract.ts";
 import type { WorkspaceChange } from "../workspace/protocol.ts";
+import { messages } from "./messages.ts";
 import { excerpt, usePaneSelection } from "./pane-kit.tsx";
 
 /**
@@ -22,10 +24,11 @@ import { excerpt, usePaneSelection } from "./pane-kit.tsx";
  * stored before views had items, which kept it in `path`) says so instead of loading forever.
  */
 export function MarkdownPane({ session, item, select }: PaneProps) {
+	const { t } = useMessages(messages);
 	if (!item)
 		return (
 			<div className="views-doc">
-				<div className="notice error">This view has no file</div>
+				<div className="notice error">{t("paneNoFile")}</div>
 			</div>
 		);
 	return <MarkdownFile session={session} path={item} select={select} />;
@@ -55,6 +58,7 @@ function MarkdownFile({ session, path, select }: Pick<PaneProps, "session" | "se
 
 /** The working tree's changes (below the view's path), each file's diff below its name. */
 export function ChangesPane({ session, item: below, select }: PaneProps) {
+	const { t } = useMessages(messages);
 	const workspace = useWorkspace(session);
 	const changed = useReadable(workspace?.changes);
 	const [status, setStatus] = useState<{ changes?: WorkspaceChange[]; error?: string }>({});
@@ -78,7 +82,7 @@ export function ChangesPane({ session, item: below, select }: PaneProps) {
 			.query({ kind: "status" }, BACKGROUND_CONTEXT)
 			.then((result) => {
 				if (!current || result.kind !== "status") return;
-				if (!result.repo) setStatus({ error: result.reason ?? "Not a git repository" });
+				if (!result.repo) setStatus({ error: result.reason ?? t("notGitRepository") });
 				else
 					setStatus({
 						changes: result.changes.filter((change) => !below || change.path.startsWith(below)),
@@ -97,7 +101,7 @@ export function ChangesPane({ session, item: below, select }: PaneProps) {
 			) : !status.changes ? (
 				<div className="spinner" />
 			) : !status.changes.length ? (
-				<p className="empty-note">No changes{below ? ` in ${below}` : ""}.</p>
+				<p className="empty-note">{below ? t("noChangesBelow", below) : t("noChanges")}</p>
 			) : (
 				status.changes.map((change) => (
 					<ChangedFile
@@ -125,6 +129,7 @@ function ChangedFile({
 	changed: number;
 }) {
 	const workspace = useWorkspace(session);
+	const { t } = useMessages(messages);
 	const [open, setOpen] = useState(initiallyOpen);
 	const [patch, setPatch] = useState<{ value?: string; error?: string }>({});
 	// biome-ignore lint/correctness/useExhaustiveDependencies: `changed` counts the working tree's changes: load again.
@@ -146,7 +151,7 @@ function ChangedFile({
 					<ChevronIcon size={14} />
 				</span>
 				<span className="views-change-path">{change.path}</span>
-				<span className="muted">{change.status === "??" ? "new" : change.status.replaceAll(".", "")}</span>
+				<span className="muted">{change.status === "??" ? t("newFile") : change.status.replaceAll(".", "")}</span>
 			</button>
 			{open &&
 				(patch.error ? (
@@ -156,7 +161,7 @@ function ChangedFile({
 				) : patch.value ? (
 					<LinesBlock lines={patchLines(patch.value)} language={change.path} />
 				) : (
-					<p className="empty-note">No text changes.</p>
+					<p className="empty-note">{t("noTextChanges")}</p>
 				))}
 		</section>
 	);
@@ -171,6 +176,7 @@ function useWorkspace(session: string) {
 
 /** A workspace file's text, loaded again when the working tree changes. */
 function useWorkspaceText(session: string, path: string): { value?: string; error?: string } {
+	const { t } = useMessages(messages);
 	const workspace = useWorkspace(session);
 	const changed = useReadable(workspace?.changes);
 	const [text, setText] = useState<{ path: string; value?: string; error?: string }>();
@@ -184,7 +190,7 @@ function useWorkspaceText(session: string, path: string): { value?: string; erro
 				if (!current || result.kind !== "file") return;
 				setText(
 					result.binary
-						? { path, error: `${path} is not a text file` }
+						? { path, error: t("notTextFile", path) }
 						: { path, value: `${result.text ?? ""}${result.truncated ? "\n\n…" : ""}` },
 				);
 			})
@@ -193,10 +199,11 @@ function useWorkspaceText(session: string, path: string): { value?: string; erro
 			current = false;
 		};
 	}, [workspace, path, changed]);
-	if (!workspace) return { error: "Only people who may send in this session see its files." };
+	if (!workspace) return { error: messages.in(undefined)("filesPermission") };
 	return text?.path === path ? text : {};
 }
 
 function Unavailable() {
-	return <p className="empty-note">Only people who may send in this session see its files.</p>;
+	const { t } = useMessages(messages);
+	return <p className="empty-note">{t("filesPermission")}</p>;
 }

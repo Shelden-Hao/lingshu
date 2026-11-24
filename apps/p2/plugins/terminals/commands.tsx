@@ -1,8 +1,17 @@
 // The terminals' commands for the command menu, the owner's as the terminal button is: Open terminal and New terminal on
 // a session or a subagent's conversation (new terminals open where the viewed conversation works).
-import { type Command, type CommandContext, PlusIcon, TerminalIcon, useCommandTarget, useRoute } from "@p2/app/v1/web";
+import {
+	type Command,
+	type CommandContext,
+	PlusIcon,
+	TerminalIcon,
+	textIn,
+	useCommandTarget,
+	useRoute,
+} from "@p2/app/v1/web";
 import type { ReactNode } from "react";
 import { commandSession, NotArchived, openPanelIn } from "../sessions/contract.web.tsx";
+import { messages } from "./messages.ts";
 import { requestNewTerminal } from "./new-terminal.ts";
 import { terminalShown, withTerminal } from "./Terminal.tsx";
 
@@ -11,22 +20,22 @@ const TARGETS = ["session", "conversation"];
 /** The commands, by id. */
 export const TERMINAL_COMMANDS: Readonly<Record<string, Command>> = {
 	"terminals.open": {
-		title: "Open terminal",
-		group: "Terminal",
+		title: textIn(messages, "openTerminal"),
+		group: textIn(messages, "groupTerminal"),
 		order: 33,
 		icon: TerminalIcon,
-		keywords: ["show terminal", "shell"],
+		keywords: [textIn(messages, "keywordShowTerminal"), textIn(messages, "keywordShell")],
 		target: TARGETS,
 		owner: true,
 		Shown: NotShown,
 		action: { kind: "run", run: openTerminal },
 	},
 	"terminals.new": {
-		title: "New terminal",
-		group: "Terminal",
+		title: textIn(messages, "newTerminal"),
+		group: textIn(messages, "groupTerminal"),
 		order: 33,
 		icon: PlusIcon,
-		keywords: ["start terminal", "shell"],
+		keywords: [textIn(messages, "keywordStartTerminal"), textIn(messages, "keywordShell")],
 		target: TARGETS,
 		owner: true,
 		Shown: NotArchived,

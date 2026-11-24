@@ -4,6 +4,8 @@
 // the owner, shows it among the owner's notices.
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { forgetSession } from "./conversation-cache.ts";
+import { useMessages } from "./language.ts";
+import { messages } from "./messages.ts";
 
 /** How many reports one page load sends at most: a failing loop must not flood the server. */
 const MAX_REPORTS = 20;
@@ -98,20 +100,21 @@ function withComponents(error: Error, components: string): Error {
 
 /** What the person sees when the page failed: the error, Reload, and a reset of the open session's saved state. */
 function PageFailed({ error }: { error: unknown }) {
+	const { t } = useMessages(messages);
 	const session = sessionOfPage();
 	const message = error instanceof Error ? error.message : String(error);
 	return (
 		<div className="hero page-failed" role="alert" data-testid="page-failed">
-			<h2>This page failed</h2>
+			<h2>{t("pageFailed")}</h2>
 			<p className="muted">{message}</p>
-			<p className="muted">The error was reported to the server.</p>
+			<p className="muted">{t("reportedToServer")}</p>
 			<p>
 				<button type="button" className="primary" onClick={() => location.reload()}>
-					Reload
+					{t("reload")}
 				</button>{" "}
 				{session && (
 					<button type="button" onClick={() => void resetSessionState(session).finally(() => location.reload())}>
-						Reset this device's saved state for this session
+						{t("resetSessionState")}
 					</button>
 				)}
 			</p>

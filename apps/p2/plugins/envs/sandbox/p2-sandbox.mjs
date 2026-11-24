@@ -199,7 +199,9 @@ function hostPath(path, readonly) {
 	const within = (parent, child) => child === parent || child.startsWith(parent === "/" ? "/" : `${parent}/`);
 	const lingshu = join(home, ".lingshu");
 	if (!readonly && (within(resolved, lingshu) || within(lingshu, resolved)))
-		throw new Error(`A writable folder must not contain or be inside ${lingshu} (p2's launcher runs from there): ${path}`);
+		throw new Error(
+			`A writable folder must not contain or be inside ${lingshu} (p2's launcher runs from there): ${path}`,
+		);
 	return resolved;
 }
 

@@ -3,10 +3,12 @@
 import {
 	type Command,
 	type CommandContext,
+	type ContributedText,
 	DiffIcon,
 	FileIcon,
 	getNavigation,
 	SearchIcon,
+	textIn,
 	useCanWrite,
 	useCommandTarget,
 	useRoute,
@@ -14,20 +16,37 @@ import {
 } from "@p2/app/v1/web";
 import type { ComponentType, ReactNode } from "react";
 import { commandSession, NotArchived, openPanelIn } from "../sessions/contract.web.tsx";
+import { messages } from "./messages.ts";
 import { showWorkspaceTab, withWorkspace } from "./tabs.ts";
 
 /** The commands, by id. */
 export const WORKSPACE_COMMANDS: Readonly<Record<string, Command>> = {
-	"workspace.files": tabCommand("Browse files", FileIcon, "files", ["open files", "workspace", "file tree"]),
-	"workspace.changes": tabCommand("Show changes", DiffIcon, "changes", ["diff", "working tree changes", "git"]),
-	"workspace.search": tabCommand("Search files", SearchIcon, "search", ["grep", "find in files"]),
+	"workspace.files": tabCommand(textIn(messages, "cmdFiles"), FileIcon, "files", [
+		textIn(messages, "keywordOpenFiles"),
+		textIn(messages, "keywordWorkspace"),
+		textIn(messages, "keywordFileTree"),
+	]),
+	"workspace.changes": tabCommand(textIn(messages, "cmdChanges"), DiffIcon, "changes", [
+		textIn(messages, "keywordDiff"),
+		textIn(messages, "keywordWorkingTree"),
+		textIn(messages, "keywordGit"),
+	]),
+	"workspace.search": tabCommand(textIn(messages, "cmdSearch"), SearchIcon, "search", [
+		textIn(messages, "keywordGrep"),
+		textIn(messages, "keywordFindInFiles"),
+	]),
 };
 
 /** A command showing the workspace on `tab`; the workspace shows the viewed conversation's working tree. */
-function tabCommand(title: string, icon: ComponentType, tab: WorkspaceTab, keywords: readonly string[]): Command {
+function tabCommand(
+	title: ContributedText,
+	icon: ComponentType,
+	tab: WorkspaceTab,
+	keywords: readonly ContributedText[],
+): Command {
 	return {
 		title,
-		group: "Workspace",
+		group: textIn(messages, "group"),
 		order: 30,
 		icon,
 		keywords,

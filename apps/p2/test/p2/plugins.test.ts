@@ -117,7 +117,8 @@ describe("plugin listing and selection", () => {
 			Boolean(
 				value?.entries.some(
 					(entry) =>
-						entry.kind === "lingshu.assistant" && JSON.stringify(entry.model).includes("Echo: after subset reload"),
+						entry.kind === "lingshu.assistant" &&
+						JSON.stringify(entry.model).includes("Echo: after subset reload"),
 				),
 			),
 		);

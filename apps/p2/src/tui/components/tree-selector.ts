@@ -4,15 +4,7 @@
 // no tool entries), so there are no filters, folding or copying; labels are branch labels, shown on each branch's first
 // own message and edited for the branch holding the selected message; the instance theme and keymap (section 5.4)
 // replace the globals; message text and labels are server text (`lineText`).
-import {
-	type Component,
-	Container,
-	type Focusable,
-	Input,
-	Spacer,
-	Text,
-	truncateToWidth,
-} from "@lingshu/tui";
+import { type Component, Container, type Focusable, Input, Spacer, Text, truncateToWidth } from "@lingshu/tui";
 import { keyHint, lineText } from "../render-context.ts";
 import { DynamicBorder, type SelectorContext } from "./selectors.ts";
 

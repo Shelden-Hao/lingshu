@@ -128,7 +128,12 @@ describe("shell bridge", () => {
 		assert.equal(linkHref(route), `${BASE}/s/${SESSION}`);
 		assert.equal(linkHref(HOME), BASE);
 		assert.equal(linkHref({ ...HOME, layers: [{ kind: "viewer", name: "artifacts" }] }), `${BASE}?viewer=artifacts`);
-		assert.deepEqual(messages(page.posted).at(-1), { channel: "lingshu-shell", version: 1, type: "location", path: "/" });
+		assert.deepEqual(messages(page.posted).at(-1), {
+			channel: "lingshu-shell",
+			version: 1,
+			type: "location",
+			path: "/",
+		});
 		stop();
 		stop = undefined;
 		assert.equal(linkHref(route), `/s/${SESSION}`);

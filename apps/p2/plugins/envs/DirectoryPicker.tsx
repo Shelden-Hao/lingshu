@@ -1,6 +1,7 @@
 // The location picker: one sheet to choose a machine (this device, an SSH environment, a sandbox) and a folder on it.
 // Per machine it offers the folders sessions worked in most recently, then a folder browser; every step is a history
 // entry. Used for a new session's location, moving a session, and a new project's folder.
+
 import { BACKGROUND_CONTEXT } from "@p2/app/v1";
 import {
 	CheckIcon,
@@ -11,6 +12,7 @@ import {
 	QueryCache,
 	Sheet,
 	shortPath,
+	useMessages,
 	useNavigation,
 	useObject,
 	useReadable,
@@ -18,6 +20,7 @@ import {
 } from "@p2/app/v1/web";
 import { type FormEvent, type KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import { type DirectoryListing, Envs } from "./contract.ts";
+import { messages } from "./messages.ts";
 import type { EnvConfig } from "./schema.ts";
 
 /** The picker at the location its view passes (`env`, `value`): the session's, or the new session's. */
@@ -49,7 +52,7 @@ export function DirectoryPicker({
 	value,
 	sessions,
 	sheet: sheetName = DIRECTORY_PICKER.name,
-	title = "Location",
+	title,
 	onChange,
 	onClose,
 }: {
@@ -66,6 +69,8 @@ export function DirectoryPicker({
 	onChange: (env: string | null, value: string) => void;
 	onClose: () => void;
 }) {
+	const { t } = useMessages(messages);
+	const heading = title ?? t("pickerTitle");
 	const service = useObject(Envs, {});
 	const envs = useReadable(service?.envs);
 	// The environments' connections start now, as in Lingshu Mobile: the first listing need not wait for ssh.
@@ -137,7 +142,7 @@ export function DirectoryPicker({
 					!Array.isArray(next.directories) ||
 					!next.directories.every((entry) => typeof entry === "string")
 				)
-					throw new Error("The folder listing was interrupted.");
+					throw new Error(t("listingInterrupted"));
 				setListing({ ...next, env });
 			})
 			.catch((caught: Error) => {
@@ -156,7 +161,7 @@ export function DirectoryPicker({
 		const config = envs?.find((entry) => entry.name === machine)?.config;
 		return config?.type === "gondolin" ? config.host : undefined;
 	};
-	const machines = useMemo(() => machinesOf(envs, env), [envs, env]);
+	const machines = useMemo(() => machinesOf(envs, env, t), [envs, env, t]);
 	const moves = moving !== undefined && moving.env !== env;
 	const sandbox = sandboxHost(env) !== undefined;
 	// Leaving a sandbox is confirmed: outside every sandbox its tools run unconfined, in another one they get its
@@ -169,10 +174,10 @@ export function DirectoryPicker({
 	};
 	const recent = recentOf(env);
 	const here = listing?.path ?? directory;
-	const verb = moves ? "Move session to" : "Use";
+	const verb = moves ? t("moveSessionTo") : t("use");
 
 	return (
-		<Sheet title={title} onClose={onClose} className="location-sheet">
+		<Sheet title={heading} onClose={onClose} className="location-sheet">
 			{machines.length > 1 && (
 				<div className="location-machines">
 					{machines.map((machine) => (
@@ -184,7 +189,7 @@ export function DirectoryPicker({
 							title={machine.title}
 							onClick={() => machine.name !== env && browse("~", machine.name)}
 						>
-							{machine.sandbox && <NavLockIcon size={14} aria-label="Sandbox" />}
+							{machine.sandbox && <NavLockIcon size={14} aria-label={t("sandboxAria")} />}
 							{machine.label}
 						</button>
 					))}
@@ -192,14 +197,12 @@ export function DirectoryPicker({
 			)}
 			{sandbox && (
 				<p className="location-note">
-					{moving
-						? `Tools of this session run in the ${env} VM and can't leave it. Only you can move the session out.`
-						: `Tools of a session here run in the ${env} VM and can't leave it.`}
+					{moving ? t("pickerSandboxNoteMoving", env ?? "") : t("pickerSandboxNote", env ?? "")}
 				</p>
 			)}
 			{recent.length > 0 && (
-				<section className="location-section" aria-label="Recent folders">
-					<h3 className="location-heading">Recent</h3>
+				<section className="location-section" aria-label={t("recentFoldersAria")}>
+					<h3 className="location-heading">{t("recent")}</h3>
 					<ul className="location-rows">
 						{recent.map((path) => {
 							const current = env === initialEnv && path === value;
@@ -221,7 +224,7 @@ export function DirectoryPicker({
 									<button
 										type="button"
 										className="location-control"
-										aria-label={`Browse ${shortPath(path)}`}
+										aria-label={t("browseAria", shortPath(path))}
 										onClick={() => browse(path)}
 									>
 										<NavDisclosureIcon size={16} className="location-chevron" aria-hidden="true" />
@@ -232,7 +235,7 @@ export function DirectoryPicker({
 					</ul>
 				</section>
 			)}
-			<section className="location-section location-browse" aria-label="Folders">
+			<section className="location-section location-browse" aria-label={t("foldersAria")}>
 				<div className="location-path">
 					{typing === undefined ? (
 						<>
@@ -241,8 +244,8 @@ export function DirectoryPicker({
 							<button
 								type="button"
 								className="location-control"
-								aria-label="Type a path"
-								title="Type a path"
+								aria-label={t("typePath")}
+								title={t("typePath")}
 								onClick={() => setTyping(here)}
 							>
 								<NavEditIcon size={16} />
@@ -261,14 +264,14 @@ export function DirectoryPicker({
 					<p className="location-error" role="alert">
 						{error}{" "}
 						<button type="button" className="text-action" onClick={() => load(directory)}>
-							Retry
+							{t("retry")}
 						</button>
 					</p>
 				)}
 				{loading && !listing && !error && (
 					<p className="location-loading">
 						<span className="spinner" />
-						{env ? `Connecting to ${env}…` : "Loading…"}
+						{env ? t("connectingTo", env) : t("loading")}
 					</p>
 				)}
 				{listing && (
@@ -294,8 +297,8 @@ export function DirectoryPicker({
 								</button>
 							</li>
 						))}
-						{!listing.directories.length && <li className="location-empty">No subfolders</li>}
-						{listing.truncated && <li className="location-empty">Showing the first 1,000 folders</li>}
+						{!listing.directories.length && <li className="location-empty">{t("noSubfolders")}</li>}
+						{listing.truncated && <li className="location-empty">{t("listingTruncated")}</li>}
 					</ul>
 				)}
 			</section>
@@ -303,30 +306,27 @@ export function DirectoryPicker({
 				{leaving !== undefined ? (
 					<div className="location-leave" role="alert">
 						<p>
-							<strong>Leave sandbox {moving?.env}?</strong>
+							<strong>{t("leaveSandbox", moving?.env ?? "")}</strong>
 						</p>
 						<p>
 							{sandbox
-								? `Moving to ${locationLabel(env, leaving)} gives this session's tools sandbox ${env}'s folders and allowed hosts instead.`
-								: `Moving to ${locationLabel(env, leaving)} lets this session's tools run directly on ${env ?? "this device"}, with its full network access and files.`}
+								? t("leaveToSandbox", locationLabel(env, leaving), env ?? "")
+								: t("leaveToDevice", locationLabel(env, leaving), env ?? t("thisDeviceFallback"))}
 						</p>
-						<p className="location-note">Files written in the sandbox stay in its folders.</p>
+						<p className="location-note">{t("leaveNote")}</p>
 						<div className="inline-form">
 							<button type="button" className="button danger" onClick={() => onChange(env, leaving)}>
-								Move out
+								{t("moveOut")}
 							</button>
 							<button type="button" className="button" onClick={() => setLeaving(undefined)}>
-								Cancel
+								{t("cancel")}
 							</button>
 						</div>
 					</div>
 				) : (
 					<>
 						{moves && (
-							<p className="location-note">
-								Tools will run {env === null ? "on this device" : `on ${env}`}. The history stays; files are not
-								copied.
-							</p>
+							<p className="location-note">{env === null ? t("moveNoteThisDevice") : t("moveNoteEnv", env)}</p>
 						)}
 						<button
 							type="button"
@@ -378,21 +378,29 @@ type Machine = {
 function machinesOf(
 	envs: readonly { readonly name: string; readonly config: EnvConfig }[] | undefined,
 	env: string | null,
+	t: {
+		(key: "thisDeviceTitle"): string;
+		(key: "sshTitle", name: string): string;
+		(key: "sandboxTitle", name: string, host: string): string;
+		(key: "notConfiguredTitle", name: string): string;
+	},
 ): readonly Machine[] {
-	const machines: Machine[] = [{ name: null, label: "This device", title: "This device", sandbox: false }];
+	const machines: Machine[] = [
+		{ name: null, label: t("thisDeviceTitle"), title: t("thisDeviceTitle"), sandbox: false },
+	];
 	for (const entry of envs ?? [])
 		if (entry.config.type === "ssh")
-			machines.push({ name: entry.name, label: entry.name, title: `${entry.name} (SSH)`, sandbox: false });
+			machines.push({ name: entry.name, label: entry.name, title: t("sshTitle", entry.name), sandbox: false });
 	for (const entry of envs ?? [])
 		if (entry.config.type === "gondolin")
 			machines.push({
 				name: entry.name,
 				label: entry.name,
-				title: `${entry.name}: sandbox on ${entry.config.host}`,
+				title: t("sandboxTitle", entry.name, entry.config.host),
 				sandbox: true,
 			});
 	if (env !== null && !machines.some((machine) => machine.name === env))
-		machines.push({ name: env, label: env, title: `${env} (not configured)`, sandbox: false });
+		machines.push({ name: env, label: env, title: t("notConfiguredTitle", env), sandbox: false });
 	return machines;
 }
 
@@ -401,9 +409,10 @@ function machinesOf(
  * the browser is.
  */
 function Crumbs({ path, onBrowse }: { path: string; onBrowse: (path: string) => void }) {
+	const { t } = useMessages(messages);
 	const steps = crumbsOf(path);
 	return (
-		<nav className="location-crumbs" aria-label="Path" title={path}>
+		<nav className="location-crumbs" aria-label={t("pathAria")} title={path}>
 			{steps.map((step, index) =>
 				index === steps.length - 1 ? (
 					<span key={step.path} className="location-crumb" aria-current="location">
@@ -461,6 +470,7 @@ function PathInput({
 	onSubmit: (path: string) => void;
 	onCancel: () => void;
 }) {
+	const { t } = useMessages(messages);
 	const submit = (event: FormEvent) => {
 		event.preventDefault();
 		if (value.trim()) onSubmit(value.trim());
@@ -478,7 +488,7 @@ function PathInput({
 				value={value}
 				onChange={(event) => onChange(event.target.value)}
 				onKeyDown={key}
-				aria-label="Directory"
+				aria-label={t("directoryAria")}
 				autoCapitalize="off"
 				autoCorrect="off"
 				spellCheck={false}

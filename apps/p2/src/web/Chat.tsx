@@ -10,6 +10,7 @@ import {
 	useRef,
 	useState,
 } from "react";
+import type { AgentMessage } from "../runtime/entries.ts";
 import type { ShownImage } from "../runtime/entry-images.ts";
 import { plainReferences, referenceParts } from "../runtime/references.ts";
 import { ActivityRow } from "./activity/ActivityRow.tsx";
@@ -38,8 +39,10 @@ import {
 	SparkIcon,
 	UsersIcon,
 } from "./icons.tsx";
+import { useMessages } from "./language.ts";
 import { useLongPress } from "./long-press.ts";
 import { Markdown } from "./Markdown.tsx";
+import { messages } from "./messages.ts";
 import { RowEstimator, type RowFeatures } from "./row-estimate.ts";
 import { Time } from "./Time.tsx";
 import type { Item, Transcript } from "./transcript.ts";
@@ -53,11 +56,11 @@ function tokens(count: number): string {
 			: `${(count / 1e6).toFixed(2)}M`;
 }
 
-/** The context bar; without `used` and `limit` (not known yet) a loading skeleton of it, in the same space. */
 export function ContextUsage({ used, limit }: { used?: number; limit?: number }) {
+	const { t } = useMessages(messages);
 	if (used === undefined || limit === undefined)
 		return (
-			<output className="context-usage pending" aria-label="Loading the context usage" aria-busy="true">
+			<output className="context-usage pending" aria-label={t("loadingContext")} aria-busy="true">
 				<span className="context-track" />
 				{/* The numbers' text, invisible under its skeleton: the same box as the numbers that replace it. */}
 				<span className="usage skeleton-text" aria-hidden="true">
@@ -71,17 +74,14 @@ export function ContextUsage({ used, limit }: { used?: number; limit?: number })
 		<div className="context-usage">
 			<progress
 				className="context-track"
-				aria-label="Estimated active context usage"
+				aria-label={t("contextUsage")}
 				value={filled}
 				max={100}
-				aria-valuetext={`${percent}% of ${limit.toLocaleString()} tokens`}
+				aria-valuetext={t("contextValuetext", percent, limit.toLocaleString())}
 			>
 				{percent}%
 			</progress>
-			<span
-				className="usage"
-				title={`Estimated active context: ${used.toLocaleString()} / ${limit.toLocaleString()} tokens`}
-			>
+			<span className="usage" title={t("contextTitle", used.toLocaleString(), limit.toLocaleString())}>
 				{percent}%/{tokens(limit).replace(".0k", "k")}
 			</span>
 		</div>
@@ -114,6 +114,7 @@ export const FillGap = createContext<((gap: Extract<Item, { type: "gap" }>["gap"
 function GapRow({ item }: { item: Extract<Item, { type: "gap" }> }) {
 	const fill = useContext(FillGap);
 	const { gap, loading } = item;
+	const { t } = useMessages(messages);
 	useEffect(() => fill?.(gap), [fill, gap]);
 	return (
 		<button
@@ -124,7 +125,7 @@ function GapRow({ item }: { item: Extract<Item, { type: "gap" }> }) {
 			onClick={() => fill?.(gap)}
 		>
 			<span className="spinner" aria-hidden="true" />
-			Load more
+			{t("loadMore")}
 		</button>
 	);
 }
@@ -182,6 +183,7 @@ export function jumpToEntry(entryId: number): boolean {
  */
 function useReply(entryId: number | undefined, name: string) {
 	const reply = useContext(ReplyTo);
+	const { t } = useMessages(messages);
 	const press = useLongPress(() => {
 		if (reply && entryId !== undefined) reply({ entryId, name });
 	});
@@ -189,7 +191,7 @@ function useReply(entryId: number | undefined, name: string) {
 	const start = () => reply({ entryId, name });
 	return {
 		button: (
-			<button type="button" className="reply-button" aria-label={`Reply to ${name}`} onClick={start}>
+			<button type="button" className="reply-button" aria-label={t("replyTo", name)} onClick={start}>
 				<ReplyIcon />
 			</button>
 		),
@@ -317,8 +319,14 @@ export const rowEstimates = new RowEstimator<TranscriptRow>(rowFeatures, 120);
 const incoming = (item: Extract<Item, { type: "user" }>): boolean =>
 	Boolean(item.agent || item.peer || item.author?.kind === "guest");
 
-const AGENT_VERBS = { answered: "answered", question: "asks", note: "wrote", failed: "failed" } as const;
-
+type AgentIntent = AgentMessage["intent"];
+type AgentVerbKey = "answered" | "asks" | "wrote" | "failedVerb";
+const AGENT_VERBS: Record<AgentIntent, AgentVerbKey> = {
+	answered: "answered",
+	question: "asks",
+	note: "wrote",
+	failed: "failedVerb",
+};
 /**
  * Someone else's message, one shape for every kind (owner decision: kinds differ only by icon and word, no coloured
  * edges): a header line "icon name · what · time", muted but the name, and the body as Markdown indented under the
@@ -326,6 +334,7 @@ const AGENT_VERBS = { answered: "answered", question: "asks", note: "wrote", fai
  * conversation, another session) and then shows a chevron; the body is text to select, never a link.
  */
 function Incoming({ item }: { item: Extract<Item, { type: "user" }> }) {
+	const { t } = useMessages(messages);
 	const openConversation = useContext(OpenConversation);
 	const openPeer = useContext(OpenPeerConversation);
 	const reveal = useContext(RevealEntry);
@@ -338,22 +347,22 @@ function Incoming({ item }: { item: Extract<Item, { type: "user" }> }) {
 				kind: "agent",
 				icon: agent.intent === "failed" ? <AlertIcon /> : <BotIcon />,
 				name: agent.from.name,
-				what: AGENT_VERBS[agent.intent],
+				what: t(AGENT_VERBS[agent.intent]),
 				open: () => openConversation(agent.from.conversationId),
 			}
 		: peer
 			? {
 					kind: "session",
 					icon: <CommentIcon />,
-					name: peer.title.trim() || "Conversation",
-					what: "wrote",
+					name: peer.title.trim() || t("conversation"),
+					what: t("wrote"),
 					...(openPeer ? { open: () => openPeer(peer.id) } : {}),
 				}
 			: {
 					kind: "guest",
 					icon: <UsersIcon />,
 					name: guest?.name ?? "",
-					what: item.chat ? "(guest) wrote in chat" : "(guest) wrote",
+					what: item.chat ? t("guestWroteChat") : t("guestWrote"),
 				};
 	// Only what reached the agent can be edited, and a subagent's message is the agent's, not a person's.
 	const entryId = item.chat || agent ? undefined : item.entryId;
@@ -375,7 +384,12 @@ function Incoming({ item }: { item: Extract<Item, { type: "user" }> }) {
 		<div className="incoming" data-entry={item.entryId} data-from={sender.kind} data-testid="incoming">
 			<div className="incoming-head">
 				{sender.open ? (
-					<button type="button" className="incoming-from" aria-label={`Open ${sender.name}`} onClick={sender.open}>
+					<button
+						type="button"
+						className="incoming-from"
+						aria-label={t("open", sender.name)}
+						onClick={sender.open}
+					>
 						{line}
 						<span className="incoming-chevron" aria-hidden="true">
 							<ChevronIcon />
@@ -388,8 +402,8 @@ function Incoming({ item }: { item: Extract<Item, { type: "user" }> }) {
 					<button
 						type="button"
 						className="edit-button"
-						aria-label="Edit"
-						title="Edit: continue the session before this message, with its text in the composer"
+						aria-label={t("edit")}
+						title={t("editHint")}
 						onClick={() => branch.from(entryId)}
 					>
 						<PencilIcon />
@@ -402,7 +416,7 @@ function Incoming({ item }: { item: Extract<Item, { type: "user" }> }) {
 					<button
 						type="button"
 						className="reply-quote"
-						title="Show the message this answers"
+						title={t("showAnswered")}
 						onClick={() => item.replyTo && void revealEntry(item.replyTo.entryId, reveal)}
 					>
 						<ReplyIcon size={12} />
@@ -432,6 +446,7 @@ function Incoming({ item }: { item: Extract<Item, { type: "user" }> }) {
 
 /** A body cut after about eight lines, with "Show more" when it is longer; `text` names what it shows. */
 function Clamped({ text, children }: { text: string; children: ReactNode }) {
+	const { t } = useMessages(messages);
 	const body = useRef<HTMLDivElement>(null);
 	const [long, setLong] = useState(false);
 	const [open, setOpen] = useState(false);
@@ -447,7 +462,7 @@ function Clamped({ text, children }: { text: string; children: ReactNode }) {
 			</div>
 			{long && (
 				<button type="button" className="incoming-more" aria-expanded={open} onClick={() => setOpen(!open)}>
-					{open ? "Show less" : "Show more"}
+					{open ? t("showLess") : t("showMore")}
 				</button>
 			)}
 		</>
@@ -469,6 +484,7 @@ function MessageText({ text }: { text: string }) {
 
 /** The owner's message (or an input without an author): a bubble. People's messages can be replied to. */
 function UserMessage({ item }: { item: Extract<Item, { type: "user" }> }) {
+	const { t } = useMessages(messages);
 	const reveal = useContext(RevealEntry);
 	const reply = useReply(item.author ? item.entryId : undefined, item.author?.name ?? "");
 	const branch = useContext(BranchFrom);
@@ -485,7 +501,7 @@ function UserMessage({ item }: { item: Extract<Item, { type: "user" }> }) {
 						<button
 							type="button"
 							className="reply-quote"
-							title="Show the message this answers"
+							title={t("showAnswered")}
 							onClick={() => item.replyTo && void revealEntry(item.replyTo.entryId, reveal)}
 						>
 							<ReplyIcon size={12} />
@@ -495,7 +511,7 @@ function UserMessage({ item }: { item: Extract<Item, { type: "user" }> }) {
 					{item.author && (
 						<div className="speaker">
 							{item.author.name}
-							{item.chat && " · chat"}
+							{item.chat && ` · ${t("chatSuffix")}`}
 						</div>
 					)}
 					<MessageText text={item.text} />
@@ -518,8 +534,8 @@ function UserMessage({ item }: { item: Extract<Item, { type: "user" }> }) {
 						<button
 							type="button"
 							className="copy"
-							aria-label="Edit"
-							title="Edit: continue the session before this message, with its text in the composer"
+							aria-label={t("edit")}
+							title={t("editHint")}
 							onClick={() => branch.from(entryId)}
 						>
 							<PencilIcon />
@@ -535,13 +551,14 @@ function UserMessage({ item }: { item: Extract<Item, { type: "user" }> }) {
 /** A thinking block in place: "Thought", opened to its text with a tap; "Thinking…" while it streams. */
 function Thought({ item }: { item: Extract<ChatItem, { type: "thought" }> }) {
 	// Open at detail 4 (settings.json), also when the setting changes while it shows, until the reader toggles it.
+	const { t } = useMessages(messages);
 	const [toggled, setOpen] = useState<boolean>();
 	const open = toggled ?? Boolean(item.full);
 	return (
 		<div className={`thinking ${item.live ? "live" : ""}`} data-entry={item.entryId} data-testid="thought">
 			<button type="button" onClick={() => setOpen(!open)} aria-expanded={open}>
 				<SparkIcon size={15} />
-				<span>{item.live ? "Thinking…" : "Thought"}</span>
+				<span>{item.live ? t("thinking") : t("thought")}</span>
 				<span className={`chev ${open ? "open" : ""}`}>
 					<ChevronIcon size={14} />
 				</span>
@@ -558,6 +575,7 @@ function Thought({ item }: { item: Extract<ChatItem, { type: "thought" }> }) {
 const Answer = memo(function Answer({ item }: { item: Extract<ChatItem, { type: "answer" }> }) {
 	const reply = useReply(item.streaming ? undefined : item.entryId, "Lingshu");
 	const branch = useContext(BranchFrom);
+	const { t } = useMessages(messages);
 	const { message, entryId } = item;
 	const text = item.text.trim();
 	return (
@@ -572,8 +590,8 @@ const Answer = memo(function Answer({ item }: { item: Extract<ChatItem, { type: 
 								<button
 									type="button"
 									className="copy"
-									aria-label="Branch from here"
-									title="Branch from here: continue the session after this answer"
+									aria-label={t("branch")}
+									title={t("branchHint")}
 									onClick={() => branch.from(entryId)}
 								>
 									<BranchIcon />
@@ -588,10 +606,10 @@ const Answer = memo(function Answer({ item }: { item: Extract<ChatItem, { type: 
 			{hasNotice(message, item.streaming) && (
 				<div className={`notice ${message.stopReason === "aborted" ? "stopped" : "error"}`}>
 					{message.stopReason === "aborted"
-						? "Stopped"
+						? t("stopped")
 						: message.stopReason === "length"
-							? "The response hit the model's length limit"
-							: message.errorMessage || "The provider returned an error."}
+							? t("lengthLimit")
+							: message.errorMessage || t("providerError")}
 				</div>
 			)}
 		</div>
@@ -772,13 +790,14 @@ export const Messages = memo(function Messages({
 }) {
 	const spacers = list.spacers(range);
 	const arriving = useArriving(rows);
+	const { t } = useMessages(messages);
 	const [slotHeights] = useState<SlotHeights>(() => new Map());
 	return (
 		<div className="messages">
 			{/* One height in every state: the edge changing never moves the transcript under the reader. It loads ahead
 			    of the reader (use-chat-scroll.ts), so the button is a fallback. */}
 			{earlier === "start" ? (
-				<div className="history-edge">Start of conversation</div>
+				<div className="history-edge">{t("startOfConversation")}</div>
 			) : (
 				earlier && (
 					<button
@@ -789,7 +808,7 @@ export const Messages = memo(function Messages({
 						onClick={onEarlier}
 					>
 						<span className="spinner" aria-hidden="true" />
-						Earlier messages
+						{t("earlierMessages")}
 					</button>
 				)
 			)}
@@ -828,15 +847,15 @@ export const Messages = memo(function Messages({
 				</SlotHeightsContext>
 				<div className="row-space" ref={list.bottomRef} style={{ height: spacers.after }} />
 			</div>
-			{stopped && !transcript.busy && <output className="notice stopped">Stopped</output>}
+			{stopped && !transcript.busy && <output className="notice stopped">{t("stopped")}</output>}
 			{transcript.compactions.map((compaction) => (
 				<output key={compaction.id} className="notice">
-					{compaction.blocking ? "Compacting context…" : "Compacting context in background…"}
-					{compaction.retry && ` Retrying: ${compaction.retry.error.slice(0, 200)}`}
+					{compaction.blocking ? t("compacting") : t("compactingBackground")}
+					{compaction.retry && t("retryingNotice", compaction.retry.error.slice(0, 200))}
 				</output>
 			))}
 			{transcript.retry && (
-				<div className="notice">Provider error, retrying… {transcript.retry.error.slice(0, 200)}</div>
+				<div className="notice">{t("providerRetrying", transcript.retry.error.slice(0, 200))}</div>
 			)}
 			<ActivityLayer rows={rows} />
 		</div>

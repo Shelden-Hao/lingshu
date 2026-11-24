@@ -1,4 +1,4 @@
-import { BACKGROUND_CONTEXT, contribute, defineFacet, liveIn } from "@p2/app/v1";
+import { BACKGROUND_CONTEXT, contribute, defineFacet, liveIn, Translations } from "@p2/app/v1";
 import {
 	navigate,
 	OpenPeerConversation,
@@ -12,6 +12,7 @@ import {
 import type { ReactNode } from "react";
 import { Sessions } from "../sessions/contract.ts";
 import { conversationsActivity } from "./activity.tsx";
+import { messages } from "./messages.ts";
 
 function Attribution({ children }: { children?: ReactNode }) {
 	const sessions = useObject(Sessions, {});
@@ -45,5 +46,6 @@ export default defineFacet((host) => {
 	contribute(host, "p2.web-conversations", (self) => {
 		self.contribute(Slots, { "chat-attribution": Attribution });
 		self.contribute(ToolActivities, { conversations: conversationsActivity });
+		self.contribute(Translations, messages.translations);
 	});
 });

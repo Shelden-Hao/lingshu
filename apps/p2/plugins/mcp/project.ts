@@ -2,12 +2,7 @@
 // a repository wrote it, and the agent can edit it). It may add stdio servers, which run at that location only, and
 // turn the owner's servers on or off there; everything else is refused and reported.
 
-import {
-	isMcpServerOverride,
-	type McpStdioServerConfig,
-	mcpNamespace,
-	validateMcpServerConfig,
-} from "@lingshu/mcp";
+import { isMcpServerOverride, type McpStdioServerConfig, mcpNamespace, validateMcpServerConfig } from "@lingshu/mcp";
 import { isRecord, type OwnerConfig, serverEntries } from "./config.ts";
 
 /** One stdio server a project adds, validated; it runs where the project is. */

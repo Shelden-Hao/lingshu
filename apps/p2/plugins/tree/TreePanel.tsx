@@ -14,6 +14,7 @@ import {
 	TableOfContents,
 	useCommandMenuRow,
 	useComposerState,
+	useMessages,
 	useNavigation,
 	useObject,
 	useReadable,
@@ -26,6 +27,7 @@ import { SessionTree, type Tree, type TreeNode } from "./contract.ts";
 import { onReaderScroll, useEntryInView } from "./entry-in-view.ts";
 import { type Tip, type Toc, type Turn, tableOfContents } from "./toc.ts";
 import "./tree.css";
+import { messages } from "./messages.ts";
 
 /** The side panel's name in the route (`Route.panel`). */
 export const TREE_PANEL = "tree";
@@ -34,6 +36,7 @@ type Loaded = { readonly kind: "tree"; readonly tree: Tree } | { readonly kind: 
 
 /** The panel for the session `session`: its tree, read again whenever the session row says it changed. */
 export function TreePanel({ session }: { session: string }) {
+	const { t } = useMessages(messages);
 	const tree = useObject(SessionTree, { session }, { variant: "owner" });
 	const rows = useReadable(liveIn(useObject(Sessions, {}), "owner", "guest")?.sessions);
 	const row = rows?.find((each) => each.id === session);
@@ -56,8 +59,8 @@ export function TreePanel({ session }: { session: string }) {
 	const branches = loaded?.kind === "tree" ? loaded.tree.branches.length : 0;
 	return (
 		<SidePanel
-			title="Tree"
-			meta={branches > 1 ? `${branches} branches` : undefined}
+			title={t("panelTitle")}
+			meta={branches > 1 ? t("branchCount", branches) : undefined}
 			onClose={closePanel}
 			className="tree-panel"
 			testId="tree-panel"
@@ -65,9 +68,9 @@ export function TreePanel({ session }: { session: string }) {
 			{loaded?.kind === "failed" ? (
 				<p className="empty-note">{loaded.error}</p>
 			) : !toc || loaded?.kind !== "tree" ? (
-				<p className="empty-note">Loading…</p>
+				<p className="empty-note">{t("loading")}</p>
 			) : toc.turns.length === 0 && toc.detached.length === 0 ? (
-				<p className="empty-note">No messages yet.</p>
+				<p className="empty-note">{t("noMessages")}</p>
 			) : (
 				<TreeContents held={tree} session={session} title={row?.title ?? ""} tree={loaded.tree} toc={toc} />
 			)}
@@ -100,6 +103,7 @@ function TreeContents({
 }) {
 	const nav = useNavigation();
 	const wide = useWide();
+	const { t } = useMessages(messages);
 	const { fail } = useComposerState();
 	const [pending, setPending] = useState(false);
 	const inMain = nav.route.conversation === tree.main;
@@ -149,16 +153,11 @@ function TreeContents({
 		},
 	};
 	return (
-		<TableOfContents.Root
-			ref={root}
-			className="tree-toc"
-			aria-label="Conversation tree, oldest first"
-			aria-busy={pending || undefined}
-		>
+		<TableOfContents.Root ref={root} className="tree-toc" aria-label={t("tocLabel")} aria-busy={pending || undefined}>
 			{toc.detached.length > 0 && (
 				<TableOfContents.List className="tree-detached">
 					<TableOfContents.Item>
-						<span className="tree-note">Started before the first message</span>
+						<span className="tree-note">{t("detached")}</span>
 						{toc.detached.map((chain) => (
 							<TurnList key={chain.start} turns={chain.turns} actions={actions} />
 						))}
@@ -189,17 +188,18 @@ function TurnList({ turns, actions }: { turns: readonly Turn[]; actions: TurnAct
 
 /** One turn: its message and answer, the branches ending at it; then its branches. */
 function TurnItem({ turn, actions }: { turn: Turn; actions: TurnActions }) {
+	const { t } = useMessages(messages);
 	const key = firstOf(turn).entry;
-	const { messages } = turn;
-	const user = messages.kind === "exchange" ? messages.user : null;
-	const answer = messages.answer;
+	const turnMessages = turn.messages;
+	const user = turnMessages.kind === "exchange" ? turnMessages.user : null;
+	const answer = turnMessages.answer;
 	return (
 		<TableOfContents.Item className={turn.current ? "current" : "inset"}>
 			<TableOfContents.Link
 				href={`#turn-${key}`}
 				active={actions.active === key}
 				data-turn={key}
-				title={turn.current ? undefined : "Switch the session to this branch and show this message"}
+				title={turn.current ? undefined : t("switchBranch")}
 				onClick={(event: MouseEvent) => {
 					// A choice in the panel, not an address.
 					event.preventDefault();
@@ -225,11 +225,12 @@ function TurnItem({ turn, actions }: { turn: Turn; actions: TurnActions }) {
 
 /** A branch's label at its last turn ("Current: …" on the main one), the command menu's target for the branch. */
 function BranchLabel({ session, tip, title }: { session: string; tip: Tip; title: string }) {
+	const { t } = useMessages(messages);
 	const label = tip.label ?? title;
 	const target = useCommandMenuRow(branchTarget({ session, conversation: tip.conversation }, label));
 	return (
 		<span className={`tree-ref ${tip.main ? "main" : ""}`} {...target}>
-			{tip.main ? "Current: " : ""}
+			{tip.main ? t("current") : ""}
 			{label}
 		</span>
 	);

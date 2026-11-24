@@ -7,17 +7,20 @@ import {
 	CommandMenu,
 	type CommandPage,
 	type CommandTarget,
+	type ContributedText,
 	type ModelChoice,
 	ModelIcon,
 	modelChoice,
 	signedInModels,
 	ThinkingIcon,
+	textIn,
 	thinkingLevels,
 	useCommandMatches,
 	useCommandMenu,
 	useCommandTarget,
 	useComposerState,
 	useHost,
+	useMessages,
 	useNewSessionState,
 	useObject,
 	useReadable,
@@ -27,6 +30,7 @@ import { Models, type ResourceSnapshot } from "../models/contract.ts";
 import { type Session, Sessions } from "../sessions/contract.ts";
 import { type Child, modelRefOf, Subagents } from "../subagents/contract.ts";
 import { Chat, conversationOf } from "./contract.ts";
+import { messages, pageText } from "./messages.ts";
 import { newSessionChoice, thinkingLevelOf } from "./model-choice.ts";
 import { modelScreen, useShownModelScreen } from "./model-screens.ts";
 
@@ -36,56 +40,66 @@ const MODEL_TARGETS = ["session", "conversation", "new-session"];
 /** The commands, by id. */
 export const MODEL_COMMANDS: Readonly<Record<string, Command>> = {
 	"chat.change-model": {
-		title: "Change model…",
-		group: "Model",
+		title: textIn(messages, "changeModel"),
+		group: textIn(messages, "groupModel"),
 		order: 20,
 		icon: ModelIcon,
-		keywords: ["switch model"],
+		keywords: [textIn(messages, "keywordSwitchModel")],
 		target: MODEL_TARGETS,
 		owner: true,
 		Shown: Configurable,
 		action: { kind: "page", page: "models" },
 	},
 	"chat.thinking-level": {
-		title: "Thinking level…",
-		group: "Model",
+		title: textIn(messages, "thinkingLevelCommand"),
+		group: textIn(messages, "groupModel"),
 		order: 20,
 		icon: ThinkingIcon,
-		keywords: ["reasoning", "effort"],
+		keywords: [textIn(messages, "keywordReasoning"), textIn(messages, "keywordEffort")],
 		target: MODEL_TARGETS,
 		owner: true,
 		Shown: Configurable,
 		action: { kind: "page", page: "thinking" },
 	},
 	"chat.make-default": {
-		title: "Set current model as default",
-		group: "Model",
+		title: textIn(messages, "setCurrentDefault"),
+		group: textIn(messages, "groupModel"),
 		order: 20,
 		icon: ModelIcon,
-		keywords: ["thinking level", "make default"],
+		keywords: [textIn(messages, "keywordThinkingLevel"), textIn(messages, "keywordMakeDefault")],
 		target: MODEL_TARGETS,
 		owner: true,
 		action: { kind: "run", run: ({ host, target }) => makeCurrentDefault(host, target) },
 	},
 	"chat.set-default-model": {
-		title: "Set default model…",
-		group: "Model",
+		title: textIn(messages, "setDefaultModel"),
+		group: textIn(messages, "groupModel"),
 		order: 20,
 		icon: ModelIcon,
-		keywords: ["default for new sessions"],
+		keywords: [textIn(messages, "keywordDefaultSessions")],
 		owner: true,
 		action: { kind: "page", page: "default-model" },
 	},
 };
 
 /** What a model page says while it lists nothing: the pages list signed-in providers' models only. */
-const NO_MODELS = "No models match. Only signed-in providers are listed.";
+const NO_MODELS: ContributedText = textIn(messages, "noModels");
 
 /** The pages, by name. */
 export const MODEL_PAGES: Readonly<Record<string, CommandPage>> = {
-	models: { label: "Models", placeholder: "Search models…", empty: NO_MODELS, Body: ModelsPage },
-	thinking: { label: "Thinking level", placeholder: "Search levels…", Body: ThinkingPage },
-	"default-model": { label: "Default model", placeholder: "Search models…", empty: NO_MODELS, Body: DefaultModelPage },
+	models: {
+		label: pageText("models"),
+		placeholder: textIn(messages, "searchModels"),
+		empty: NO_MODELS,
+		Body: ModelsPage,
+	},
+	thinking: { label: pageText("thinking"), placeholder: textIn(messages, "searchLevels"), Body: ThinkingPage },
+	"default-model": {
+		label: pageText("default-model"),
+		placeholder: textIn(messages, "searchModels"),
+		empty: NO_MODELS,
+		Body: DefaultModelPage,
+	},
 };
 
 /**
@@ -145,15 +159,16 @@ function ThinkingPage() {
 	const choice = target?.choice;
 	const levels = useMemo(() => thinkingLevels(resources, choice?.model), [resources, choice?.model]);
 	const matches = useCommandMatches(levels, levelText);
-	if (!target || !choice) return null;
+	const { t } = useMessages(messages);
 	return (
-		<CommandMenu.Group heading="Thinking level">
+		<CommandMenu.Group heading={t("pageThinking")}>
 			{matches.map((level) => (
 				<CommandMenu.Row
 					key={level}
 					title={level}
-					checked={level === choice.thinkingLevel}
+					checked={choice !== undefined && level === choice.thinkingLevel}
 					onSelect={async () => {
+						if (target === undefined || choice === undefined) return;
 						await close();
 						await target.apply({ ...choice, thinkingLevel: thinkingLevelOf(level) }).catch(fail);
 					}}
@@ -215,6 +230,7 @@ function ModelRows({
 	current: Pick<ModelChoice, "model"> | undefined;
 	onPick: (model: Model) => void;
 }) {
+	const { t } = useMessages(messages);
 	const models = useMemo(() => signedInModels(resources), [resources]);
 	const providers = useMemo(
 		() => new Map(resources?.providers.map((provider) => [provider.id, provider.name])),
@@ -234,7 +250,7 @@ function ModelRows({
 		[matches, provider],
 	);
 	return (
-		<CommandMenu.Group heading="Models">
+		<CommandMenu.Group heading={t("pageModels")}>
 			{ordered.slice(0, MODEL_ROWS).map((model) => (
 				<CommandMenu.Row
 					key={`${model.provider}/${model.modelId}`}

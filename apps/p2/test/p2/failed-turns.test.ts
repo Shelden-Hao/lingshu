@@ -313,7 +313,11 @@ test("p2 TUI shows the persistent compaction error once and removes it when Dura
 		.join("\n");
 	assert.equal(plain.split(detail).length - 1, 1);
 	assert(!plain.includes("The model could not answer this input."));
-	const cleared = transcriptComponent(buildTranscript(wholeView({ ...base, docs: { "lingshu.live": {} } })), false, false)
+	const cleared = transcriptComponent(
+		buildTranscript(wholeView({ ...base, docs: { "lingshu.live": {} } })),
+		false,
+		false,
+	)
 		.render(200)
 		.map(stripTerminalSequences)
 		.join("\n");

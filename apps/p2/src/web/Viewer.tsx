@@ -3,7 +3,9 @@ import { type DownloadInfo, filePreview } from "../runtime/files.ts";
 import { useScrollMemory, useShownModal } from "../runtime/web.tsx";
 import { CodeBlock } from "./Code.tsx";
 import { CloseIcon, DownloadIcon } from "./icons.tsx";
+import { useMessages } from "./language.ts";
 import { Markdown } from "./Markdown.tsx";
+import { messages } from "./messages.ts";
 import { inPage } from "./navigation.ts";
 
 // One full-screen viewer for what a conversation hands the user: sent files today. It never executes anything (html
@@ -54,6 +56,7 @@ export function FileCard({
 	openHref?: string;
 	onOpen: () => void;
 }) {
+	const { t } = useMessages(messages);
 	const body = (
 		<>
 			<span className="file-card-icon">{icon}</span>
@@ -66,21 +69,20 @@ export function FileCard({
 	return (
 		<div className="file-card">
 			{openHref === undefined ? (
-				<button type="button" className="file-card-main" onClick={onOpen} aria-label={`Open ${title}`}>
+				<button type="button" className="file-card-main" onClick={onOpen} aria-label={t("open", title)}>
 					{body}
 				</button>
 			) : (
-				<a className="file-card-main" href={openHref} onClick={inPage(onOpen)} aria-label={`Open ${title}`}>
+				<a className="file-card-main" href={openHref} onClick={inPage(onOpen)} aria-label={t("open", title)}>
 					{body}
 				</a>
 			)}
-			<a className="file-card-download" href={href} download={download} aria-label={`Download ${title}`}>
+			<a className="file-card-download" href={href} download={download} aria-label={t("download", title)}>
 				<DownloadIcon />
 			</a>
 		</div>
 	);
 }
-
 export function ViewerShell({
 	title,
 	subtitle,
@@ -99,6 +101,7 @@ export function ViewerShell({
 	onClose: () => void;
 	children: ReactNode;
 }) {
+	const { t } = useMessages(messages);
 	const area = useRef<HTMLDivElement>(null);
 	useShownModal();
 	useScrollMemory(area);
@@ -121,7 +124,7 @@ export function ViewerShell({
 						<span>{subtitle}</span>
 					</div>
 					{actions}
-					<button type="button" className="icon-button" onClick={onClose} aria-label="Close viewer">
+					<button type="button" className="icon-button" onClick={onClose} aria-label={t("closeViewer")}>
 						<CloseIcon />
 					</button>
 				</header>
@@ -136,6 +139,7 @@ export function ViewerShell({
 
 /** Conservative preview of a stored file: text, raster images and media only; never executes. */
 export function DownloadPreview({ url, name, size }: { url: string; name: string; size: number }) {
+	const { t } = useMessages(messages);
 	const preview = filePreview(name);
 	const markdown = /\.(md|markdown)$/i.test(name);
 	const [text, setText] = useState<string>();
@@ -147,17 +151,17 @@ export function DownloadPreview({ url, name, size }: { url: string; name: string
 		setError(undefined);
 		void fetch(url, { credentials: "same-origin", cache: "no-store", signal: abort.signal })
 			.then(async (response) => {
-				if (!response.ok) throw new Error(`Could not preview file (${response.status})`);
+				if (!response.ok) throw new Error(t("previewFailed", response.status));
 				setText(await response.text());
 			})
 			.catch((caught: unknown) => {
-				if (!abort.signal.aborted) setError(caught instanceof Error ? caught.message : "Could not preview file");
+				if (!abort.signal.aborted) setError(caught instanceof Error ? caught.message : t("previewFailedGeneric"));
 			});
 		return () => abort.abort();
-	}, [preview?.kind, size, url]);
-	if (!preview) return <p className="notice">No preview for this file type. Download it instead.</p>;
+	}, [preview?.kind, size, url, t]);
+	if (!preview) return <p className="notice">{t("noPreview")}</p>;
 	if (preview.kind === "text") {
-		if (size > 1024 * 1024) return <p className="notice">Text preview is limited to 1 MiB. Download it instead.</p>;
+		if (size > 1024 * 1024) return <p className="notice">{t("previewLimit")}</p>;
 		if (error) return <p className="notice error">{error}</p>;
 		if (text === undefined) return <div className="spinner large" />;
 		return markdown ? <Markdown text={text} /> : <CodeBlock code={text} language={name} />;
@@ -183,6 +187,7 @@ export function FilePanel({
 	file: DownloadInfo;
 	onClose: () => void;
 }) {
+	const { t } = useMessages(messages);
 	const url = fileUrl(sessionId, file);
 	const kind = filePreview(file.name)?.kind;
 	return (
@@ -193,7 +198,7 @@ export function FilePanel({
 			onClose={onClose}
 			actions={
 				<a className="text-action" href={url} download={file.name}>
-					Download
+					{t("downloadAction")}
 				</a>
 			}
 		>

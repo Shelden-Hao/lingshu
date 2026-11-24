@@ -2,7 +2,9 @@ import type { Static } from "@lingshu/schema";
 import { BACKGROUND_CONTEXT, liveIn } from "@p2/app/v1";
 import { CopyButton, errorText, Sheet, Switch, useObject, useOptimisticCall, useReadable } from "@p2/app/v1/web";
 import { useState } from "react";
+import { useMessages } from "../../src/web/language.ts";
 import { type ForwardSchema, Ports } from "./contract.ts";
+import { messages } from "./messages.ts";
 
 type Forward = Static<typeof ForwardSchema>;
 
@@ -35,6 +37,7 @@ function applyPort(forwards: Forward[] | undefined, guess: PortGuess): Forward[]
 export function PortsPanel({ onClose }: { onClose: () => void }) {
 	const service = liveIn(useObject(Ports, {}), "owner");
 	const origin = useReadable(service?.radiusOrigin);
+	const { t } = useMessages(messages);
 	const [port, setPort] = useState("");
 	const [name, setName] = useState("");
 	const [removing, setRemoving] = useState<string>();
@@ -49,18 +52,9 @@ export function PortsPanel({ onClose }: { onClose: () => void }) {
 	};
 	const onDevice = ["127.0.0.1", "localhost", "[::1]"].includes(location.hostname);
 	return (
-		<Sheet title="Ports" onClose={onClose}>
-			<p className="muted small">
-				Open web servers running on this device, such as a dev server, from your other devices. Each port gets its
-				own address through Radius, which signs you in to it. A public port has a second address that anyone can
-				open without signing in.
-			</p>
-			{forwards && !origin && (
-				<p className="muted small">
-					Links appear once this server has been opened through Radius (
-					<span className="mono">npm run radius:login</span>, then Lingshu in Radius).
-				</p>
-			)}
+		<Sheet title={t("ports")} onClose={onClose}>
+			<p className="muted small">{t("intro")}</p>
+			{forwards && !origin && <p className="muted small">{t("linksPending", "npm run radius:login")}</p>}
 			<div className="list">
 				{forwards?.map((forward) => {
 					const url = forward.url ?? (onDevice ? `http://localhost:${forward.port}/` : undefined);
@@ -76,11 +70,9 @@ export function PortsPanel({ onClose }: { onClose: () => void }) {
 						<div className="forward" key={forward.id}>
 							<div className="guest-row forward-row">
 								<span>
-									{forward.name ?? `Port ${forward.port}`}{" "}
+									{forward.name ?? t("port", forward.port)}{" "}
 									<small className="muted mono">localhost:{forward.port}</small>
-									{forward.session && (
-										<small className="muted"> · by {forward.sessionTitle ?? "another session"}</small>
-									)}
+									{forward.session && <small className="muted">{t("bySession", forward.sessionTitle)}</small>}
 								</span>
 								<span className="inline-form">
 									{removing === forward.id ? (
@@ -96,10 +88,10 @@ export function PortsPanel({ onClose }: { onClose: () => void }) {
 														);
 												}}
 											>
-												Remove
+												{t("remove")}
 											</button>
 											<button type="button" className="text-action" onClick={() => setRemoving(undefined)}>
-												Cancel
+												{t("cancel")}
 											</button>
 										</>
 									) : (
@@ -110,12 +102,12 @@ export function PortsPanel({ onClose }: { onClose: () => void }) {
 												disabled={pending}
 												onClick={() => setRemoving(forward.id)}
 											>
-												Remove
+												{t("remove")}
 											</button>
 											{forward.url && <CopyButton text={forward.url} />}
 											{url && (
 												<a className="button" href={url} target="_blank" rel="noopener noreferrer">
-													Open
+													{t("open")}
 												</a>
 											)}
 										</>
@@ -124,20 +116,18 @@ export function PortsPanel({ onClose }: { onClose: () => void }) {
 							</div>
 							{publishing === forward.id ? (
 								<div className="inline-form forward-public">
-									<span className="small">
-										Anyone with the link can open localhost:{forward.port} without signing in.
-									</span>
+									<span className="small">{t("publicConfirm", forward.port)}</span>
 									<button type="button" className="text-action danger" onClick={() => setPublic(true)}>
-										Make public
+										{t("makePublic")}
 									</button>
 									<button type="button" className="text-action" onClick={() => setPublishing(undefined)}>
-										Cancel
+										{t("cancel")}
 									</button>
 								</div>
 							) : (
 								<div className="forward-public">
 									<Switch
-										label="Public: no sign-in"
+										label={t("publicNoSignIn")}
 										checked={forward.public ?? false}
 										disabled={pending}
 										onChange={(checked) => (checked ? setPublishing(forward.id) : setPublic(false))}
@@ -153,7 +143,7 @@ export function PortsPanel({ onClose }: { onClose: () => void }) {
 						</div>
 					);
 				})}
-				{forwards && !forwards.length && <p className="empty-note">No ports forwarded.</p>}
+				{forwards && !forwards.length && <p className="empty-note">{t("noForwards")}</p>}
 			</div>
 			<form
 				className="inline-form"
@@ -174,7 +164,7 @@ export function PortsPanel({ onClose }: { onClose: () => void }) {
 					onChange={(event) => setPort(event.target.value)}
 					inputMode="numeric"
 					placeholder="5173"
-					aria-label="Port"
+					aria-label={t("portLabel")}
 					required
 				/>
 				<input
@@ -182,11 +172,11 @@ export function PortsPanel({ onClose }: { onClose: () => void }) {
 					value={name}
 					onChange={(event) => setName(event.target.value)}
 					maxLength={40}
-					placeholder="Name (optional)"
-					aria-label="Name"
+					placeholder={t("namePlaceholder")}
+					aria-label={t("nameLabel")}
 				/>
 				<button type="submit" className="button primary" disabled={!service || !/^\d+$/.test(port.trim())}>
-					Add
+					{t("add")}
 				</button>
 			</form>
 			{error && (

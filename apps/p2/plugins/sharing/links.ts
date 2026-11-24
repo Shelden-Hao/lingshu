@@ -1,10 +1,16 @@
 // A session's share links on the page, for the share sheet and the command menu: their labels, copying a link (made
 // first when there is none) and resetting one.
 import { BACKGROUND_CONTEXT, type Held } from "@p2/app/v1";
-import { readValue } from "@p2/app/v1/web";
+import { type ContributedText, readValue, textIn } from "@p2/app/v1/web";
 import type { ShareMode, Sharing } from "./contract.ts";
+import { messages } from "./messages.ts";
 
-export const LINK_LABEL: Record<ShareMode, string> = { view: "Read-only", full: "Read/write" };
+/** The links' labels as contributed texts (the sheet's rows and options); `LINK_TEXT` reads them as words. */
+export const LINK_LABEL: Record<ShareMode, ContributedText> = {
+	view: textIn(messages, "readOnlyLabel"),
+	full: textIn(messages, "readWriteLabel"),
+};
+export const LINK_TEXT: Record<ShareMode, string> = { view: "Read-only", full: "Read/write" };
 
 /**
  * Whether making the link of `mode` needs the owner's confirmation first: a first read/write link on a remote

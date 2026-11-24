@@ -3,15 +3,26 @@
 // while a sign-in waits, the final redirect URL can be pasted here, for a browser that cannot reach where it returns.
 // Until the servers load it says so; a view that failed or ended shows why, with Retry.
 
-import { BACKGROUND_CONTEXT, contribute, defineFacet, type HeldIn, keptIn, locationText } from "@p2/app/v1";
 import {
-	ChevronIcon,
+	BACKGROUND_CONTEXT,
+	contribute,
+	defineFacet,
+	type HeldIn,
+	keptIn,
+	locationText,
+	type MessagesOf,
+	Translations,
+	type Translator,
+} from "@p2/app/v1";
+import {
 	closeLayers,
 	errorText,
 	SettingsSections,
 	Sheet,
+	textIn,
 	useComposerState,
 	useConnected,
+	useMessages,
 	useObject,
 	useOptimisticCall,
 	useOwner,
@@ -20,6 +31,7 @@ import {
 } from "@p2/app/v1/web";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { type Instance, Mcp, type SignIn, signInLink } from "./contract.ts";
+import { messages } from "./messages.ts";
 
 type OwnerView = HeldIn<typeof Mcp, "owner">;
 
@@ -47,22 +59,16 @@ type Actions = {
 	readonly cancelSignIn: (id: string) => void;
 };
 
-const STATUS: Record<Instance["status"], string> = {
-	starting: "Starting",
-	connected: "Connected",
-	"sign-in": "Sign-in needed",
-	failed: "Failed",
-};
-
 /** The sheet: the intro, then the servers, held anew when their view ended. */
 function McpSheet({ onClose }: { onClose: () => void }) {
+	const { t } = useMessages(messages);
 	const [hold, setHold] = useState(0);
 	const holdAgain = useCallback(() => setHold((count) => count + 1), []);
 	return (
-		<Sheet title="MCP servers" onClose={onClose}>
+		<Sheet title={t("title")} onClose={onClose}>
 			<p className="muted small">
-				Servers of <span className="mono">mcp.json</span> run while sessions use them. Sign-in credentials are
-				stored on the server.
+				{t("intro")} <span className="mono">mcp.json</span>
+				{t("introRun")}
 			</p>
 			<McpServers key={hold} holdAgain={holdAgain} />
 		</Sheet>
@@ -75,6 +81,7 @@ function McpSheet({ onClose }: { onClose: () => void }) {
  * retried when the page reconnects (Chord binds loading references again by itself, not failed or ended ones).
  */
 function McpServers({ holdAgain }: { holdAgain: () => void }) {
+	const { t } = useMessages(messages);
 	const ref = useObject(Mcp, {});
 	const state = useReadable(ref?.state);
 	const view = keptIn(ref, "owner");
@@ -109,13 +116,15 @@ function McpServers({ holdAgain }: { holdAgain: () => void }) {
 	if (view === undefined) {
 		const failure = state?.kind === "failed" ? state.cause.error : state?.kind === "ended" ? state.error : undefined;
 		return failure === undefined ? (
-			<p className="empty-note">Loading…</p>
+			<p className="empty-note">{t("loading")}</p>
 		) : (
 			<div className="stack">
-				<p className="error small">The MCP servers could not be loaded: {errorText(failure)}</p>
+				<p className="error small">
+					{t("loadFailed")} {errorText(failure)}
+				</p>
 				<div className="inline-form">
 					<button type="button" className="text-action" onClick={retry}>
-						Retry
+						{t("retry")}
 					</button>
 				</div>
 			</div>
@@ -128,7 +137,7 @@ function McpServers({ holdAgain }: { holdAgain: () => void }) {
 					{error}
 				</p>
 			))}
-			{servers.length === 0 && <p className="empty-note">No MCP server is running.</p>}
+			{servers.length === 0 && <p className="empty-note">{t("noServers")}</p>}
 			{actions && (
 				<div className="list">
 					{servers.map((server) => (
@@ -147,6 +156,14 @@ function McpServers({ holdAgain }: { holdAgain: () => void }) {
 	);
 }
 
+/** What an instance's row says of its status. */
+function statusText(status: Instance["status"], t: Translator<"mcp", MessagesOf<typeof messages>>): string {
+	if (status === "starting") return t("statusStarting");
+	if (status === "connected") return t("statusConnected");
+	if (status === "sign-in") return t("statusSignIn");
+	return t("statusFailed");
+}
+
 /** One server: its instances (status, place, tools, error, restart), and signing in or out if it uses OAuth. */
 function ServerEntry({
 	view,
@@ -161,6 +178,7 @@ function ServerEntry({
 	instances: readonly Instance[];
 	signIn: SignIn | undefined;
 }) {
+	const { t } = useMessages(messages);
 	const oauth = instances.some((instance) => instance.auth === "oauth");
 	const mayNeedSignIn = instances.some((instance) => instance.status === "sign-in" || instance.status === "failed");
 	// Signing in again (another account, a grant the server refuses) is signing out, then in, as in lingshu: any instance
@@ -172,20 +190,17 @@ function ServerEntry({
 			{instances.map((instance) => (
 				<div key={instance.id} className="stack">
 					<p className="small">
-						{STATUS[instance.status]}
+						{statusText(instance.status, t)}
 						{instance.location && <span className="muted mono"> · {locationText(instance.location)}</span>}
 						{instance.runsOn !== "host" && <span className="muted"> · on {instance.runsOn.env}</span>}
 						{instance.status === "connected" && (
-							<span className="muted">
-								{" "}
-								· {instance.tools.length} tool{instance.tools.length === 1 ? "" : "s"}
-							</span>
+							<span className="muted">{t("toolsCount", instance.tools.length)}</span>
 						)}
 					</p>
 					{instance.error && instance.status !== "sign-in" && <p className="error small">{instance.error}</p>}
 					<div className="inline-form">
 						<button type="button" className="text-action" onClick={() => actions.restart(instance.id)}>
-							Restart
+							{t("restart")}
 						</button>
 					</div>
 				</div>
@@ -195,9 +210,9 @@ function ServerEntry({
 			)}
 			{oauth && signIn?.status === "failed" && (
 				<div className="stack">
-					<p className="error small">{signIn.error ?? "The sign-in failed."}</p>
+					<p className="error small">{signIn.error ?? t("signInFailed")}</p>
 					<button type="button" className="text-action" onClick={() => actions.cancelSignIn(signIn.id)}>
-						Dismiss
+						{t("dismiss")}
 					</button>
 				</div>
 			)}
@@ -205,13 +220,12 @@ function ServerEntry({
 				<div className="inline-form">
 					{mayNeedSignIn || signIn !== undefined ? (
 						<a className="login-continue" href={signInLink(server)} target="_blank" rel="noreferrer">
-							{signIn?.status === "waiting" ? "Sign in again" : "Sign in"}
-							<ChevronIcon />
+							{signIn?.status === "waiting" ? t("signInAgain") : t("signIn")}
 						</a>
 					) : null}
 					{mayHoldCredentials && (
 						<button type="button" className="text-action danger" onClick={() => actions.signOut(server)}>
-							Sign out
+							{t("signOut")}
 						</button>
 					)}
 				</div>
@@ -222,6 +236,7 @@ function ServerEntry({
 
 /** A sign-in waiting for the browser: paste the final redirect URL, or cancel. */
 function PendingSignIn({ view, signIn, onCancel }: { view: OwnerView; signIn: SignIn; onCancel: () => void }) {
+	const { t } = useMessages(messages);
 	const [value, setValue] = useState("");
 	const [sending, setSending] = useState(false);
 	const [error, setError] = useState<string>();
@@ -240,26 +255,26 @@ function PendingSignIn({ view, signIn, onCancel }: { view: OwnerView; signIn: Si
 			}}
 		>
 			<p className="muted small">
-				Waiting for the sign-in in the browser. If it ends on a page that does not load (
-				{signIn.via === "loopback" ? "a 127.0.0.1 address" : "p2's address"}), copy that page's full address from
-				the address bar and paste it here.
+				{t("waitingIntro")}
+				{signIn.via === "loopback" ? t("waitingLoopback") : t("waitingP2")}
+				{t("waitingPaste")}
 			</p>
 			<input
 				className="input mono"
 				type="text"
 				autoComplete="off"
-				placeholder="Final redirect URL"
-				aria-label="Final redirect URL"
+				placeholder={t("redirectUrl")}
+				aria-label={t("redirectUrl")}
 				value={value}
 				onChange={(event) => setValue(event.target.value)}
 			/>
 			{error && <p className="error small">{error}</p>}
 			<div className="inline-form">
 				<button type="submit" className="button" disabled={sending || !value.trim()}>
-					Continue
+					{t("continue")}
 				</button>
 				<button type="button" className="text-action" onClick={onCancel}>
-					Cancel
+					{t("cancel")}
 				</button>
 			</div>
 		</form>
@@ -275,6 +290,9 @@ function McpSheetSlot() {
 
 export default defineFacet((host) => {
 	contribute(host, "p2.web-mcp", (self) => {
-		self.contribute(SettingsSections, { mcp: { label: "MCP servers", order: 20, Sheet: McpSheetSlot } });
+		self.contribute(SettingsSections, {
+			mcp: { label: textIn(messages, "sectionMcp"), order: 20, Sheet: McpSheetSlot },
+		});
+		self.contribute(Translations, messages.translations);
 	});
 });

@@ -1,5 +1,6 @@
 // How the `terminal` tool shows in the chat: its tmux command line, its output, and the terminal one tap away.
 import {
+	activityMessages,
 	CommandBlock,
 	DetailLink,
 	detailsOf,
@@ -16,6 +17,7 @@ import {
 	type ToolView,
 } from "@p2/app/v1/web";
 import { useContext } from "react";
+import { messages } from "./messages.ts";
 
 /** A call as its tmux command line: `send-keys -t 1 C-c`. */
 const commandLine = (tool: ToolView) =>
@@ -56,8 +58,7 @@ export const terminalActivity: ToolActivity = {
 		mono: true,
 	}),
 	running: (step) => ({ kind: "command", verb: "Terminal", object: firstLine(commandLine(step.tool)), style: "code" }),
-	argument: (tool) => firstLine(commandLine(tool)),
-	summary: (count) => (count === 1 ? "used the terminal" : `used the terminal ${count} times`),
+	summary: (count) => activityMessages(messages)("toolSummary", count),
 	Detail: TerminalDetail,
 	// A script's call: the tmux command's name, as a command line.
 	CallInput: ({ call }) => <CommandBlock command={stringOf(parsedArgs(call.args).command)} />,

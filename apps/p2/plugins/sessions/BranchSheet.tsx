@@ -1,9 +1,10 @@
 // The owner's sheet for a `/tree` branch's label (docs/tree.md): a new label, or for conversation 1 the session title.
 // A route layer, opened from a branch's command menu ("Rename branch…"; the tree panel's branch labels are its
 // targets, plugins/tree/branch-target.ts).
-import { type Layer, Sheet } from "@p2/app/v1/web";
+import { type Layer, Sheet, useMessages } from "@p2/app/v1/web";
 import { useEffect, useRef, useState } from "react";
 import { PREVIEW_LENGTH } from "../tree/contract.ts";
+import { messages } from "./messages.ts";
 
 /** The name of the sheet's layer. */
 export const BRANCH_SHEET = "branch-name";
@@ -29,6 +30,7 @@ export function BranchSheet({
 	onSave: (label: string | null) => void;
 	onClose: () => void;
 }) {
+	const { t } = useMessages(messages);
 	const shown = label ?? title;
 	const [draft, setDraft] = useState(shown);
 	// The field is what the sheet is for: focused, its text selected, so typing replaces it.
@@ -45,7 +47,7 @@ export function BranchSheet({
 		onClose();
 	};
 	return (
-		<Sheet title="Branch name" onClose={onClose}>
+		<Sheet title={t("sheetBranchName")} onClose={onClose}>
 			<form
 				className="stack"
 				onSubmit={(event) => {
@@ -54,7 +56,7 @@ export function BranchSheet({
 				}}
 			>
 				<label className="field">
-					<span className="label">Label in the sidebar and /tree</span>
+					<span className="label">{t("branchLabel")}</span>
 					<input
 						ref={field}
 						className="input"
@@ -63,16 +65,14 @@ export function BranchSheet({
 						onChange={(event) => setDraft(event.target.value)}
 					/>
 				</label>
-				{resettable && (
-					<p className="muted small">The first branch shows the session title until it gets a label of its own.</p>
-				)}
+				{resettable && <p className="muted small">{t("branchFirstHint")}</p>}
 				<div className="inline-form">
 					<button type="submit" className="button" disabled={unchanged || (!next && !resettable)}>
-						Save
+						{t("save")}
 					</button>
 					{resettable && label !== null && (
 						<button type="button" className="text-action" onClick={() => save(null)}>
-							Use the session title
+							{t("useSessionTitle")}
 						</button>
 					)}
 				</div>

@@ -11,6 +11,9 @@ import {
 	type HeldIn,
 	keptIn,
 	liveIn,
+	type MessagesOf,
+	Translations,
+	type Translator,
 	whenLive,
 } from "@p2/app/v1";
 import {
@@ -33,6 +36,7 @@ import {
 	useComposerState,
 	useConnected,
 	useHost,
+	useMessages,
 	useNavigation,
 	useObject,
 	useOptimisticCall,
@@ -56,6 +60,7 @@ import { BRANCH_SHEET, BranchSheet } from "./BranchSheet.tsx";
 import { SESSION_COMMANDS, SESSION_PAGES, SESSION_SEARCH } from "./commands.tsx";
 import { type Operation, type Session, Sessions, SidebarSettings, type SidebarWindow } from "./contract.ts";
 import { type DrawerRows, DrawerRowsContext } from "./contract.web.tsx";
+import { messages } from "./messages.ts";
 import {
 	locatingProject,
 	PROJECT_COMMANDS,
@@ -141,10 +146,10 @@ const newSession = () => startNewSession();
 
 /** What a row says about a lifecycle operation (`Sessions.operations`), by kind: running, and failed. */
 const OPERATION_LABELS: Record<Operation["kind"], { running: string; failed: string }> = {
-	relocate: { running: "Moving…", failed: "Move failed" },
-	clone: { running: "Cloning…", failed: "Clone failed" },
-	fork: { running: "Forking…", failed: "Fork failed" },
-	archive: { running: "Archiving…", failed: "Archive failed" },
+	relocate: { running: "opMoving", failed: "opMoveFailed" },
+	clone: { running: "opCloning", failed: "opCloneFailed" },
+	fork: { running: "opForking", failed: "opForkFailed" },
+	archive: { running: "opArchiving", failed: "opArchiveFailed" },
 };
 
 /**
@@ -155,16 +160,21 @@ function operationOf(
 	operations: readonly Operation[],
 	session: string,
 	dismiss: (operation: string) => void,
+	t: Translator<"sessions", MessagesOf<typeof messages>>,
 ): SidebarRow["operation"] {
 	const failed = operations.find((operation) => operation.phase === "failed" && operation.session === session);
 	if (failed?.phase === "failed")
-		return { label: OPERATION_LABELS[failed.kind].failed, error: failed.error, dismiss: () => dismiss(failed.id) };
+		return {
+			label: t(OPERATION_LABELS[failed.kind].failed as "opMoving"),
+			error: failed.error,
+			dismiss: () => dismiss(failed.id),
+		};
 	const running = operations.find((operation) => operation.session === session);
-	if (running) return { label: OPERATION_LABELS[running.kind].running };
+	if (running) return { label: t(OPERATION_LABELS[running.kind].running as "opMoving") };
 	const copying = operations.find(
 		(operation) => operation.phase === "running" && operation.target === session && operation.copying,
 	);
-	return copying ? { label: "Copying files…" } : undefined;
+	return copying ? { label: t("copyingFiles") } : undefined;
 }
 
 /** A change to one session's row while its call is in flight. */
@@ -214,6 +224,7 @@ function publishWanting(next: Wanting): void {
  * objects.
  */
 function useSidebarData() {
+	const { t } = useMessages(messages);
 	const route = useRoute();
 	const host = useHost();
 	const nav = useNavigation();
@@ -259,10 +270,10 @@ function useSidebarData() {
 						unread: (answers?.[session.id] ?? 0) > (reads?.[session.id] ?? 0),
 					},
 					subagents: children?.[session.id] ?? NO_SUBAGENTS,
-					operation: operationOf(operations, session.id, dismiss),
+					operation: operationOf(operations, session.id, dismiss, t),
 				};
 			}),
-		[list, statuses, children, answers, reads, operations, dismiss],
+		[list, statuses, children, answers, reads, operations, dismiss, t],
 	);
 	// The projects rollup reads the projects and the sessions' projects (`Projects`, from the projects plugin); moving a
 	// session or a project shows at once.
@@ -461,13 +472,13 @@ function useSidebarData() {
  * its effect at once (`useOptimisticCall`); a refused one rolls back and the toast says why.
  */
 function Sidebar() {
+	const { t } = useMessages(messages);
 	const connected = useConnected();
 	const nav = useNavigation();
 	const data = useSidebarData();
 	const { route, catalog, owner, fail, list, edit, rows, answers, reads, marks, search, settings, changeSettings } =
 		data;
 	const { rollups, rollupsHeld, entries, context, view, onOpen, onRestore, guest } = data;
-	// Sessions a plugin's sidebar entry shows (the Familiar's, a `sidebar-start` row) are left out of the rollups.
 	const [apart, setApart] = useState<Readonly<Record<string, readonly string[]>>>({});
 	const listApart = useCallback(
 		(key: string, ids: readonly string[]) => setApart((current) => ({ ...current, [key]: ids })),
@@ -738,7 +749,7 @@ function Sidebar() {
 			{projectFolder && (
 				<DirectoryPicker
 					sheet={PROJECT_FOLDER}
-					title="Project folder"
+					title={t("projectFolder")}
 					sessions={list}
 					env={null}
 					value="~"
@@ -749,7 +760,7 @@ function Sidebar() {
 			{projectLocation && locating && (
 				<DirectoryPicker
 					sheet={PROJECT_LOCATION}
-					title={`Default location of ${locating.name}`}
+					title={t("defaultLocationOf", locating.name)}
 					sessions={list}
 					env={locating.places[0]?.env ?? null}
 					value={locating.places[0]?.path ?? "~"}
@@ -854,12 +865,13 @@ function SectionPage() {
  * answer), in the error colour when one failed, else the unread blue. Steady: only working moves in the sidebar.
  */
 function MenuBadge() {
+	const { t } = useMessages(messages);
 	const { count, failed } = useSyncExternalStore(subscribeWanting, () => wanting);
 	if (count === 0) return null;
 	return (
 		<span
 			className={`menu-badge ${failed ? "failed" : ""}`}
-			title={failed ? `${count} want you, a failure among them` : `${count} with a new answer`}
+			title={failed ? t("badgeFailed", count) : t("badgeUnread", count)}
 		>
 			{count}
 		</span>
@@ -868,6 +880,7 @@ function MenuBadge() {
 
 /** The top bar's button that opens the Session sheet (the drawer renders the sheet, where the rows are). */
 function SessionOptions() {
+	const { t } = useMessages(messages);
 	const route = useRoute();
 	const rows = useReadable(useObject(Sessions, {}, { variant: "owner" })?.sessions);
 	const session = rows?.find((row) => row.id === route.session);
@@ -876,7 +889,7 @@ function SessionOptions() {
 		<button
 			type="button"
 			className="icon-button"
-			aria-label="Session options"
+			aria-label={t("sessionOptions")}
 			onClick={() => openLayer({ kind: "sheet", name: "session" })}
 		>
 			<MoreIcon />
@@ -892,6 +905,7 @@ export default defineFacet((host) => {
 			"session-options": SessionOptions,
 			"menu-badge": MenuBadge,
 		});
+		self.contribute(Translations, messages.translations);
 		self.contribute(Commands, { ...SESSION_COMMANDS, ...PROJECT_COMMANDS });
 		self.contribute(CommandPages, { ...SESSION_PAGES, ...PROJECT_PAGES });
 		self.contribute(CommandSearches, { sessions: SESSION_SEARCH });

@@ -6,13 +6,7 @@ import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
 import { createModels } from "@lingshu/ai/models";
-import {
-	type ConversationId,
-	type ConversationView,
-	configure,
-	createRegistry,
-	Harness,
-} from "@lingshu/durable";
+import { type ConversationId, type ConversationView, configure, createRegistry, Harness } from "@lingshu/durable";
 import { BACKGROUND_CONTEXT } from "@p2/app/v1";
 import { Chat } from "../../plugins/chat/contract.ts";
 import { Sessions } from "../../plugins/sessions/contract.ts";

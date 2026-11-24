@@ -1,4 +1,4 @@
-import { BACKGROUND_CONTEXT, contribute, defineFacet, follow, liveIn } from "@p2/app/v1";
+import { BACKGROUND_CONTEXT, contribute, defineFacet, follow, liveIn, Translations } from "@p2/app/v1";
 import type { Navigation, WorkspaceRoute } from "@p2/app/v1/web";
 import {
 	Commands,
@@ -7,6 +7,7 @@ import {
 	Slots,
 	useCanWrite,
 	useComposerState,
+	useMessages,
 	useNavigation,
 	useObject,
 	useOwner,
@@ -20,6 +21,7 @@ import { Sessions } from "../sessions/contract.ts";
 import { conversationLocation, Subagents } from "../subagents/contract.ts";
 import { WORKSPACE_COMMANDS } from "./commands.tsx";
 import { Workspace } from "./contract.ts";
+import { messages } from "./messages.ts";
 import { withWorkspace } from "./tabs.ts";
 import { WorkspacePanel as MobileWorkspacePanel } from "./Workspace.tsx";
 
@@ -27,12 +29,13 @@ function WorkspaceButton() {
 	const nav = useNavigation();
 	const route = useRoute();
 	const canWrite = useCanWrite(route.session);
+	const { t } = useMessages(messages);
 	if (!route.session || !canWrite) return null;
 	return (
 		<button
 			type="button"
 			className={`icon-button workspace-toggle ${route.workspace ? "on" : ""}`}
-			aria-label="Workspace files and changes"
+			aria-label={t("workspaceAria")}
 			aria-pressed={!!route.workspace}
 			onClick={() =>
 				route.workspace
@@ -81,6 +84,7 @@ function NativePanel({
 	route: WorkspaceRoute;
 }) {
 	const workspace = useObject(Workspace, { session, conversation });
+	const { t } = useMessages(messages);
 	// Only to send review comments: a method-only reference (the chat view holds the state when it is open).
 	const chat = useObject(Chat, { session, conversation });
 	const rows = useReadable(liveIn(useObject(Sessions, {}), "owner", "guest")?.sessions);
@@ -120,11 +124,10 @@ function NativePanel({
 			onSend={async (text) => {
 				try {
 					const writer = liveIn(chat, "participant");
-					if (!writer) throw new Error("This conversation is read-only");
+					if (!writer) throw new Error(t("readOnlyConversation"));
 					await writer.send({ text, requestId: crypto.randomUUID(), whenBusy: "steer" }, BACKGROUND_CONTEXT);
 				} catch (error) {
-					setError(error instanceof Error ? error.message : "Could not send comments");
-					throw error;
+					setError(error instanceof Error ? error.message : t("couldNotSendComments"));
 				}
 			}}
 		/>
@@ -135,5 +138,6 @@ export default defineFacet((host) => {
 	contribute(host, "p2.web-workspace", (self) => {
 		self.contribute(Slots, { "workspace-actions": WorkspaceButton, "workspace-panel": WorkspacePanel });
 		self.contribute(Commands, WORKSPACE_COMMANDS);
+		self.contribute(Translations, messages.translations);
 	});
 });

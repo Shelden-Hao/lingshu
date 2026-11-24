@@ -132,7 +132,11 @@ test(
 		assert.deepEqual(copies, ["selected text"]);
 		assert.equal((await responses()).at(-1)?.ok, true);
 		const inputs = (await seen()).filter((message) => message.kind === "input").map((message) => message.data);
-		assert.deepEqual(inputs.slice(-3), [press(5, 5), drag(12, 6), release(12, 6)], "lingshu-tui selects in the worker");
+		assert.deepEqual(
+			inputs.slice(-3),
+			[press(5, 5), drag(12, 6), release(12, 6)],
+			"lingshu-tui selects in the worker",
+		);
 		// The window is single-use.
 		terminal.sendInput("w");
 		await poll(async () => (await responses()).length === 4);

@@ -14,6 +14,7 @@ import {
 	plainReferences,
 	renameReferences,
 	serveKeyed,
+	Translations,
 	UI_LINGER,
 	whenLive,
 } from "@p2/app/v1";
@@ -103,6 +104,7 @@ import {
 	useFileCompletion,
 	useHost,
 	useLongPress,
+	useMessages,
 	useNavigation,
 	useNewSessionState,
 	useObject,
@@ -146,6 +148,7 @@ import { SessionTree } from "../tree/contract.ts";
 import { configure, MODEL_COMMANDS, MODEL_PAGES } from "./commands.tsx";
 import { Chat, ChatCosts, conversationTargetId, TranscriptEntries } from "./contract.ts";
 import { DraftEditor } from "./draft-editor.tsx";
+import { messages } from "./messages.ts";
 import { isDefaultChoice, newSessionChoice, thinkingLevelOf } from "./model-choice.ts";
 import { useModelScreen } from "./model-screens.ts";
 import { type Outgoing, outboxOf } from "./outbox.ts";
@@ -331,8 +334,8 @@ function ModelControls({
 	target: CommandTarget | undefined;
 	onDefault: (choice: ModelChoice) => void;
 }) {
-	const name = choice ? modelName(resources, choice.model) : "Choose model";
-	// A model without adjustable thinking has no thinking link.
+	const { t } = useMessages(messages);
+	const name = choice ? modelName(resources, choice.model) : t("chooseModel");
 	const level = choice && thinkingLevels(resources, choice.model).length > 1 ? choice.thinkingLevel : undefined;
 	const disabled = !resources || !target;
 	const described = `${name}${level ? ` · ${level}` : ""}`;
@@ -341,7 +344,7 @@ function ModelControls({
 			<button
 				type="button"
 				className="model-control footer-action"
-				aria-label="Model"
+				aria-label={t("model")}
 				title={name}
 				onClick={() => openCommandPage("models", target)}
 				disabled={disabled}
@@ -356,8 +359,8 @@ function ModelControls({
 					<button
 						type="button"
 						className="thinking-control footer-action"
-						aria-label="Thinking level"
-						title={`Thinking: ${level}`}
+						aria-label={t("thinkingLevel")}
+						title={t("thinkingTitle", level)}
 						onClick={() => openCommandPage("thinking", target)}
 						disabled={disabled}
 					>
@@ -369,8 +372,8 @@ function ModelControls({
 				<button
 					type="button"
 					className="default-control"
-					aria-label="Make default for new sessions"
-					title={`Make ${described} the default for new sessions`}
+					aria-label={t("makeDefault")}
+					title={t("makeDefaultTitle", described)}
 					onClick={() => onDefault(choice)}
 				>
 					<StarIcon size={13} />
@@ -415,6 +418,7 @@ function Composer({
 	inputRef?: React.RefObject<DraftInput | null>;
 	children?: React.ReactNode;
 }) {
+	const { t } = useMessages(messages);
 	// The draft straight from the app's composer state, not through the screen's dock content: that arrives a layout
 	// effect after a keystroke, so the input rendered the previous text first, which put the caret at the end on every
 	// keystroke and broke a phone keyboard's composition (its first tap on Send only closed the keyboard).
@@ -453,10 +457,8 @@ function Composer({
 		>
 			{replying && (
 				<div className="replying">
-					<span>
-						Replying to <strong>{replying.name}</strong>
-					</span>
-					<button type="button" aria-label="Cancel reply" onClick={replying.onCancel}>
+					<span>{t("replyingTo", replying.name)}</span>
+					<button type="button" aria-label={t("cancelReply")} onClick={replying.onCancel}>
 						<CloseIcon />
 					</button>
 				</div>
@@ -468,7 +470,7 @@ function Composer({
 				files={files}
 				register={registerInput}
 				{...(inputRef ? { inputRef } : {})}
-				placeholder={busy ? "Steer the current run…" : "Message Lingshu…"}
+				placeholder={busy ? t("placeholderBusy") : t("placeholderIdle")}
 				onEdit={() => completion?.update()}
 				onPaste={(event) => {
 					if (!attaching) return;
@@ -498,7 +500,7 @@ function Composer({
 			/>
 			<div className="composer-bar">
 				{attaching && (
-					<label className="round attach" aria-label="Attach files" title="Attach files">
+					<label className="round attach" aria-label={t("attachFiles")} title={t("attachFiles")}>
 						<PlusIcon />
 						<input
 							type="file"
@@ -514,7 +516,7 @@ function Composer({
 				{children}
 				<span className="spacer" />
 				{busy && onStop && (
-					<button type="button" className="round stop" aria-label="Stop" onClick={onStop}>
+					<button type="button" className="round stop" aria-label={t("stop")} onClick={onStop}>
 						<StopIcon />
 					</button>
 				)}
@@ -533,7 +535,7 @@ function Composer({
 					>
 						<Menu.Portal>
 							<Menu.Positioner className="send-menu" anchor={sendButton} side="top" align="end" sideOffset={4}>
-								<Menu.Popup ref={popup} className="send-options" aria-label="Ways to send">
+								<Menu.Popup ref={popup} className="send-options" aria-label={t("waysToSend")}>
 									{choices.map((choice, index) => (
 										<Menu.Item
 											key={choice.label}
@@ -566,8 +568,8 @@ function Composer({
 						ref={sendButton}
 						type="submit"
 						className="round send"
-						aria-label="Send"
-						title={choices ? `${send.label} (${moreVerb(pointer)} for more)` : send.label}
+						aria-label={t("send")}
+						title={choices ? t("sendTitle", send.label, moreVerb(pointer)) : send.label}
 						disabled={!content || disabled}
 						{...(choices ? { "aria-haspopup": "menu" as const, "aria-expanded": choosing } : {})}
 						{...press.handlers}
@@ -727,6 +729,7 @@ function TopBar({
 	/** Opens the viewed subagent's sheet (its actions), as the main conversation's dots open the Session sheet. */
 	onAgentOptions?: () => void;
 }) {
+	const { t } = useMessages(messages);
 	const offline = useOffline();
 	// Only the owner reads environments (`PageObjects.envs`): guests see the location without the sandbox lock.
 	const objects = usePageObjects();
@@ -739,7 +742,12 @@ function TopBar({
 	);
 	return (
 		<header className="topbar">
-			<button type="button" className="icon-button menu sidebar-open" onClick={openSidebar} aria-label="Sessions">
+			<button
+				type="button"
+				className="icon-button menu sidebar-open"
+				onClick={openSidebar}
+				aria-label={t("sessions")}
+			>
 				<MenuIcon />
 				<Slot name="menu-badge" />
 			</button>
@@ -748,7 +756,7 @@ function TopBar({
 				{child ? (
 					<>
 						<h1>
-							<span className="sub-tag">{child.kind === "agent" ? "agent" : "subagent"}</span> {child.name}
+							<span className="sub-tag">{child.kind === "agent" ? t("agent") : t("subagent")}</span> {child.name}
 						</h1>
 						<button type="button" className="crumb" onClick={() => session && openMain(session.id, session.main)}>
 							← {session?.title}
@@ -756,17 +764,17 @@ function TopBar({
 					</>
 				) : (
 					<>
-						<h1>{session?.title ?? "New session"}</h1>
+						<h1>{session?.title ?? t("newSession")}</h1>
 						{session &&
 							(owner ? (
 								<button
 									type="button"
 									className="title-cwd"
 									onClick={() => openLayer(directoryPickerLayer(session.env ?? null, session.cwd))}
-									{...(sandboxed ? { title: `Sandbox ${session.env}: tools run in its VM` } : {})}
+									{...(sandboxed ? { title: t("sandboxTitle", session.env ?? "") } : {})}
 								>
 									{moving ? (
-										"Moving…"
+										t("moving")
 									) : (
 										<>
 											{lock}
@@ -780,7 +788,7 @@ function TopBar({
 					</>
 				)}
 			</div>
-			{offline && <span className="offline">Offline</span>}
+			{offline && <span className="offline">{t("offline")}</span>}
 			<Slot name="view-actions" />
 			<Slot name="artifact-actions" />
 			<Slot name="tree-actions" />
@@ -788,7 +796,7 @@ function TopBar({
 			<Slot name="workspace-actions" />
 			<Slot name="session-options" />
 			{onAgentOptions && (
-				<button type="button" className="icon-button" aria-label="Subagent options" onClick={onAgentOptions}>
+				<button type="button" className="icon-button" aria-label={t("subagentOptions")} onClick={onAgentOptions}>
 					<MoreIcon />
 				</button>
 			)}
@@ -880,12 +888,13 @@ function viewTarget(
  * their names, each opening its conversation. The main conversation idle shows no wheel, so this says work goes on.
  */
 function RunningAgents({ agents, onOpen }: { agents: readonly Child[]; onOpen: (conversation: number) => void }) {
+	const { t } = useMessages(messages);
 	return (
 		<div className="composer-wrap subagent-wrap">
 			<div className="subagent-bar running-agents">
 				<PiDots />
 				<span className="running-agents-names">
-					{agents.length > 1 ? `${agents.length} agents running: ` : "Running: "}
+					{agents.length > 1 ? t("agentsRunning", agents.length) : t("running")}
 					{agents.map((agent, index) => (
 						<Fragment key={agent.conversationId}>
 							{index > 0 && ", "}
@@ -943,15 +952,16 @@ function SessionChat({ sessionId, conversationId }: { sessionId: string; convers
 	// A session archived or removed elsewhere while viewed: the new-session screen replaces it, and the toast says why
 	// (Lingshu Mobile's attach errors). Archiving from this view navigates first, so it never shows here.
 	const { setError: toast } = useComposerState();
+	const { t } = useMessages(messages);
 	useEffect(() => {
 		const current = nav.route;
 		if (listed && (!session || session.archivedAt !== null) && current.session === sessionId) {
 			// What this device kept of a session the server no longer has goes with it (an archived one stays).
 			if (!session) void forgetSession(sessionId);
-			toast(session ? "Session is archived" : "Session not found");
+			toast(session ? t("sessionArchived") : t("sessionNotFound"));
 			void nav.replace(NEW_SESSION, current);
 		}
-	}, [listed, session, nav, sessionId, toast]);
+	}, [listed, session, nav, sessionId, toast, t]);
 	// Who this browser is, as the server last said: kept while reconnecting (`useOwner`), so the composer stays.
 	const { access } = objects;
 	const liveGrant = useReadable(liveIn(access, "guest")?.grant);
@@ -1309,12 +1319,12 @@ function SessionChat({ sessionId, conversationId }: { sessionId: string; convers
 	);
 	const sends: { send: SendChoice; alternate?: SendChoice } = busy
 		? {
-				send: { label: "Steer", run: () => send("steer") },
-				alternate: { label: "Follow up", run: () => send("followUp") },
+				send: { label: t("steer"), run: () => send("steer") },
+				alternate: { label: t("followUp"), run: () => send("followUp") },
 			}
 		: {
-				send: { label: "Send", run: () => send("steer") },
-				...(branchable ? { alternate: { label: "Send in a new branch", run: sendInBranch } } : {}),
+				send: { label: t("send"), run: () => send("steer") },
+				...(branchable ? { alternate: { label: t("sendInNewBranch"), run: sendInBranch } } : {}),
 			};
 	// The outbox sends while this conversation's chat object is live; the latest values, for its sender.
 	const latest = useRef({ chat: writer, host, sessionId, conversationId, busy });
@@ -1492,7 +1502,7 @@ function SessionChat({ sessionId, conversationId }: { sessionId: string; convers
 	const modelControl = owner ? (
 		<ModelControls resources={resources} choice={choice} target={target} onDefault={setDefault} />
 	) : (
-		<span className="model-control static">{grant?.name} · guest</span>
+		<span className="model-control static">{t("guestModel", grant?.name ?? "")}</span>
 	);
 	const footer = (
 		<SessionStats
@@ -1513,7 +1523,7 @@ function SessionChat({ sessionId, conversationId }: { sessionId: string; convers
 		/>
 	);
 	const toBottom = !follow.atBottom && (
-		<button type="button" className="to-bottom" onClick={follow.toBottom} aria-label="Scroll to bottom">
+		<button type="button" className="to-bottom" onClick={follow.toBottom} aria-label={t("scrollToBottom")}>
 			<DownIcon />
 		</button>
 	);
@@ -1523,9 +1533,9 @@ function SessionChat({ sessionId, conversationId }: { sessionId: string; convers
 		<div className="composer-wrap subagent-wrap">
 			{toBottom}
 			<div className="subagent-bar">
-				<span>One-shot agent of a script · read-only</span>
+				<span>{t("oneShotBar")}</span>
 				{canWrite && busy && (
-					<button type="button" className="round stop" aria-label="Stop" onClick={stop}>
+					<button type="button" className="round stop" aria-label={t("stop")} onClick={stop}>
 						<StopIcon />
 					</button>
 				)}
@@ -1536,7 +1546,7 @@ function SessionChat({ sessionId, conversationId }: { sessionId: string; convers
 	const agentActions = canWrite && child && !oneShot && subagentControl ? { child, subagentControl } : undefined;
 	const readOnlyBar = (!canWrite || failure) && (
 		<div className="subagent-bar">
-			<span>{failure ? "Session unavailable" : grant ? `Joined as ${grant.name} · read-only` : "Connecting…"}</span>
+			<span>{failure ? t("sessionUnavailable") : grant ? t("joinedAs", grant.name) : t("connecting")}</span>
 		</div>
 	);
 	const queuedRows = queued.length + pendingQueued.length > 0 && (
@@ -1546,19 +1556,19 @@ function SessionChat({ sessionId, conversationId }: { sessionId: string; convers
 					<button
 						type="button"
 						className="queue-edit"
-						title="Move back to editor"
+						title={t("moveBackToEditor")}
 						onClick={() => {
 							if (!outbox.take(message.id)) return;
 							restore([message.text], true);
 							setFiles((current) => [...current, ...message.files]);
 						}}
 					>
-						<span>{message.whenBusy === "steer" ? "Steer" : "Queued"}</span> {plainReferences(message.text)}
+						<span>{message.whenBusy === "steer" ? t("steer") : t("queued")}</span> {plainReferences(message.text)}
 					</button>
 					<button
 						type="button"
 						className="queue-remove"
-						aria-label="Remove from queue"
+						aria-label={t("removeFromQueue")}
 						onClick={() => outbox.remove(message.id)}
 					>
 						<CloseIcon />
@@ -1570,7 +1580,7 @@ function SessionChat({ sessionId, conversationId }: { sessionId: string; convers
 					<button
 						type="button"
 						className="queue-edit"
-						title="Move back to editor"
+						title={t("moveBackToEditor")}
 						onClick={() =>
 							writer &&
 							dequeue(item.id, async () => {
@@ -1582,12 +1592,12 @@ function SessionChat({ sessionId, conversationId }: { sessionId: string; convers
 							})
 						}
 					>
-						<span>{item.mode === "steer" ? "Steer" : "Queued"}</span> {plainReferences(item.text)}
+						<span>{item.mode === "steer" ? t("steer") : t("queued")}</span> {plainReferences(item.text)}
 					</button>
 					<button
 						type="button"
 						className="queue-remove"
-						aria-label="Remove from queue"
+						aria-label={t("removeFromQueue")}
 						onClick={() =>
 							writer && dequeue(item.id, () => writer.dequeue({ submissionId: item.id }, BACKGROUND_CONTEXT))
 						}
@@ -1643,7 +1653,7 @@ function SessionChat({ sessionId, conversationId }: { sessionId: string; convers
 				{...(agentActions ? { onAgentOptions: () => openLayer({ kind: "sheet", name: "subagent" }) } : {})}
 			/>
 			{agentSheet && agentActions && (
-				<Sheet title="Subagent" onClose={closeLayers}>
+				<Sheet title={t("subagentSheet")} onClose={closeLayers}>
 					<div className="list">
 						<button
 							type="button"
@@ -1658,7 +1668,7 @@ function SessionChat({ sessionId, conversationId }: { sessionId: string; convers
 								);
 							}}
 						>
-							<span>{archived ? "Restore" : "Archive"}</span>
+							<span>{archived ? t("restore") : t("archive")}</span>
 						</button>
 					</div>
 				</Sheet>
@@ -1700,14 +1710,14 @@ function SessionChat({ sessionId, conversationId }: { sessionId: string; convers
 				<div className="scroller transcript" ref={follow.scroller}>
 					{failure && connected ? (
 						<div className="hero worker-start-error">
-							<h2>Session unavailable</h2>
+							<h2>{t("sessionUnavailable")}</h2>
 							<p className="error" role="alert">
 								{failure}
 							</p>
 							{owner ? (
 								<div className="actions">
 									<button type="button" className="button" disabled={retrying} onClick={() => void retry()}>
-										{retrying ? "Retrying…" : "Retry"}
+										{retrying ? t("retrying") : t("retry")}
 									</button>
 									<button
 										type="button"
@@ -1716,11 +1726,11 @@ function SessionChat({ sessionId, conversationId }: { sessionId: string; convers
 											openLayer({ kind: "sheet", name: "logs", locator: `session:${sessionId}` })
 										}
 									>
-										Show logs
+										{t("showLogs")}
 									</button>
 								</div>
 							) : (
-								<p className="muted">Ask the owner to retry this session.</p>
+								<p className="muted">{t("askOwnerRetry")}</p>
 							)}
 						</div>
 					) : shown ? (
@@ -1768,7 +1778,7 @@ function SessionChat({ sessionId, conversationId }: { sessionId: string; convers
 							</SessionId.Provider>
 						) : (
 							<div className="hero small-hero">
-								<p className="muted">Send a message to start.</p>
+								<p className="muted">{t("emptyTranscript")}</p>
 							</div>
 						)
 					) : (
@@ -1786,6 +1796,7 @@ function SessionChat({ sessionId, conversationId }: { sessionId: string; convers
 const NEW_SESSION_TARGET: CommandTarget = { type: "new-session", id: "new", kind: "New session", label: "" };
 
 function NewSession() {
+	const { t } = useMessages(messages);
 	const connected = useConnected();
 	const host = useHost();
 	const owner = useOwner();
@@ -1924,7 +1935,7 @@ function NewSession() {
 			composer: owner
 				? {
 						kind: "composer",
-						props: { busy: false, disabled: false, send: { label: "Send", run: send }, attaching },
+						props: { busy: false, disabled: false, send: { label: t("send"), run: send }, attaching },
 						footer: (
 							<div className="session-usage">
 								<div className="session-controls">
@@ -1975,7 +1986,7 @@ function NewSession() {
 						<div className="hero">
 							<div className="hero-title">
 								<PiLogo />
-								<h2>What should Lingshu do?</h2>
+								<h2>{t("hero")}</h2>
 							</div>
 							{/* The project the session joins, then where it starts: each opens its own picker. */}
 							<div className="new-session-choices">
@@ -1983,11 +1994,11 @@ function NewSession() {
 									<button
 										type="button"
 										className="project-pick"
-										aria-label={`Project: ${join?.label ?? "No project"}`}
+										aria-label={join?.label === undefined ? t("noProject") : t("projectLabel", join.label)}
 										onClick={() => openCommandPage("new-session-project", NEW_SESSION_TARGET)}
 									>
 										<ListIcon />
-										<span>{join?.label ?? "No project"}</span>
+										<span>{join?.label ?? t("noProject")}</span>
 										<ChevronIcon size={14} />
 									</button>
 								)}
@@ -2007,7 +2018,7 @@ function NewSession() {
 									className="button"
 									onClick={() => openLayer({ kind: "sheet", name: "providers" })}
 								>
-									Sign in to a provider
+									{t("signInProvider")}
 								</button>
 							)}
 						</div>
@@ -2020,12 +2031,13 @@ function NewSession() {
 
 /** A guest's share ended: Lingshu Mobile clears the view and says so in its toast; nothing reconnects. */
 function ShareEnded() {
+	const { t } = useMessages(messages);
 	const place = useChatScreen(undefined);
 	return (
 		<>
 			<TopBar />
 			<button type="button" className="toast">
-				This share has ended.
+				{t("shareEnded")}
 			</button>
 			{place(<div className="scroller" />)}
 		</>
@@ -2099,6 +2111,7 @@ export default defineFacet((host, self) => {
 	// The chat plugin defines the transcript's entry displays (chat-mode adds its own): served on the page too.
 	serveKeyed(host, TranscriptEntries);
 	self.contribute(Slots, { main: Main });
+	self.contribute(Translations, messages.translations);
 	self.contribute(Commands, MODEL_COMMANDS);
 	self.contribute(CommandPages, MODEL_PAGES);
 });

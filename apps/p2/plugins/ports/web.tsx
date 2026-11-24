@@ -1,4 +1,4 @@
-import { contribute, defineFacet } from "@p2/app/v1";
+import { contribute, defineFacet, Translations } from "@p2/app/v1";
 import {
 	ChevronIcon,
 	closeLayers,
@@ -6,17 +6,22 @@ import {
 	SettingsSections,
 	Slots,
 	ToolActivities,
+	textIn,
 	useOwner,
 	useSheet,
 } from "@p2/app/v1/web";
+import { showText } from "../../src/runtime/web-core.ts";
+import { useLanguage } from "../../src/web/language.ts";
 import { portsActivity } from "./activity.tsx";
+import { messages } from "./messages.ts";
 import { PortsPanel } from "./PortsPanel.tsx";
 
 function PortsButton() {
+	const language = useLanguage();
 	return (
 		<button className="row-button" type="button" onClick={() => openLayer({ kind: "sheet", name: "ports" })}>
-			<span>Ports</span>
-			<small className="row-value">Open dev servers through Radius</small>
+			<span>{showText(textIn(messages, "ports"), language)}</span>
+			<small className="row-value">{showText(textIn(messages, "portsHint"), language)}</small>
 			<ChevronIcon />
 		</button>
 	);
@@ -28,11 +33,17 @@ function PortsSheet() {
 export default defineFacet((host) => {
 	contribute(host, "p2.web-ports", (self) => {
 		self.contribute(SettingsSections, {
-			ports: { label: "Ports", title: "Open dev servers through Radius", order: 40, Sheet: PortsSheet },
+			ports: {
+				label: textIn(messages, "ports"),
+				title: textIn(messages, "portsHint"),
+				order: 40,
+				Sheet: PortsSheet,
+			},
 		});
 		self.contribute(Slots, {
 			"envs-actions:ports": PortsButton,
 		});
 		self.contribute(ToolActivities, { ports: portsActivity });
+		self.contribute(Translations, messages.translations);
 	});
 });

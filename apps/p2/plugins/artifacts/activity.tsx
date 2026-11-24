@@ -4,6 +4,7 @@
 
 import { BACKGROUND_CONTEXT, type JsonValue } from "@p2/app/v1";
 import {
+	activityMessages,
 	detailsOf,
 	failureOf,
 	SessionId,
@@ -20,29 +21,65 @@ import {
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Views } from "../views/contract.ts";
 import { type InlineSize, InlineSizeContext, inlineHeights } from "./inline-size.ts";
+import { messages } from "./messages.ts";
 import { useArtifacts } from "./use-artifacts.ts";
 
 /** The artifact a call names: its ID from its arguments or its result. */
 const idOf = (tool: ToolView): string => stringOf(tool.args.id) || stringOf(detailsOf(tool).id);
 
 /** The activity of one artifact tool: its past and present words, naming the artifact when `named`. */
-function artifactTool(done: string, doing: string, kind: "read" | "artifact", named = true): ToolActivity {
+type ArtifactVerb =
+	| "verbListed"
+	| "verbListing"
+	| "verbRead"
+	| "verbReading"
+	| "verbWrote"
+	| "verbWriting"
+	| "verbEdited"
+	| "verbEditing"
+	| "verbShowed"
+	| "verbShowing"
+	| "verbOpened"
+	| "verbOpening"
+	| "verbDeleted"
+	| "verbDeleting"
+	| "verbHtmlErrors"
+	| "verbHtmlErrorsDoing"
+	| "verbHtmlLogs"
+	| "verbHtmlLogsDoing"
+	| "verbHtmlEval"
+	| "verbHtmlEvalDoing"
+	| "verbHtmlState"
+	| "verbHtmlStateDoing"
+	| "verbHtmlSet"
+	| "verbHtmlSetDoing";
+
+/** The activity of one artifact tool: its past and present words, naming the artifact when `named`. */
+function artifactTool(done: ArtifactVerb, doing: ArtifactVerb, kind: "read" | "artifact", named = true): ToolActivity {
 	const object = (step: Step) => (named ? stringOf(step.tool.args.title) || idOf(step.tool) : "");
 	return {
 		brief: "Working on artifacts",
 		describe(step) {
 			const name = object(step);
 			return {
-				label: { kind, verb: done, ...(name ? { object: name, style: "words" as const } : {}) },
+				label: {
+					kind,
+					verb: activityMessages(messages)(done),
+					...(name ? { object: name, style: "words" as const } : {}),
+				},
 				...(failureOf(step) ? { description: failureOf(step) } : {}),
 			};
 		},
 		running(step) {
 			const name = object(step);
-			return { kind, verb: doing, ...(name ? { object: name, style: "words" as const } : {}) };
+			return {
+				kind,
+				verb: activityMessages(messages)(doing),
+				...(name ? { object: name, style: "words" as const } : {}),
+			};
 		},
 		argument: (tool) => (named ? stringOf(tool.args.title) || idOf(tool) : ""),
-		summary: (count) => (count === 1 ? "worked on an artifact" : `worked on artifacts ${count} times`),
+		summary: (count) => activityMessages(messages)("toolSummary", count),
 	};
 }
 
@@ -188,20 +225,20 @@ function scrollRoot(element: HTMLElement): HTMLElement | null {
 
 /** The artifact tools' activities, by tool name. */
 export const ARTIFACT_ACTIVITIES: Readonly<Record<string, ToolActivity>> = {
-	artifact_list: artifactTool("Listed artifacts", "Listing artifacts", "read", false),
-	artifact_read: artifactTool("Read artifact", "Reading artifact", "read"),
-	artifact_write: artifactTool("Wrote artifact", "Writing artifact", "artifact"),
-	artifact_edit: artifactTool("Edited artifact", "Editing artifact", "artifact"),
+	artifact_list: artifactTool("verbListed", "verbListing", "read", false),
+	artifact_read: artifactTool("verbRead", "verbReading", "read"),
+	artifact_write: artifactTool("verbWrote", "verbWriting", "artifact"),
+	artifact_edit: artifactTool("verbEdited", "verbEditing", "artifact"),
 	artifact_show: {
-		...artifactTool("Showed artifact", "Showing artifact", "artifact"),
+		...artifactTool("verbShowed", "verbShowing", "artifact"),
 		hasResult: (tool) => (tool.status === "done" && idOf(tool) ? "inline" : false),
 		Result: ShownArtifact,
 	},
-	artifact_open: artifactTool("Opened artifact", "Opening artifact", "artifact"),
-	artifact_delete: artifactTool("Deleted artifact", "Deleting artifact", "artifact"),
-	artifact_html_errors: artifactTool("Read the page's errors", "Reading the page's errors", "read"),
-	artifact_html_logs: artifactTool("Read the page's logs", "Reading the page's logs", "read"),
-	artifact_html_eval: artifactTool("Ran code in the page", "Running code in the page", "artifact"),
-	artifact_html_state: artifactTool("Read the page's state", "Reading the page's state", "read"),
-	artifact_html_set_state: artifactTool("Set the page's state", "Setting the page's state", "artifact"),
+	artifact_open: artifactTool("verbOpened", "verbOpening", "artifact"),
+	artifact_delete: artifactTool("verbDeleted", "verbDeleting", "artifact"),
+	artifact_html_errors: artifactTool("verbHtmlErrors", "verbHtmlErrorsDoing", "read"),
+	artifact_html_logs: artifactTool("verbHtmlLogs", "verbHtmlLogsDoing", "read"),
+	artifact_html_eval: artifactTool("verbHtmlEval", "verbHtmlEvalDoing", "artifact"),
+	artifact_html_state: artifactTool("verbHtmlState", "verbHtmlStateDoing", "read"),
+	artifact_html_set_state: artifactTool("verbHtmlSet", "verbHtmlSetDoing", "artifact"),
 };

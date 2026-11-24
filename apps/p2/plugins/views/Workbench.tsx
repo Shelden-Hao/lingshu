@@ -7,6 +7,7 @@ import {
 	CloseIcon,
 	reportClientError,
 	useComposerState,
+	useMessages,
 	useObject,
 	useReadable,
 	useRegistry,
@@ -29,6 +30,7 @@ import { type Annotation, type View, Views } from "./contract.ts";
 import { ViewKinds } from "./kinds.ts";
 import { activate, adopt, arrange, CHAT, move, type Rect, reconcile, resize, viewsIn, type Zone } from "./layout.ts";
 import { hide, setLayout, useAnnotateMode, useLayout } from "./layout-store.ts";
+import { messages } from "./messages.ts";
 
 /** Height of an area's tab strip (and the phone's strip). */
 const TABS = 36;
@@ -43,6 +45,7 @@ export function Workbench({ children }: { children?: ReactNode }) {
 	const views = useObject(Views, session ? { session } : undefined);
 	useStatus(views);
 	const editor = liveIn(views, "editor");
+	const { t } = useMessages(messages);
 	const list = useReadable(views?.views);
 	const annotations = useReadable(views?.annotations) ?? [];
 	const layout = useLayout(session ?? "");
@@ -105,7 +108,7 @@ export function Workbench({ children }: { children?: ReactNode }) {
 						className={`views-tab ${id === shown ? "on" : ""}`}
 						onClick={() => session && setLayout(session, (current) => ({ ...current, phone: id }))}
 					>
-						<span>{titleOf(id, byId)}</span>
+						<span>{titleOf(id, byId, t)}</span>
 					</button>
 				))}
 			</div>,
@@ -140,13 +143,13 @@ export function Workbench({ children }: { children?: ReactNode }) {
 									setLayout(session, (current) => ({ ...current, tree: activate(current.tree, id) }));
 							}}
 						>
-							<span>{titleOf(id, byId)}</span>
+							<span>{titleOf(id, byId, t)}</span>
 							{id !== CHAT && (
 								<button
 									type="button"
 									className="views-tab-close"
-									aria-label={`Hide ${titleOf(id, byId)}`}
-									title="Hide here (the Views sheet shows it again)"
+									aria-label={t("hideTabLabel", titleOf(id, byId, t))}
+									title={t("hideTabTip")}
 									onPointerDown={(event) => event.stopPropagation()}
 									onClick={() => session && hide(session, id)}
 								>
@@ -310,9 +313,7 @@ export function Workbench({ children }: { children?: ReactNode }) {
 									/>
 								</PaneBoundary>
 							) : (
-								<div className="empty-note">
-									Unknown view kind "{view.kind}": no plugin of this page shows it (yet).
-								</div>
+								<div className="empty-note">{t("unknownKind", view.kind)}</div>
 							)}
 							<InkLayer annotations={notesOf(annotations, view.id)} />
 						</div>
@@ -340,7 +341,7 @@ export function Workbench({ children }: { children?: ReactNode }) {
 							top: drag.y - (container.current?.getBoundingClientRect().top ?? 0) + 12,
 						}}
 					>
-						{titleOf(drag.view, byId)}
+						{titleOf(drag.view, byId, t)}
 					</div>
 				</div>
 			)}
@@ -356,7 +357,8 @@ const paneAttributes = (pane: { style: CSSProperties; shown: boolean } | undefin
 	hidden: pane ? !pane.shown : false,
 });
 
-const titleOf = (id: string, views: ReadonlyMap<string, View>) => (id === CHAT ? "Chat" : (views.get(id)?.title ?? id));
+const titleOf = (id: string, views: ReadonlyMap<string, View>, t: (key: "chat") => string): string =>
+	id === CHAT ? t("chat") : (views.get(id)?.title ?? id);
 
 const notesOf = (annotations: readonly Annotation[], view: string) =>
 	annotations.filter((annotation) => annotation.view === view);
@@ -377,10 +379,11 @@ class PaneBoundary extends Component<{ children: ReactNode }, { error?: string }
 	}
 
 	override render() {
+		const { t } = useMessages(messages);
 		return this.state.error === undefined ? (
 			this.props.children
 		) : (
-			<div className="empty-note">This view failed: {this.state.error}</div>
+			<div className="empty-note">{t("viewFailed", this.state.error)}</div>
 		);
 	}
 }

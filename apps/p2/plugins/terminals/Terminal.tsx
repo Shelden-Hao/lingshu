@@ -1,5 +1,4 @@
-import type { Held } from "@p2/app/v1";
-import { BACKGROUND_CONTEXT, whenLive } from "@p2/app/v1";
+import { BACKGROUND_CONTEXT, type Held, type MessagesOf, type Translator, whenLive } from "@p2/app/v1";
 import {
 	APPLE,
 	browserEnvironment,
@@ -18,6 +17,7 @@ import {
 	useDragSize,
 } from "@p2/app/v1/web";
 import { useEffect, useRef, useState } from "react";
+import { useMessages } from "../../src/web/language.ts";
 import type { Terminals } from "./contract.ts";
 import {
 	BOLD,
@@ -34,6 +34,7 @@ import {
 	UNDERLINE,
 	type VtTerminal,
 } from "./ghostty.ts";
+import { messages } from "./messages.ts";
 import type { TerminalEvent, TerminalInfo, TerminalTheme } from "./protocol.ts";
 import { typedChange } from "./terminal-input.ts";
 import ghosttyWasm from "./vendor/ghostty/ghostty-vt.wasm?url";
@@ -103,13 +104,9 @@ export function withTerminal(route: Route): Route {
  * How to paste without clipboard access: a long press opens the field's Paste menu; the browser's own paste key goes
  * past the terminal's key encoding (Cmd+V on Apple's, Ctrl+Shift+V elsewhere, as #keyDown leaves them).
  */
-function pasteHint(kind: PointerKind): string {
+function pasteHint(kind: PointerKind, t: Translator<"terminals", MessagesOf<typeof messages>>): string {
 	const key = APPLE ? "⌘V" : "Ctrl+Shift+V";
-	return kind === "touch"
-		? "Long-press the terminal to paste."
-		: kind === "mouse"
-			? `Press ${key} in the terminal to paste.`
-			: `Long-press the terminal or press ${key} to paste.`;
+	return kind === "touch" ? t("pasteHintTouch") : kind === "mouse" ? t("pasteHintKey", key) : t("pasteHintBoth", key);
 }
 
 /** Whether the row of extra keys shows. Kept per browser; by default only on touch screens. */
@@ -1276,10 +1273,11 @@ const KEYS: { label: string; input?: KeyInput; text?: string }[] = [
 ];
 
 /** A tab's text: the name it was opened with, else its program's title, else its number (the agent's `-t`). */
-function label(terminal: TerminalInfo): string {
+function label(terminal: TerminalInfo, t: Translator<"terminals", MessagesOf<typeof messages>>): string {
 	// A host running older code numbers none.
-	const name = terminal.name || terminal.title || (terminal.index ? `Terminal ${terminal.index}` : "Terminal");
-	return terminal.exited ? `${name} (exited)` : name;
+	const name =
+		terminal.name || terminal.title || (terminal.index ? t("terminalNumber", terminal.index) : t("terminal"));
+	return terminal.exited ? t("exited", name) : name;
 }
 
 export function TerminalView({
@@ -1310,6 +1308,7 @@ export function TerminalView({
 	/** Hide the panel; the terminals keep running. The panel also hides once its last terminal is closed. */
 	onHide?: () => void;
 }) {
+	const { t } = useMessages(messages);
 	const frame = useRef<HTMLDivElement>(null);
 	const screen = useRef<HTMLDivElement>(null);
 	const input = useRef<HTMLTextAreaElement>(null);
@@ -1395,7 +1394,7 @@ export function TerminalView({
 	const pasteClipboard = () => {
 		void session.current?.pasteClipboard().then(
 			() => setPasteNotice(""),
-			() => setPasteNotice(`Clipboard unavailable. ${pasteHint(pointerKind())}`),
+			() => setPasteNotice(`${t("pasteClipboardUnavailable")} ${pasteHint(pointerKind(), t)}`),
 		);
 	};
 	const toggleKeys = () => {
@@ -1416,33 +1415,38 @@ export function TerminalView({
 						key={terminal.id}
 						aria-pressed={terminal.id === current?.id}
 						className={terminal.exited ? "exited" : ""}
-						title={`${terminal.index}: ${terminal.env ? `${terminal.env}:${terminal.cwd}` : terminal.cwd}${terminal.agent ? " (opened by the agent)" : ""}`}
+						title={`${terminal.index}: ${terminal.env ? `${terminal.env}:${terminal.cwd}` : terminal.cwd}${terminal.agent ? t("openedByAgent") : ""}`}
 						onPointerDown={keepFocus}
 						onClick={() => session.current?.attach(terminal.id)}
 					>
 						{terminal.agent && <span className="terminal-agent">Lingshu</span>}
-						{label(terminal)}
+						{label(terminal, t)}
 					</button>
 				))}
 				<button
 					type="button"
 					className="icon-button"
-					aria-label="New terminal"
+					aria-label={t("newTerminalLabel")}
 					onPointerDown={keepFocus}
 					onClick={() => session.current?.open()}
 				>
 					<PlusIcon size={16} />
 				</button>
-				<button type="button" aria-label="Paste into terminal" onPointerDown={keepFocus} onClick={pasteClipboard}>
-					Paste
+				<button
+					type="button"
+					aria-label={t("pasteIntoTerminal")}
+					onPointerDown={keepFocus}
+					onClick={pasteClipboard}
+				>
+					{t("paste")}
 				</button>
 				<span className="spacer" />
 				<button
 					type="button"
 					className="icon-button"
-					aria-label="Extra keys"
+					aria-label={t("extraKeys")}
 					aria-pressed={keys}
-					title={keys ? "Hide extra keys" : "Show extra keys"}
+					title={keys ? t("hideExtraKeys") : t("showExtraKeys")}
 					onPointerDown={keepFocus}
 					onClick={toggleKeys}
 				>
@@ -1451,8 +1455,8 @@ export function TerminalView({
 				<button
 					type="button"
 					className="icon-button"
-					aria-label={placement === "side" ? "Move terminal to the bottom" : "Move terminal to the side"}
-					title={placement === "side" ? "Move to the bottom" : "Move to the side"}
+					aria-label={placement === "side" ? t("moveToBottom") : t("moveToSide")}
+					title={placement === "side" ? t("moveToBottomTitle") : t("moveToSideTitle")}
 					onClick={() => onMove(current?.id)}
 				>
 					{placement === "side" ? <PanelBottomIcon /> : <PanelSideIcon />}
@@ -1461,8 +1465,8 @@ export function TerminalView({
 					<button
 						type="button"
 						className="icon-button"
-						aria-label={current.exited ? "Remove terminal" : "Close terminal"}
-						title={current.exited ? "Remove" : "Close (kills the program)"}
+						aria-label={current.exited ? t("removeTerminal") : t("closeTerminal")}
+						title={current.exited ? t("remove") : t("closeKills")}
 						onClick={() => session.current?.close()}
 					>
 						<CloseIcon />
@@ -1472,8 +1476,8 @@ export function TerminalView({
 					<button
 						type="button"
 						className="icon-button"
-						aria-label="Hide terminal"
-						title="Hide (keeps running)"
+						aria-label={t("hideTerminal")}
+						title={t("hideKeepsRunning")}
 						onClick={onHide}
 					>
 						<HideIcon />
@@ -1489,42 +1493,39 @@ export function TerminalView({
 				<p className={`notice workspace-note ${state.error || current?.exited?.error ? "error" : ""}`}>
 					{state.error ??
 						(!state.connected
-							? "Connecting…"
+							? t("connecting")
 							: current?.exited?.error
 								? current.exited.error
-								: `Exited with code ${current?.exited?.code}`)}
+								: t("exitedWithCode", current?.exited?.code ?? 0))}
 				</p>
 			)}
 			{state.busy && state.busy.terminalId === current?.id && (
 				<p className="notice workspace-note terminal-confirm">
-					<span>
-						{state.busy.program ? <code>{state.busy.program}</code> : "A program"} is running in this terminal.
-						Close it anyway?
-					</span>
+					<span>{t("programRunning", state.busy.program)}</span>
 					<button type="button" className="text-action danger" onClick={() => session.current?.close(true)}>
-						Close
+						{t("close")}
 					</button>
 					<button type="button" className="text-action" onClick={() => session.current?.keep()}>
-						Cancel
+						{t("cancel")}
 					</button>
 				</p>
 			)}
 			{state.outdated && (
 				<p className="notice workspace-note terminal-outdated">
 					<span>
-						The terminal host runs older code.{" "}
+						{t("hostOlder")}{" "}
 						{state.outdated.running === undefined
-							? "Restarting it ends its terminals."
-							: `Restarting it ends ${state.outdated.running} running terminal${state.outdated.running === 1 ? "" : "s"}.`}
+							? t("hostRestartEndsAll")
+							: t("hostRestartEnds", state.outdated.running)}
 					</span>
 					<button type="button" className="text-action" onClick={() => session.current?.restartHost()}>
-						Restart
+						{t("restart")}
 					</button>
 				</p>
 			)}
 			{state.connected && !current && !state.terminals.some((terminal) => !terminal.exited) && (
 				<button type="button" className="button terminal-start" onClick={() => session.current?.open()}>
-					New terminal
+					{t("startNewTerminal")}
 				</button>
 			)}
 			<div
@@ -1542,7 +1543,7 @@ export function TerminalView({
 				<textarea
 					ref={input}
 					className="terminal-input"
-					aria-label="Terminal input"
+					aria-label={t("terminalInput")}
 					autoCapitalize="off"
 					autoComplete="off"
 					autoCorrect="off"
@@ -1585,6 +1586,7 @@ export function TerminalView({
 export function TerminalPanel(props: Omit<Parameters<typeof TerminalView>[0], "placement">) {
 	const panel = useRef<HTMLElement>(null);
 	const height = useDragSize("p2-terminal-height", "--terminal-height");
+	const { t } = useMessages(messages);
 	const startResize = (event: React.PointerEvent<HTMLButtonElement>) => {
 		const element = panel.current;
 		const parent = element?.parentElement;
@@ -1594,11 +1596,11 @@ export function TerminalPanel(props: Omit<Parameters<typeof TerminalView>[0], "p
 		height.drag(event, element, (moved) => Math.min(Math.max(bottom - moved.clientY, 120), limit));
 	};
 	return (
-		<section className="terminal-panel" aria-label="Terminal" ref={panel} style={height.style}>
+		<section className="terminal-panel" aria-label={t("terminal")} ref={panel} style={height.style}>
 			<button
 				type="button"
 				className="terminal-resize"
-				aria-label="Drag to resize terminal"
+				aria-label={t("resizeTerminal")}
 				tabIndex={-1}
 				onPointerDown={startResize}
 			/>

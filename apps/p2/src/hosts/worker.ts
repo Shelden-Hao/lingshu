@@ -6,14 +6,14 @@
 // sends it to the server's store every second, as Chord's kit worker does; off, its host uses Chord's NOOP adapter.
 
 import { setTimeout as sleep } from "node:timers/promises";
+import { registerLazyBedrockProvider } from "@lingshu/ai/lazy-bedrock-provider";
+import { registerLazyOAuthFlows } from "@lingshu/ai/lazy-oauth";
 import { isChordError } from "@lingshu/chord";
 import { filesFacet } from "@lingshu/chord/app/files";
 import { nodeCompression } from "@lingshu/chord/compression";
 import { BACKGROUND_CONTEXT } from "@lingshu/chord/context";
 import { sendWorkerTelemetry, TelemetryRecorder } from "@lingshu/chord/telemetry-ingest";
 import { workerMain } from "@lingshu/chord/workers/child";
-import { registerLazyBedrockProvider } from "@lingshu/ai/lazy-bedrock-provider";
-import { registerLazyOAuthFlows } from "@lingshu/ai/lazy-oauth";
 import { createNodePhotonImages } from "@lingshu/durable/images/node";
 import { backupConfigured } from "../runtime/backup.ts";
 import { createHost, hostErrorText } from "../runtime/chord.ts";

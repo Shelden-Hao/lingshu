@@ -6,6 +6,8 @@
 // Cancel (a cross in a circle) while it runs, Archive while idle (on touch screens the item's command menu has them,
 // commands.tsx). The name is cut with "…" before the detail. A session lists its subagents below it (its chevron shows
 // or hides them); its `/tree` branches are not listed.
+
+import type { Language } from "@p2/app/v1";
 import {
 	type CommandTarget,
 	HOME,
@@ -18,17 +20,27 @@ import {
 	type Route,
 	SideNavigation,
 	shortPath,
+	showText,
 	useCommandMenuRow,
 	useCommandTargetRow,
+	useLanguage,
 	useLinkHref,
 } from "@p2/app/v1/web";
 import { type ComponentProps, type ReactNode, useEffect, useId, useMemo, useState, useSyncExternalStore } from "react";
 import { conversationTargetId } from "../../chat/contract.ts";
 import { byRecentActivity, type Child } from "../../subagents/contract.ts";
 import { stoppable } from "../agent-actions.ts";
+import { messages, sidebarText } from "../messages.ts";
 import { FailedDot, PiDots, UnreadMark } from "./marks.tsx";
 import { type Activity, failureOf, type SidebarRow } from "./model.ts";
 import { NavRow } from "./NavRow.tsx";
+
+/** Renders a sessions-plugin message `key` with its `args` in `language` (outside React hooks). */
+const showT =
+	(key: string, ...args: readonly unknown[]) =>
+	(language: Language | undefined): string =>
+		(messages.in(language) as unknown as (...a: readonly unknown[]) => string)(key, ...args);
+
 import { failureWords, runState, subagentTitle } from "./run-state.ts";
 
 /** A failure that wants the owner: a warning sign and `label`, in the error colour; `title` says what failed. */
@@ -46,18 +58,19 @@ export function FailedMark({ label, title }: { label: string; title: string }) {
  * how many have an unread answer (a blue count). Nothing when none does.
  */
 export function HiddenAttention({ activity }: { activity: Activity }) {
+	const language = useLanguage();
 	const { working, failed, unread } = activity;
 	return (
 		<>
 			{working > 0 && (
-				<span className="working-count" title={`${working} running`}>
+				<span className="working-count" title={showT("runningCount", working)(language)}>
 					<PiDots />
 					{working}
 				</span>
 			)}
-			{failed > 0 && <FailedMark label={String(failed)} title={`${failed} failed`} />}
+			{failed > 0 && <FailedMark label={String(failed)} title={showT("failedCount", failed)(language)} />}
 			{unread > 0 && (
-				<span className="unread-count" title={`${unread} with a new answer`}>
+				<span className="unread-count" title={showT("unreadCount", unread)(language)}>
 					{unread}
 				</span>
 			)}
@@ -146,13 +159,14 @@ export function Toggle({
 	className: string;
 	onToggle: () => void;
 }) {
+	const language = useLanguage();
 	return (
 		<button
 			type="button"
 			className={`nav-control nav-toggle ${className}`}
 			aria-expanded={open}
 			aria-controls={controls}
-			aria-label={`${open ? "Hide" : "Show"} ${label}`}
+			aria-label={`${open ? showText(sidebarText("hide"), language) : showText(sidebarText("show"), language)} ${label}`}
 			onClick={onToggle}
 		>
 			<NavDisclosureIcon className="nav-chevron" size={16} />
@@ -310,10 +324,14 @@ function sessionStatus(session: SidebarRow): ItemStatus {
  * nothing runs.
  */
 function BackgroundWork({ session, status }: { session: SidebarRow; status: ItemStatus }) {
+	const language = useLanguage();
 	const running = session.worker.busy.length;
 	if (status.kind === "working" || running === 0) return null;
 	return (
-		<span className="working-count background-work" title={running > 1 ? `${running} agents running` : "Running"}>
+		<span
+			className="working-count background-work"
+			title={running > 1 ? showT("agentsRunning", running)(language) : showText(sidebarText("running"), language)}
+		>
 			<PiDots />
 			{running > 1 && running}
 		</span>
@@ -345,6 +363,7 @@ export function SessionItem({
 	actions: RowActions;
 }) {
 	const linkHref = useLinkHref();
+	const language = useLanguage();
 	const { activeId, activeScope, conversationId: shownConversation, now, onRestore, onArchive } = actions;
 	const onCancel = actions.writable?.(session.id) ? actions.onCancel : undefined;
 	const active = session.id === activeId && (activeScope === undefined || activeScope === scope);
@@ -376,11 +395,17 @@ export function SessionItem({
 				? {
 						kind: "cancel",
 						title:
-							running.length > 1 ? `Stop ${session.title}: ${running.length} agents` : `Stop ${session.title}`,
+							running.length > 1
+								? showT("stopSessionAgents", session.title, running.length)(language)
+								: showT("stopSession", session.title)(language),
 						run: () => onCancel(session.id, running),
 					}
 				: undefined
-			: onArchive && { kind: "archive", title: `Archive ${session.title}`, run: () => onArchive(session.id) };
+			: onArchive && {
+					kind: "archive",
+					title: showT("archiveSession", session.title)(language),
+					run: () => onArchive(session.id),
+				};
 	const name = (
 		<>
 			{session.pinned && <PinIcon size={12} />}
@@ -400,7 +425,7 @@ export function SessionItem({
 				className={`session-header ${nested ? "has-subagents" : ""}`}
 				linkClassName="session-main"
 				{...(archived
-					? { title: "Restore and open" }
+					? { title: showText(sidebarText("restoreAndOpen"), language) }
 					: { href: linkHref({ session: session.id, conversation: main, layers: [] }) })}
 				onActivate={() => {
 					if (archived) {
@@ -414,7 +439,7 @@ export function SessionItem({
 						<Toggle
 							className="subagent-toggle"
 							open={expanded}
-							label="subagents"
+							label={showText(sidebarText("subagents"), language)}
 							controls={listId}
 							onToggle={() => setExpanded(!expanded)}
 						/>
@@ -482,6 +507,7 @@ function SubagentItem({
 	actions: RowActions;
 }) {
 	const linkHref = useLinkHref();
+	const language = useLanguage();
 	const id = agent.conversationId;
 	const busy = session.worker.busy.includes(id);
 	const shown = runState(agent.failure, busy, session.worker.work[id]);
@@ -496,9 +522,17 @@ function SubagentItem({
 	const onArchiveAgent = writable ? actions.onArchiveAgent : undefined;
 	const oneShot = agent.kind === "agent";
 	const action: ItemAction | undefined = busy
-		? onCancel && { kind: "cancel", title: `Stop ${agent.name}`, run: () => onCancel(session.id, [id]) }
+		? onCancel && {
+				kind: "cancel",
+				title: showT("stopAgent", agent.name)(language),
+				run: () => onCancel(session.id, [id]),
+			}
 		: onArchiveAgent && !oneShot && !agent.archived
-			? { kind: "archive", title: `Archive ${agent.name}`, run: () => onArchiveAgent(session.id, id) }
+			? {
+					kind: "archive",
+					title: showT("archiveAgent", agent.name)(language),
+					run: () => onArchiveAgent(session.id, id),
+				}
 			: undefined;
 	return (
 		<SideNavigation.Item>
@@ -543,6 +577,7 @@ function ArchivedAgents({
 	onOpen: (conversation: number) => void;
 	actions: RowActions;
 }) {
+	const language = useLanguage();
 	const [shown, setShown] = useState(false);
 	const open = shown || agents.some((agent) => agent.conversationId === selected);
 	const listId = useId();
@@ -555,7 +590,7 @@ function ArchivedAgents({
 				controlsId={listId}
 				onActivate={() => setShown(!open)}
 				marker={null}
-				label={<span className="session-title">{agents.length} archived</span>}
+				label={<span className="session-title">{showT("archivedCount", agents.length)(language)}</span>}
 			/>
 			<SideNavigation.List className="conversation-items" id={listId} hidden={!open}>
 				{agents.map((agent) => (

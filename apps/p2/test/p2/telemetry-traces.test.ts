@@ -80,7 +80,8 @@ describe("the owner's telemetry read back", () => {
 		await script(first, "return 1;");
 		const traces = await holdIn(owner, Traces, {}, "owner");
 		await poll(
-			async () => (await traces.findTraces({ name: "lingshu.durable.submit" }, BACKGROUND_CONTEXT)).traces.length > 0,
+			async () =>
+				(await traces.findTraces({ name: "lingshu.durable.submit" }, BACKGROUND_CONTEXT)).traces.length > 0,
 		);
 		traces.release();
 	});
@@ -93,7 +94,8 @@ describe("the owner's telemetry read back", () => {
 		assert.ok(page.cursor, "more than one trace: a cursor");
 		const next = await traces.findTraces({ limit: 1, cursor: page.cursor! }, BACKGROUND_CONTEXT);
 		assert.notEqual(next.traces[0]?.traceId, page.traces[0]?.traceId);
-		const [submit] = (await traces.findTraces({ name: "lingshu.durable.submit", limit: 1 }, BACKGROUND_CONTEXT)).traces;
+		const [submit] = (await traces.findTraces({ name: "lingshu.durable.submit", limit: 1 }, BACKGROUND_CONTEXT))
+			.traces;
 		assert.ok(submit && submit.spans > 0 && submit.hosts.some((host) => host.startsWith("session|")));
 		const trace = await traces.getTrace({ traceId: submit.traceId }, BACKGROUND_CONTEXT);
 		assert.equal(trace?.spans.length, submit.spans);

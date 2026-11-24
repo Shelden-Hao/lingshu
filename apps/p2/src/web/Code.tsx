@@ -2,6 +2,8 @@ import { common, createLowlight } from "lowlight";
 import { type CSSProperties, Fragment, type ReactNode, useEffect, useMemo, useState } from "react";
 import { type HastNode, highlightLines } from "./highlight-lines.ts";
 import { CheckIcon, CopyIcon } from "./icons.tsx";
+import { useMessages } from "./language.ts";
+import { messages } from "./messages.ts";
 
 const lowlight = createLowlight(common);
 const ALIASES: Record<string, string> = { mjs: "js", cjs: "js", mts: "ts", cts: "ts", jsonc: "json", zsh: "bash" };
@@ -138,6 +140,7 @@ export function LinesBlock({
 	onLine?: (index: number) => void;
 	after?: (index: number) => ReactNode;
 }) {
+	const { t } = useMessages(messages);
 	const resolved = languageOf(language);
 	const size = lines.reduce((total, line) => total + line.text.length, 0);
 	// Each side of the patch as one text: a comment or template literal spanning lines stays one token.
@@ -166,7 +169,7 @@ export function LinesBlock({
 									type="button"
 									className="diff-number"
 									onClick={() => onLine(index)}
-									aria-label={`Line ${line.number}`}
+									aria-label={t("lineNumber", line.number)}
 								>
 									{line.number}
 								</button>
@@ -174,7 +177,7 @@ export function LinesBlock({
 								<span className="diff-number">{line.number}</span>
 							)}
 							{line.kind === "hunk" && onHunk ? (
-								<button type="button" className="diff-code" onClick={onHunk} title="Show more context">
+								<button type="button" className="diff-code" onClick={onHunk} title={t("showMoreContext")}>
 									{highlighted[index]} ⋯
 								</button>
 							) : (
@@ -209,23 +212,23 @@ export async function copyText(text: string): Promise<boolean> {
 
 /** Icon-only copy in content; `primary` renders an outline button when copying is the sheet's main action. */
 export function CopyButton({ text, label, primary }: { text: string; label?: string; primary?: boolean }) {
+	const { t } = useMessages(messages);
 	const [copied, setCopied] = useState(false);
 	useEffect(() => {
-		if (!copied) return;
 		const timer = setTimeout(() => setCopied(false), 1500);
 		return () => clearTimeout(timer);
-	}, [copied]);
+	}, []);
 	return (
 		<button
 			type="button"
 			className={`${primary ? "button" : "copy"} ${copied ? "done" : ""}`}
-			aria-label={copied ? "Copied" : "Copy"}
+			aria-label={copied ? t("copied") : t("copy")}
 			onClick={() => {
 				void copyText(text).then(setCopied);
 			}}
 		>
 			{copied ? <CheckIcon /> : <CopyIcon />}
-			{label && <span>{copied ? "Copied" : label}</span>}
+			{label && <span>{copied ? t("copied") : label}</span>}
 		</button>
 	);
 }
@@ -236,6 +239,7 @@ export function highlightCode(code: string, hint: string | undefined): ReactNode
 }
 
 export function CodeBlock({ code, language, tool }: { code: string; language?: string; tool?: boolean }) {
+	const { t } = useMessages(messages);
 	const resolved = languageOf(language);
 	const content = useMemo(() => highlight(code, resolved), [code, resolved]);
 	if (tool)
@@ -248,7 +252,7 @@ export function CodeBlock({ code, language, tool }: { code: string; language?: s
 		<div className="code-block">
 			<div className="code-head">
 				<span>{language || "text"}</span>
-				<CopyButton text={code} label="Copy" />
+				<CopyButton text={code} label={t("copy")} />
 			</div>
 			<pre className="hljs">
 				<code>{content}</code>

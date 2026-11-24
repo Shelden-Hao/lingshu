@@ -1,6 +1,7 @@
 // How Durable's coding tools (bash, read, write, edit) show in the chat: their words on the wheel and in the sheet,
 // and their details (a command and its output as a terminal, a file's numbered lines or image, an edit's diff).
 import {
+	activityMessages,
 	CodeBlock,
 	type CodeLine,
 	CommandBlock,
@@ -22,6 +23,7 @@ import {
 	stringOf,
 	type ToolActivity,
 } from "@p2/app/v1/web";
+import { messages } from "./messages.ts";
 
 /** Commands that search: they read as "Searched". */
 const SEARCH = /^\s*(rg|grep|egrep|fgrep|find|fd|ag|ack)\b/;
@@ -44,10 +46,11 @@ const bash: ToolActivity = {
 	describe(step) {
 		const command = stringOf(step.tool.args.command);
 		const search = SEARCH.test(command);
+		const t = activityMessages(messages);
 		return {
 			label: {
 				kind: search ? "search" : "command",
-				verb: search ? "Searched" : "Ran",
+				verb: search ? t("searched") : t("ran"),
 				object: command,
 				style: "code",
 			},
@@ -59,9 +62,10 @@ const bash: ToolActivity = {
 	running(step) {
 		const command = firstLine(stringOf(step.tool.args.command));
 		const search = SEARCH.test(command);
+		const t = activityMessages(messages);
 		return {
 			kind: search ? "search" : "command",
-			verb: search ? "Searching" : "Running",
+			verb: search ? t("searching") : t("running"),
 			object: command,
 			style: "code",
 		};
@@ -72,7 +76,7 @@ const bash: ToolActivity = {
 		const code = /exited with code (\d+)/.exec(tool.output)?.[1];
 		return code ? `exit ${code}` : undefined;
 	},
-	summary: (count) => (count === 1 ? "ran a command" : `ran ${count} commands`),
+	summary: (count) => activityMessages(messages)("summaryRan", count),
 	Detail: BashDetail,
 	CallInput: ({ call }) => <CommandBlock command={stringOf(parsedArgs(call.args).command)} />,
 };
@@ -121,17 +125,23 @@ function ReadDetail({ step }: { step: Step }) {
 const read: ToolActivity = {
 	describe(step) {
 		const lines = range(step);
+		const t = activityMessages(messages);
 		return {
-			label: { kind: "read", verb: "Read", object: fileName(pathOf(step)), style: "file" },
+			label: { kind: "read", verb: t("read"), object: fileName(pathOf(step)), style: "file" },
 			description:
 				failureOf(step) ??
 				(step.tool.images.length ? "Image" : lines ? `Lines ${lines.offset}–${lines.end}` : pathOf(step)),
 		};
 	},
-	running: (step) => ({ kind: "read", verb: "Reading", object: fileName(pathOf(step)), style: "file" }),
+	running: (step) => ({
+		kind: "read",
+		verb: activityMessages(messages)("reading"),
+		object: fileName(pathOf(step)),
+		style: "file",
+	}),
 	brief: "Reading",
 	argument: (tool, cwd) => relativePath(cwd, stringOf(tool.args.path)),
-	summary: (count) => (count === 1 ? "read a file" : `read ${count} files`),
+	summary: (count) => activityMessages(messages)("summaryRead", count),
 	Detail: ReadDetail,
 };
 
@@ -158,16 +168,21 @@ function ChangeDetail({ step }: { step: Step }) {
 }
 
 /** write and edit count together in a run's summary: the same function. */
-const edited = (count: number) => (count === 1 ? "edited a file" : `edited ${count} files`);
+const edited = (count: number) => activityMessages(messages)("summaryEdited", count);
 
 /** write and edit: the same look, their own verbs. */
-const change = (verb: string, running: string): ToolActivity => ({
+const change = (done: "wrote" | "edited", doing: "writing" | "editing"): ToolActivity => ({
 	describe: (step) => ({
-		label: { kind: "edit", verb, object: fileName(pathOf(step)), style: "file" },
+		label: { kind: "edit", verb: activityMessages(messages)(done), object: fileName(pathOf(step)), style: "file" },
 		description: failureOf(step) ?? pathOf(step),
 	}),
-	running: (step) => ({ kind: "edit", verb: running, object: fileName(pathOf(step)), style: "file" }),
-	brief: running,
+	running: (step) => ({
+		kind: "edit",
+		verb: activityMessages(messages)(doing),
+		object: fileName(pathOf(step)),
+		style: "file",
+	}),
+	brief: doing === "writing" ? "Writing" : "Editing",
 	argument: (tool, cwd) => relativePath(cwd, stringOf(tool.args.path)),
 	summary: edited,
 	Detail: ChangeDetail,
@@ -177,6 +192,6 @@ const change = (verb: string, running: string): ToolActivity => ({
 export const codingToolActivities: Record<string, ToolActivity> = {
 	bash,
 	read,
-	write: change("Wrote", "Writing"),
-	edit: change("Edited", "Editing"),
+	write: change("wrote", "writing"),
+	edit: change("edited", "editing"),
 };

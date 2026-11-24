@@ -2,7 +2,8 @@
 // live nested slots (`tool.calls`, internal tools by their script name); once settled, the final list its result keeps
 // in `details.calls` (Durable's `CodemodeToolDetails`).
 import { isInterruptedError } from "@p2/app/v1";
-import type { NestedCall, ToolStatus } from "@p2/app/v1/web";
+import { activityMessages, type NestedCall, type ToolStatus } from "@p2/app/v1/web";
+import { messages } from "./messages.ts";
 
 /** A settled call's status in `details.calls`: a call still running when the script ended was cut short with it. */
 const SETTLED: Readonly<Record<string, ToolStatus>> = {
@@ -65,4 +66,4 @@ export function scriptCalls(tool: {
 
 /** How an entry of a script's calls that groups `count` identical calls in a row says so. */
 export const repeatedRuns = (count: number, failed: number): string =>
-	`${count} runs${failed ? `, ${failed} failed` : ""}`;
+	activityMessages(messages)("repeatedRuns", count, failed);

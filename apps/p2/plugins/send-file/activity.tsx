@@ -1,6 +1,7 @@
 // How the `send_file` tool shows in the chat: "Sent <name>", and the file as a card after the turn's answer that opens
 // the viewer.
 import {
+	activityMessages,
 	CodeBlock,
 	detailsOf,
 	FileCard,
@@ -22,6 +23,7 @@ import {
 } from "@p2/app/v1/web";
 import { useContext } from "react";
 import type { DownloadInfo } from "../files/contract.ts";
+import { messages } from "./messages.ts";
 
 /** The file a call sent, when its details are complete and valid (they come from the tool's result). */
 function sentFileOf(tool: ToolView): DownloadInfo | undefined {
@@ -75,7 +77,7 @@ export const sendFileActivity: ToolActivity = {
 	describe: (step) => ({
 		label: {
 			kind: "file",
-			verb: "Sent",
+			verb: activityMessages(messages)("sent"),
 			object: stringOf(detailsOf(step.tool).name) || fileName(stringOf(step.tool.args.path)),
 			style: "file",
 		},
@@ -83,12 +85,12 @@ export const sendFileActivity: ToolActivity = {
 	}),
 	running: (step) => ({
 		kind: "file",
-		verb: "Sending",
+		verb: activityMessages(messages)("sending"),
 		object: fileName(stringOf(step.tool.args.path)),
 		style: "file",
 	}),
 	argument: (tool, cwd) => relativePath(cwd, stringOf(tool.args.path)),
-	summary: (count) => (count === 1 ? "sent a file" : `sent ${count} files`),
+	summary: (count) => activityMessages(messages)("summarySent", count),
 	hasResult: (tool) => (sentFileOf(tool) ? "after" : false),
 	Result: SentFile,
 	Detail: SendFileDetail,

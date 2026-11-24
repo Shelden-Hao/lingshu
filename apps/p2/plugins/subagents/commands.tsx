@@ -11,8 +11,11 @@ import {
 	knownMain,
 	locationLabel,
 	ParentIcon,
+	showText,
+	textIn,
 	useCommandMatches,
 	useCommandMenu,
+	useMessages,
 	useObject,
 	useReadable,
 	useRoute,
@@ -24,25 +27,30 @@ import { PiDots, useCommandSession, useOpenFromMenu } from "../sessions/contract
 import { SessionStatus } from "../status/contract.ts";
 import { byRecentActivity, type Child, Subagents, shortModelName } from "./contract.ts";
 import { openMain } from "./contract.web.ts";
+import { messages } from "./messages.ts";
 
 // Order 15: after Session (10), before Model (20), whose commands act on the conversation switched to.
 export const CONVERSATION_COMMANDS = {
 	"subagents.switch": {
-		title: "Switch conversation…",
-		group: "Conversation",
+		title: textIn(messages, "cmdSwitch"),
+		group: textIn(messages, "groupConversation"),
 		order: 15,
 		icon: ConversationsIcon,
-		keywords: ["agents", "subagents", "open subagent"],
+		keywords: [
+			textIn(messages, "keywordAgents"),
+			textIn(messages, "keywordSubagents"),
+			textIn(messages, "keywordOpenSubagent"),
+		],
 		target: ["session", "conversation"],
 		Shown: HasSubagents,
 		action: { kind: "page", page: "conversations" },
 	},
 	"subagents.main": {
-		title: "Back to main conversation",
-		group: "Conversation",
+		title: textIn(messages, "cmdMain"),
+		group: textIn(messages, "groupConversation"),
 		order: 15,
 		icon: ParentIcon,
-		keywords: ["parent", "leave subagent"],
+		keywords: [textIn(messages, "keywordParent"), textIn(messages, "keywordLeaveSubagent")],
 		// The main conversation's target is the session, so this shows only on a subagent's.
 		target: ["conversation"],
 		action: { kind: "run", run: backToMain },
@@ -50,11 +58,19 @@ export const CONVERSATION_COMMANDS = {
 } satisfies Record<string, Command>;
 
 export const CONVERSATION_PAGES = {
-	conversations: { label: "Conversations", placeholder: "Search conversations…", Body: ConversationsPage },
+	conversations: {
+		label: textIn(messages, "pageConversations"),
+		placeholder: textIn(messages, "pageConversationsSearch"),
+		Body: ConversationsPage,
+	},
 } satisfies Record<string, CommandPage>;
 
 // Order 1005: after the Sessions search (1000), so a query matching a session and a subagent highlights the session.
-export const CONVERSATION_SEARCH: CommandSearch = { group: "Conversations", order: 1005, Results: ConversationResults };
+export const CONVERSATION_SEARCH: CommandSearch = {
+	group: textIn(messages, "groupConversations"),
+	order: 1005,
+	Results: ConversationResults,
+};
 
 function backToMain(ctx: CommandContext): void {
 	const at = ctx.target?.type === "conversation" ? conversationOf(ctx.target.id) : undefined;
@@ -76,11 +92,12 @@ type Conversation = {
 const titleOf = (conversation: Conversation): string => conversation.title;
 
 function ConversationsPage() {
+	const { t } = useMessages(messages);
 	const { session } = useCommandSession();
 	const matches = useCommandMatches(useConversations(session).all, titleOf);
 	if (session === undefined) return null;
 	return (
-		<CommandMenu.Group heading="Conversations">
+		<CommandMenu.Group heading={t("pageConversations")}>
 			<ConversationRows session={session.id} conversations={matches} />
 		</CommandMenu.Group>
 	);
@@ -127,7 +144,7 @@ const subagentConversation = (child: Child): Conversation => ({
 	id: child.conversationId,
 	title: child.name,
 	suffix: [
-		...(child.archived ? ["Archived"] : []),
+		...(child.archived ? [showText(textIn(messages, "archived"), undefined)] : []),
 		shortModelName(child.model),
 		...(child.location ? [locationLabel(child.location.env, child.location.cwd)] : []),
 	].join(" · "),

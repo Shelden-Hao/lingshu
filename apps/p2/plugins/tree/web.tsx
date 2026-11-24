@@ -1,11 +1,22 @@
 // `/tree` in the browser (docs/tree.md, "Tree panel"): the top bar's button opening the tree panel in the side panel,
 // beside the terminal's and the workspace's, and the panel itself (TreePanel.tsx). The owner's only: the tree is.
-import { contribute, defineFacet } from "@p2/app/v1";
-import { BranchIcon, closePanel, openPanel, Slots, useOwner, useRoute, useSidePanelShown } from "@p2/app/v1/web";
+import { contribute, defineFacet, Translations } from "@p2/app/v1";
+import {
+	BranchIcon,
+	closePanel,
+	openPanel,
+	Slots,
+	useMessages,
+	useOwner,
+	useRoute,
+	useSidePanelShown,
+} from "@p2/app/v1/web";
+import { messages } from "./messages.ts";
 import { TREE_PANEL, TreePanel } from "./TreePanel.tsx";
 
 /** Shows or hides the tree panel. */
 function TreeButton() {
+	const { t } = useMessages(messages);
 	const route = useRoute();
 	const owner = useOwner();
 	if (!owner || !route.session) return null;
@@ -15,7 +26,7 @@ function TreeButton() {
 		<button
 			type="button"
 			className={`icon-button workspace-toggle ${open ? "on" : ""}`}
-			aria-label="Conversation tree"
+			aria-label={t("openPanel")}
 			aria-pressed={open}
 			onClick={() => (open ? closePanel() : openPanel(TREE_PANEL))}
 		>
@@ -35,6 +46,7 @@ function TreeOverlay() {
 
 export default defineFacet((host) => {
 	contribute(host, "p2.web-tree", (self) => {
+		self.contribute(Translations, messages.translations);
 		self.contribute(Slots, { "tree-actions": TreeButton, "overlay:tree": TreeOverlay });
 	});
 });

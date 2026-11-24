@@ -1,5 +1,5 @@
-import type { JsonValue } from "@lingshu/chord/json";
 import type { AssistantMessage, ImageContent, TextContent, ToolResultMessage } from "@lingshu/ai";
+import type { JsonValue } from "@lingshu/chord/json";
 import type {
 	AgentState,
 	CompactionFailure,

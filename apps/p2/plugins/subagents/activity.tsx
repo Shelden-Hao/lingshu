@@ -1,6 +1,7 @@
 // How the `subagent` tool shows in the chat: what it asked which subagent, and for an answer or a spawn how it went,
 // with the subagent's conversation one tap away.
 import {
+	activityMessages,
 	DetailLink,
 	DetailNote,
 	DetailProse,
@@ -16,24 +17,31 @@ import {
 	stringOf,
 	type ToolActivity,
 	type ToolView,
+	useMessages,
 	WorkingDirectory,
 } from "@p2/app/v1/web";
 import { useContext } from "react";
+import { messages } from "./messages.ts";
 
-const VERBS: Record<string, string> = {
-	spawn: "Started subagent",
-	send: "Messaged",
-	answer: "Read the answer of",
-	status: "Checked on",
-	archive: "Archived",
-	restore: "Restored",
-	configure: "Configured",
-	stop: "Stopped",
+/** Each action's verb in the catalog (`verbSpawn`, `verbSend`, …). */
+const VERBS: Record<
+	string,
+	"verbSpawn" | "verbSend" | "verbAnswer" | "verbStatus" | "verbArchive" | "verbRestore" | "verbConfigure" | "verbStop"
+> = {
+	spawn: "verbSpawn",
+	send: "verbSend",
+	answer: "verbAnswer",
+	status: "verbStatus",
+	archive: "verbArchive",
+	restore: "verbRestore",
+	configure: "verbConfigure",
+	stop: "verbStop",
 };
 
 const nameOf = (tool: ToolView) => stringOf(tool.args.name) || stringOf(detailsOf(tool).name);
 
 function SubagentDetail({ step }: { step: Step }) {
+	const { t } = useMessages(messages);
 	const { tool } = step;
 	const openConversation = useContext(OpenConversation);
 	const cwd = useContext(WorkingDirectory)?.replace(/\/+$/, "");
@@ -51,13 +59,13 @@ function SubagentDetail({ step }: { step: Step }) {
 		.join(" · ");
 	return (
 		<>
-			<DetailSection label="Input">
+			<DetailSection label={t("detailInput")}>
 				<DetailNote>{[action, nameOf(tool)].filter(Boolean).join(" · ")}</DetailNote>
 				{tool.args.message !== undefined && <DetailProse text={stringOf(tool.args.message)} />}
 				{config && <DetailNote testId="tool-config">{config}</DetailNote>}
 			</DetailSection>
 			{tool.output && (
-				<DetailSection label="Output">
+				<DetailSection label={t("detailOutput")}>
 					{action === "answer" && tool.status === "done" ? (
 						<DetailProse text={tool.output} />
 					) : (
@@ -66,7 +74,9 @@ function SubagentDetail({ step }: { step: Step }) {
 				</DetailSection>
 			)}
 			{target !== undefined && (
-				<DetailLink onClick={() => openConversation(target)}>Open {nameOf(tool) || "the conversation"}</DetailLink>
+				<DetailLink onClick={() => openConversation(target)}>
+					{t("openConversation", nameOf(tool) || t("openTheConversation"))}
+				</DetailLink>
 			)}
 		</>
 	);
@@ -74,17 +84,27 @@ function SubagentDetail({ step }: { step: Step }) {
 
 export const subagentActivity: ToolActivity = {
 	brief: "Asking subagent",
-	describe: (step) => ({
-		label: {
-			kind: "agent",
-			verb: VERBS[stringOf(step.tool.args.action)] ?? "Subagent",
-			object: nameOf(step.tool),
-			style: "file",
-		},
-		description: failureOf(step) ?? (plainText(sentence(stringOf(step.tool.args.message))) || undefined),
+	describe: (step) => {
+		const t = activityMessages(messages);
+		const key = VERBS[stringOf(step.tool.args.action)];
+		return {
+			label: {
+				kind: "agent",
+				...(key ? { verb: t(key) } : { verb: t("verbSubagent") }),
+				object: nameOf(step.tool),
+				style: "file",
+			},
+			description: failureOf(step) ?? (plainText(sentence(stringOf(step.tool.args.message))) || undefined),
+		};
+	},
+	running: (step) => ({
+		kind: "agent",
+		verb: activityMessages(messages)("asking"),
+		object: stringOf(step.tool.args.name),
+		style: "file",
 	}),
-	running: (step) => ({ kind: "agent", verb: "Asking", object: stringOf(step.tool.args.name), style: "file" }),
 	argument: (tool) => [stringOf(tool.args.action), nameOf(tool)].filter(Boolean).join(" "),
-	summary: (count) => (count === 1 ? "used a subagent" : `used subagents ${count} times`),
+	summary: (count) =>
+		count === 1 ? activityMessages(messages)("summaryOne") : activityMessages(messages)("summaryMany", count),
 	Detail: SubagentDetail,
 };

@@ -110,8 +110,7 @@ test("p2's tsconfig maps every workspace package the repository's maps, and the 
 		);
 	const own = absolute(APP, paths(APP));
 	for (const [pattern, targets] of Object.entries(absolute(repository, paths(repository)))) {
-		if (pattern.startsWith("@lingshu/") || pattern === "typebox")
-			assert.deepEqual(own[pattern], targets, pattern);
+		if (pattern.startsWith("@lingshu/") || pattern === "typebox") assert.deepEqual(own[pattern], targets, pattern);
 	}
 	assert.deepEqual(own["@p2/app/v1"], [join(APP, "src/api/v1/index.ts")]);
 });

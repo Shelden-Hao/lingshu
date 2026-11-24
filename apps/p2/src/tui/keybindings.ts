@@ -1,13 +1,7 @@
 // lingshu's keybinding ids and defaults, copied from coding-agent core/keybindings.ts (APP_KEYBINDINGS, the KEYBINDINGS
 // platform overrides and the legacy-name migration) and core/key-id-schema.ts. Pure data: the platform is the
 // guest's (from the launcher's `capabilities`), never this process's. Shared by the launcher and the worker.
-import {
-	Key,
-	type KeybindingDefinitions,
-	type KeybindingsConfig,
-	type KeyId,
-	TUI_KEYBINDINGS,
-} from "@lingshu/tui";
+import { Key, type KeybindingDefinitions, type KeybindingsConfig, type KeyId, TUI_KEYBINDINGS } from "@lingshu/tui";
 
 export type KeyPlatform = { platform: string; windowsKeys: boolean };
 export const DEFAULT_KEY_PLATFORM: KeyPlatform = { platform: "linux", windowsKeys: false };

@@ -3,13 +3,7 @@
 import { appendFileSync } from "node:fs";
 import type { Message } from "@lingshu/ai";
 import { type CreateModelsOptions, createModels } from "@lingshu/ai/models";
-import {
-	fauxAssistantMessage,
-	fauxProvider,
-	fauxText,
-	fauxThinking,
-	fauxToolCall,
-} from "@lingshu/ai/providers/faux";
+import { fauxAssistantMessage, fauxProvider, fauxText, fauxThinking, fauxToolCall } from "@lingshu/ai/providers/faux";
 import { SENDER_PREFIX } from "@p2/app/v1";
 
 // Fake-mode prompts that make the faux model call one tool; anything else is echoed.

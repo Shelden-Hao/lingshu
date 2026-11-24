@@ -6,6 +6,8 @@
 // Projects rollup's "+" creates a project; a group's row shows or hides its sessions, a project's ⋯ (or a long press)
 // opens its commands; a session's row opens it, its chevron shows or hides its subagents. With a mouse, sessions and
 // projects are dragged (drag.ts). It renders what model.ts computes and calls back for every action.
+
+import type { Language } from "@p2/app/v1";
 import { type Grant, grantMode } from "@p2/app/v1";
 import {
 	NavAddIcon,
@@ -17,14 +19,36 @@ import {
 	PiLogo,
 	Sidebar,
 	SideNavigation,
+	showText,
 	ThemeButton,
+	useLanguage,
 	useLinkHref,
 } from "@p2/app/v1/web";
 import { type ComponentProps, memo, type ReactNode, useEffect, useId, useState } from "react";
+import { messages, sidebarText } from "../messages.ts";
 import { projectTarget } from "../project-commands.tsx";
 import { type DropActions, useSidebarDrag } from "./drag.ts";
 import { type GroupSection, type NewTarget, PROJECTS, type Section, type SidebarRow } from "./model.ts";
 import { NavRow } from "./NavRow.tsx";
+
+/** The messages key of a built-in rollup's name (project names are their own). */
+const rollupNameKey = (name: string): string =>
+	name === "Folders"
+		? "pageFolders"
+		: name === "Other sessions"
+			? "sidebarOtherSessions"
+			: name === "Projects"
+				? "groupProjects"
+				: name === "Archive"
+					? "pageArchive"
+					: name;
+
+/** Renders a sessions-plugin message `key` with its `args` in `language` (outside React hooks). */
+const showT =
+	(key: string, ...args: readonly unknown[]) =>
+	(language: Language | undefined): string =>
+		(messages.in(language) as unknown as (...a: readonly unknown[]) => string)(key, ...args);
+
 import {
 	HiddenAttention,
 	pageRoute,
@@ -67,6 +91,7 @@ type HeadingActions = {
  * says what its hidden sessions do: how many run, failed or have a new answer.
  */
 function GroupItem({ group, rows, actions }: { group: GroupSection; rows: RowActions; actions: HeadingActions }) {
+	const language = useLanguage();
 	const { onCollapse, onNewIn, connected, projectMenus } = actions;
 	const { target } = group;
 	const listId = useId();
@@ -75,7 +100,11 @@ function GroupItem({ group, rows, actions }: { group: GroupSection; rows: RowAct
 		target?.kind === "project"
 			? target.project.places.map((place) => (place.env ? `${place.env}:${place.path}` : place.path)).join("\n")
 			: undefined;
-	const marker = group.sandboxed ? <NavLockIcon size={16} aria-label="Sandbox" /> : <NavFolderIcon size={16} />;
+	const marker = group.sandboxed ? (
+		<NavLockIcon size={16} aria-label={showText(sidebarText("sandbox"), language)} />
+	) : (
+		<NavFolderIcon size={16} />
+	);
 	const label = <span className="session-title">{group.name}</span>;
 	const menu = projectMenus && target?.kind === "project" ? projectTarget(target.project.name) : undefined;
 	const row: ComponentProps<typeof NavRow> = {
@@ -95,8 +124,8 @@ function GroupItem({ group, rows, actions }: { group: GroupSection; rows: RowAct
 					<button
 						type="button"
 						className="nav-control group-options"
-						aria-label={`${group.name} options`}
-						title="Options"
+						aria-label={showT("optionsOf", group.name)(language)}
+						title={showText(sidebarText("options"), language)}
 						onClick={() => openCommandMenu(menu)}
 					>
 						<NavMoreIcon size={16} />
@@ -142,6 +171,7 @@ function GroupItem({ group, rows, actions }: { group: GroupSection; rows: RowAct
  * a "+" that creates a project.
  */
 function RollupGroup({ section, rows, actions }: { section: Section; rows: RowActions; actions: HeadingActions }) {
+	const language = useLanguage();
 	const { page, onPage, onCollapse, onOptions, onNewProject, connected } = actions;
 	const linkHref = useLinkHref();
 	const listId = useId();
@@ -161,14 +191,14 @@ function RollupGroup({ section, rows, actions }: { section: Section; rows: RowAc
 				linkClassName="group-label"
 				href={linkHref(pageRoute(section.key))}
 				onActivate={() => onPage(section.key)}
-				label={section.name}
+				label={showText(sidebarText(rollupNameKey(section.name)), language)}
 				after={
 					onCollapse &&
 					collapsed !== undefined && (
 						<Toggle
 							className="section-toggle"
 							open={!collapsed}
-							label={`the sessions of ${section.name}`}
+							label={showT("sessionsOf", section.name)(language)}
 							controls={listId}
 							onToggle={() => onCollapse(section.key, !collapsed)}
 						/>
@@ -189,8 +219,8 @@ function RollupGroup({ section, rows, actions }: { section: Section; rows: RowAc
 							<button
 								type="button"
 								className="nav-control new-project"
-								aria-label="New project"
-								title="New project"
+								aria-label={showText(sidebarText("newProject"), language)}
+								title={showText(sidebarText("newProject"), language)}
 								disabled={!connected}
 								onClick={onNewProject}
 							>
@@ -201,8 +231,8 @@ function RollupGroup({ section, rows, actions }: { section: Section; rows: RowAc
 							<button
 								type="button"
 								className="nav-control rollup-options"
-								aria-label={`${section.name} options`}
-								title="Options"
+								aria-label={showT("optionsOf", section.name)(language)}
+								title={showText(sidebarText("options"), language)}
 								onClick={() => onOptions(section.key)}
 							>
 								<NavMoreIcon size={16} />
@@ -221,7 +251,7 @@ function RollupGroup({ section, rows, actions }: { section: Section; rows: RowAc
 						section.groups.map((group) => (
 							<GroupItem key={group.key} group={group} rows={rows} actions={actions} />
 						))}
-					{empty && <li className="empty-note sidebar-empty">No activity</li>}
+					{empty && <li className="empty-note sidebar-empty">{showText(sidebarText("noActivity"), language)}</li>}
 				</SideNavigation.List>
 			)}
 		</SideNavigation.Group>
@@ -243,10 +273,11 @@ function HeadlessGroup({
 	selected: boolean;
 	onPage: (key: string) => void;
 }) {
+	const language = useLanguage();
 	const linkHref = useLinkHref();
 	return (
 		<SideNavigation.Group className="sidebar-section headless" data-key={section.key}>
-			<SideNavigation.List aria-label={section.name}>
+			<SideNavigation.List aria-label={showText(sidebarText(rollupNameKey(section.name)), language)}>
 				{section.rows.map((session) => (
 					<SessionItem key={session.id} session={session} scope={section.key} actions={rows} />
 				))}
@@ -258,7 +289,7 @@ function HeadlessGroup({
 							href={linkHref(pageRoute(section.key))}
 							onActivate={() => onPage(section.key)}
 							marker={null}
-							label={`${section.older} older`}
+							label={showT("older", section.older)(language)}
 						/>
 					</SideNavigation.Item>
 				)}
@@ -352,6 +383,7 @@ export const SidebarView = memo(function SidebarView({
 	footerActions?: ReactNode;
 }) {
 	const linkHref = useLinkHref();
+	const language = useLanguage();
 	// The open session is selected in one place only: where it was opened from, else the first place it shows.
 	const openedFrom = useOpenedFrom();
 	const places = activeId === undefined ? [] : placesOf(sections, activeId);
@@ -396,20 +428,24 @@ export const SidebarView = memo(function SidebarView({
 	);
 	if (guest)
 		return frame(
-			"Shared session",
+			showText(sidebarText("sidebarShared"), language),
 			<>
 				<div className="brand">
 					<PiLogo compact />
-					<span>Shared session</span>
+					<span>{showText(sidebarText("sidebarShared"), language)}</span>
 				</div>
 				<p className="empty-note">
-					Joined as <strong>{guest.name}</strong>
+					{showT("joinedAs", guest.name)(language).split(guest.name)[0]}
+					<strong>{guest.name}</strong>
+					{showT("joinedAs", guest.name)(language).split(guest.name)[1]}
 					<br />
 					{/* The open session's access: sessions may be shared with a guest in different modes. */}
-					{grantMode(guest, activeId) === "full" ? "Read/write" : "Read-only"}
+					{grantMode(guest, activeId) === "full"
+						? showText(sidebarText("readWrite"), language)
+						: showText(sidebarText("readOnly"), language)}
 				</p>
 			</>,
-			<SideNavigation.Root className="sidebar-nav" aria-label="Shared sessions">
+			<SideNavigation.Root className="sidebar-nav" aria-label={showText(sidebarText("sharedSessions"), language)}>
 				<SideNavigation.List>
 					{rows.map((session) => (
 						// A guest's list shows each session once.
@@ -428,15 +464,22 @@ export const SidebarView = memo(function SidebarView({
 			</>,
 		);
 	return frame(
-		"Sessions",
+		showText(sidebarText("sidebarLabel"), language),
 		<div className="drawer-header-row">
 			<div className="brand">
 				<PiLogo compact />
 			</div>
 			{headerActions}
-			<Sidebar.Trigger className="collapse-sidebar" aria-label="Collapse sidebar" />
+			<Sidebar.Trigger
+				className="collapse-sidebar"
+				aria-label={showText(sidebarText("collapseSidebar"), language)}
+			/>
 		</div>,
-		<SideNavigation.Root className="sidebar-nav" aria-label="Rollups" {...(drop ? { "data-drag": "" } : {})}>
+		<SideNavigation.Root
+			className="sidebar-nav"
+			aria-label={showText(sidebarText("sidebarRollups"), language)}
+			{...(drop ? { "data-drag": "" } : {})}
+		>
 			<SideNavigation.List className="sidebar-start">
 				{startRows}
 				<SideNavigation.Item>
@@ -447,7 +490,7 @@ export const SidebarView = memo(function SidebarView({
 						href={linkHref(NEW_SESSION)}
 						onActivate={onNew}
 						marker={<NavAddIcon size={16} />}
-						label="New session"
+						label={showText(sidebarText("newSession"), language)}
 					/>
 				</SideNavigation.Item>
 			</SideNavigation.List>

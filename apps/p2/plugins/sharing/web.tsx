@@ -10,6 +10,9 @@ import {
 	errorText,
 	Sheet,
 	Slots,
+	showText,
+	useLanguage,
+	useMessages,
 	useObject,
 	useOwner,
 	useReadable,
@@ -20,6 +23,7 @@ import { useEffect, useState } from "react";
 import { SHARING_COMMANDS, SHARING_PAGES } from "./commands.tsx";
 import { GuestPresence, type ShareMode, Sharing } from "./contract.ts";
 import { confirmsFirst, LINK_LABEL, linkUrl, resetLink } from "./links.ts";
+import { messages } from "./messages.ts";
 
 /**
  * Two links per session (read-only; read/write: send and Stop), the people it is shared with by email, and the guests
@@ -27,6 +31,8 @@ import { confirmsFirst, LINK_LABEL, linkUrl, resetLink } from "./links.ts";
  * there, signed in with that email, in any organization.
  */
 function ShareSheet({ session, onClose }: { session: string; onClose: () => void }) {
+	const { t } = useMessages(messages);
+	const language = useLanguage();
 	const sharing = useObject(Sharing, { session });
 	const links = useReadable(sharing?.links);
 	const guests = useReadable(sharing?.guests);
@@ -102,7 +108,7 @@ function ShareSheet({ session, onClose }: { session: string; onClose: () => void
 	};
 	const cancel = (
 		<button type="button" className="text-action" onClick={() => setConfirming(undefined)}>
-			Cancel
+			{t("cancel")}
 		</button>
 	);
 	/** Remove, confirmed in place: for a link guest (blocked from the session) or a person (shared no more). */
@@ -110,43 +116,37 @@ function ShareSheet({ session, onClose }: { session: string; onClose: () => void
 		confirming?.kind === "remove" && confirming.remove === id ? (
 			<span className="inline-form">
 				<button type="button" className="text-action danger" onClick={confirm}>
-					Remove
+					{t("remove")}
 				</button>
 				{cancel}
 			</span>
 		) : (
 			<button type="button" className="text-action" onClick={() => setConfirming({ kind: "remove", remove: id })}>
-				Remove
+				{t("remove")}
 			</button>
 		);
 	return (
-		<Sheet title="Share" onClose={onClose}>
-			<p className="muted small">
-				Anyone with a link can join this session and its subagents under a name they choose. Read/write lets them
-				make the agent run commands and change files on{" "}
-				{remoteEnv ? `the remote environment "${remoteEnv}"` : "this host"}.
-			</p>
+		<Sheet title={t("title")} onClose={onClose}>
+			<p className="muted small">{t("intro", remoteEnv ? t("remoteEnv", remoteEnv) : t("host"))}</p>
 			<div className="list">
 				{(["view", "full"] as const).map((mode) => {
 					const exists = links?.some((link) => link.mode === mode) ?? false;
 					return (
 						<div className="share-row" key={mode}>
-							<span>{LINK_LABEL[mode]}</span>
+							<span>{showText(LINK_LABEL[mode], language)}</span>
 							{mode === "full" && confirming?.kind === "remote" ? (
 								<>
-									<span className="muted small">
-										Guests can run commands on "{remoteEnv}". Create the link?
-									</span>
+									<span className="muted small">{t("remoteConfirm", remoteEnv ?? "")}</span>
 									<button type="button" className="text-action danger" onClick={confirm}>
-										Create
+										{t("create")}
 									</button>
 									{cancel}
 								</>
 							) : confirming?.kind === "reset" && confirming.reset === mode ? (
 								<>
-									<span className="muted small">New link, disconnect its guests?</span>
+									<span className="muted small">{t("resetConfirm")}</span>
 									<button type="button" className="text-action danger" onClick={confirm}>
-										Reset
+										{t("reset")}
 									</button>
 									{cancel}
 								</>
@@ -158,7 +158,7 @@ function ShareSheet({ session, onClose }: { session: string; onClose: () => void
 											className="text-action"
 											onClick={() => setConfirming({ kind: "reset", reset: mode })}
 										>
-											Reset
+											{t("reset")}
 										</button>
 									)}
 									<button
@@ -167,7 +167,7 @@ function ShareSheet({ session, onClose }: { session: string; onClose: () => void
 										disabled={links === undefined}
 										onClick={() => void copy(mode)}
 									>
-										{copied === mode ? "Copied" : "Copy link"}
+										{copied === mode ? t("copied") : t("copyLink")}
 									</button>
 								</>
 							)}
@@ -177,10 +177,8 @@ function ShareSheet({ session, onClose }: { session: string; onClose: () => void
 			</div>
 			{peopleUrl && (
 				<div className="list">
-					<span className="label">People</span>
-					<p className="muted small">
-						Share with someone's email; they open this session in Radius, signed in with that address.
-					</p>
+					<span className="label">{t("people")}</span>
+					<p className="muted small">{t("peopleIntro")}</p>
 					<form
 						className="inline-form"
 						onSubmit={(event) => {
@@ -191,32 +189,30 @@ function ShareSheet({ session, onClose }: { session: string; onClose: () => void
 						<input
 							className="input"
 							type="email"
-							aria-label="Email"
-							placeholder="Email"
+							aria-label={t("email")}
+							placeholder={t("email")}
 							autoComplete="off"
 							value={email}
 							onChange={(event) => setEmail(event.target.value)}
 						/>
 						<select
 							className="input"
-							aria-label="Access"
+							aria-label={t("access")}
 							value={personMode}
 							onChange={(event) => setPersonMode(event.target.value as ShareMode)}
 						>
-							<option value="view">{LINK_LABEL.view}</option>
-							<option value="full">{LINK_LABEL.full}</option>
+							<option value="view">{t("readOnlyLabel")}</option>
+							<option value="full">{t("readWriteLabel")}</option>
 						</select>
 						<button type="submit" className="button" disabled={!email.trim()}>
-							Share
+							{t("share")}
 						</button>
 					</form>
 					{confirming?.kind === "share" && (
 						<div className="share-row">
-							<span className="muted small">
-								{confirming.share} can run commands on "{remoteEnv}". Share read/write?
-							</span>
+							<span className="muted small">{t("shareConfirm", confirming.share, remoteEnv ?? "")}</span>
 							<button type="button" className="text-action danger" onClick={confirm}>
-								Share
+								{t("share")}
 							</button>
 							{cancel}
 						</div>
@@ -225,33 +221,33 @@ function ShareSheet({ session, onClose }: { session: string; onClose: () => void
 						<div className="guest-row" key={person.id}>
 							<span>
 								{person.name}{" "}
-								<small className="muted">· {person.mode === "full" ? "read/write" : "read-only"}</small>
+								<small className="muted">· {person.mode === "full" ? t("readWrite") : t("readOnly")}</small>
 							</span>
 							{removal(person.id)}
 						</div>
 					))}
 					{people && people.length > 0 && (
 						<div className="share-row">
-							<span className="muted small">Send them this session's address in Radius.</span>
+							<span className="muted small">{t("sendAddress")}</span>
 							<button
 								type="button"
 								className={`button ${copied === "address" ? "done" : ""}`}
 								onClick={() => void copyAddress()}
 							>
-								{copied === "address" ? "Copied" : "Copy address"}
+								{copied === "address" ? t("copied") : t("copyAddress")}
 							</button>
 						</div>
 					)}
 				</div>
 			)}
 			<div className="list">
-				<span className="label">Connected</span>
-				{guests && !guests.length && <p className="empty-note">No guests connected.</p>}
+				<span className="label">{t("connected")}</span>
+				{guests && !guests.length && <p className="empty-note">{t("noGuests")}</p>}
 				{guests?.map((guest) => (
 					<div className="guest-row" key={guest.id}>
 						<span>
 							{guest.name}{" "}
-							<small className="muted">· {guest.mode === "full" ? "read/write" : "read-only"}</small>
+							<small className="muted">· {guest.mode === "full" ? t("readWrite") : t("readOnly")}</small>
 						</span>
 						{removal(guest.id)}
 					</div>

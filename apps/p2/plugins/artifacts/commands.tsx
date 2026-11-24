@@ -17,6 +17,7 @@ import {
 	useCommandTarget,
 	useComposerState,
 	useHost,
+	useMessages,
 	useObject,
 	useRegistry,
 	useRoute,
@@ -25,6 +26,7 @@ import { type ReactNode, useEffect, useState } from "react";
 import { Views } from "../views/contract.ts";
 import { ViewsPages } from "../views/contract.web.ts";
 import { PANEL, showLocally } from "./local-item.ts";
+import { messages } from "./messages.ts";
 
 /** The commands, by id. */
 export const ARTIFACT_COMMANDS: Readonly<Record<string, Command>> = {
@@ -136,6 +138,7 @@ function ArtifactResults() {
 
 /** The matching items of `session`, at most `limit`. */
 function Rows({ session, limit }: { session: string; limit: number | undefined }) {
+	const { t } = useMessages(messages);
 	const host = useHost();
 	const editor = liveIn(useObject(Views, { session }), "editor");
 	const viewsPage = useRegistry(ViewsPages).get("views");
@@ -147,7 +150,7 @@ function Rows({ session, limit }: { session: string; limit: number | undefined }
 		<>
 			{collectors}
 			{matches.length > 0 && (
-				<CommandMenu.Group heading="Artifacts">
+				<CommandMenu.Group heading={t("groupArtifacts")}>
 					{matches.map(({ kind, item }) => (
 						<CommandMenu.Row
 							key={`${kind.view}:${item.id}`}

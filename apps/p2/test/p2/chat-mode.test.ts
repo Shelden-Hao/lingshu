@@ -37,7 +37,8 @@ const answered = (view: ConversationView | null | undefined) =>
 describe("chat-mode mentions", () => {
 	it("recognizes @lingshu as a word of its own, in any case", () => {
 		for (const text of ["@lingshu", "hey @Lingshu, look", "(@PI)", "ok @lingshu."]) assert(mentionsAgent(text), text);
-		for (const text of ["@pizza", "me@lingshu", "lingshu", "@@lingshu", "@pi_bot"]) assert(!mentionsAgent(text), text);
+		for (const text of ["@pizza", "me@lingshu", "lingshu", "@@lingshu", "@pi_bot"])
+			assert(!mentionsAgent(text), text);
 	});
 
 	it("recognizes a renamed agent's mention instead of @lingshu", () => {
@@ -131,7 +132,10 @@ describe("chat-mode digest", () => {
 					id: 99,
 					mode: "followUp",
 					content: "digest",
-					entry: { kind: "chat.mention", data: { author: ann, text: "@lingshu", attachments: [], included: [4, 6] } },
+					entry: {
+						kind: "chat.mention",
+						data: { author: ann, text: "@lingshu", attachments: [], included: [4, 6] },
+					},
 				},
 			],
 		} as unknown as InboxState;

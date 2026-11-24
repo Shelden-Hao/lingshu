@@ -517,7 +517,10 @@ test(
 		};
 		assert.equal(await ownPwd("own-local"), own);
 		await sessions.relocate({ id: session.id, cwd: "~/project", env: "box" }, BACKGROUND_CONTEXT);
-		await until(viewer.view, (view) => (view?.docs["lingshu.agent"] as { cwd?: string })?.cwd === join(home, "project"));
+		await until(
+			viewer.view,
+			(view) => (view?.docs["lingshu.agent"] as { cwd?: string })?.cwd === join(home, "project"),
+		);
 		assert.equal(statusOf(viewer), "live");
 		assert.equal(await generation(), before, "the same worker throughout");
 		const moved = await until(sessions.sessions, (rows) => rows?.find((row) => row.id === session.id)?.env === "box");

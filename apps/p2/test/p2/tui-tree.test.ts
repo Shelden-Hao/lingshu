@@ -4,12 +4,7 @@
 // following a switch made elsewhere (the session row's `main`), and Alt+Enter sending in a new branch when idle.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {
-	type ConversationView,
-	type EntryId,
-	type EntryRecord,
-	ROOT_CONVERSATION_ID,
-} from "@lingshu/durable";
+import { type ConversationView, type EntryId, type EntryRecord, ROOT_CONVERSATION_ID } from "@lingshu/durable";
 import { Chat, type ModelMeta } from "../../plugins/chat/contract.ts";
 import chatTui, { ChatSurface } from "../../plugins/chat/tui.ts";
 import { type Session, Sessions } from "../../plugins/sessions/contract.ts";
