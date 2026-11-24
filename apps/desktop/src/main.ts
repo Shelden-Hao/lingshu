@@ -1,5 +1,6 @@
 // Electron main process: manages the p2 server lifecycle and hosts its web UI in a window.
 import { type ChildProcess, spawn } from "node:child_process";
+import { createHmac } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createConnection } from "node:net";
 import { resolve } from "node:path";
@@ -141,6 +142,15 @@ const KCODER_PROVIDER = {
 			id: "deepseek",
 			name: "DeepSeek-V4-Flash-0731 (1M)",
 			reasoning: true,
+			input: ["text"],
+			contextWindow: 1000000,
+			maxTokens: 131072,
+			cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+		},
+		{
+			id: "qwen",
+			name: "Qwen-3.8-27B (1M)",
+			reasoning: true,
 			input: ["text", "image"],
 			contextWindow: 1000000,
 			maxTokens: 131072,
@@ -261,28 +271,45 @@ function waitForToken(timeoutMs = 20_000): Promise<string | undefined> {
 }
 
 /**
- * Sign in automatically: exchange the startup token for the owner cookie and put it in the
- * session the window uses, so the app opens signed in instead of on the sign-in page.
+ * Sign in automatically as the local owner: prove this process runs as the server's user by answering its
+ * HMAC challenge with `<data>/owner-key`, and put the owner cookie in the session the window uses, so the app
+ * opens on the home screen instead of the sign-in page. Works on every start, including when a p2 this shell
+ * did not spawn already serves the port.
  */
 async function signIn(win: BrowserWindow): Promise<void> {
-	const token = await waitForToken();
-	if (!token) return;
 	try {
-		const response = await fetch(new URL("/owner/claim", APP_URL), {
+		const dataDir = process.env.P2_DATA_DIR ?? resolve(app.getPath("home"), ".lingshu", "p2");
+		const key = readFileSync(resolve(dataDir, "owner-key"), "utf8").trim();
+		const challenged = await fetch(new URL("/owner/local/challenge", APP_URL), {
 			method: "POST",
 			headers: { Origin: APP_URL, "Content-Type": "application/json" },
-			body: JSON.stringify({ token }),
+			body: JSON.stringify({}),
 			redirect: "error",
 		});
-		if (!response.ok) return;
-		for (const header of response.headers.getSetCookie()) {
+		const value: unknown = challenged.ok ? await challenged.json() : undefined;
+		const challenge =
+			value && typeof value === "object" && "challenge" in value && typeof value.challenge === "string"
+				? value.challenge
+				: undefined;
+		const proof = createHmac("sha256", key).update(`p2-local-owner:${PORT}:${challenge}`).digest("hex");
+		const claimed = await fetch(new URL("/owner/local/claim", APP_URL), {
+			method: "POST",
+			headers: { Origin: APP_URL, "Content-Type": "application/json" },
+			body: JSON.stringify({ challenge, proof }),
+			redirect: "error",
+		});
+		if (!claimed.ok) return;
+		for (const header of claimed.headers.getSetCookie()) {
 			const [pair] = header.split(";", 1);
 			const index = pair.indexOf("=");
 			if (index <= 0) continue;
+			// The server marks the owner cookie HttpOnly (and a stale one may sit in the session from an earlier
+			// sign-in); Electron refuses a plain `set` that would overwrite an HttpOnly cookie, so set it HttpOnly.
 			await win.webContents.session.cookies.set({
 				url: APP_URL,
 				name: pair.slice(0, index),
 				value: pair.slice(index + 1),
+				httpOnly: true,
 			});
 		}
 	} catch (error) {
@@ -343,8 +370,9 @@ async function bootstrap(): Promise<void> {
 		return;
 	}
 	const win = createWindow();
-	// Sign in before the first load so the app opens on the home screen, not the sign-in page.
-	if (!alreadyRunning) await signIn(win);
+	// Sign in before the first load so the app opens on the home screen, not the sign-in page — every start,
+	// including when a p2 this shell did not spawn (another desktop, a dev server) already serves the port.
+	await signIn(win);
 	void win.loadURL(APP_URL);
 }
 
